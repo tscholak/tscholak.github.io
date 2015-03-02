@@ -1,5 +1,4 @@
 /* We need to add display:inline in order to align the '>>' of the 'read more' link */
-@import url(http://fonts.googleapis.com/css?family=Oswald|PT+Serif);
 @import url(http://fonts.googleapis.com/css?family=Fira+Sans:300,400,500,700,300italic,400italic,500italic,700italic);
 .post-excerpt p {
   display: inline; }
@@ -199,6 +198,30 @@
   .highlight .il {
     color: #009999; }
 
+@font-face {
+  font-family: 'charterbold_italic';
+  src: url("../fonts/charter_bold_italic-webfont.eot");
+  src: url("../fonts/charter_bold_italic-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/charter_bold_italic-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal; }
+@font-face {
+  font-family: 'charterbold';
+  src: url("../fonts/charter_bold-webfont.eot");
+  src: url("../fonts/charter_bold-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/charter_bold-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal; }
+@font-face {
+  font-family: 'charteritalic';
+  src: url("../fonts/charter_italic-webfont.eot");
+  src: url("../fonts/charter_italic-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/charter_italic-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal; }
+@font-face {
+  font-family: 'charterregular';
+  src: url("../fonts/charter_regular-webfont.eot");
+  src: url("../fonts/charter_regular-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/charter_regular-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal; }
 aside {
   display: block;
   float: left;
@@ -212,17 +235,17 @@ aside {
   margin-bottom: 1rem; }
 
 .author-profile .author-meta {
-  font-family: "Charter", serif;
+  font-family: "charterregular", serif;
   letter-spacing: 0.01rem; }
 
 body {
-  font-family: "Charter", serif; }
+  font-family: "charterregular", serif; }
 
 code, tt {
   font-family: monospace, sans-serif; }
 
 dl dt {
-  width: 140px;
+  width: 160px;
   overflow: hidden;
   clear: left;
   text-align: right;
@@ -230,7 +253,7 @@ dl dt {
   white-space: nowrap; }
 
 dl dd {
-  margin-left: 160px; }
+  margin-left: 180px; }
 
 h1, h2, h3,
 h4, h5, h6 {
@@ -253,13 +276,13 @@ h2 {
   font-size: 1.8rem;
   font-weight: 400;
   letter-spacing: 0.01rem;
-  font-family: "Charter", serif; }
+  font-family: "charterregular", serif; }
 
 .publicationList h3 {
   font-size: 1.8rem;
   font-weight: 400;
   letter-spacing: 0.01rem;
-  font-family: "Charter", serif; }
+  font-family: "charterregular", serif; }
 
 html {
   font-family: "Fira Sans", sans-serif; }
@@ -274,7 +297,7 @@ html {
 
 .page-description {
   font-size: 2.5rem;
-  font-family: "Charter", serif;
+  font-family: "charterregular", serif;
   letter-spacing: -0.01rem;
   color: rgba(0, 0, 0, 0.8); }
 
