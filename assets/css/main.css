@@ -245,7 +245,7 @@ code, tt {
   font-family: monospace, sans-serif; }
 
 dl dt {
-  width: 160px;
+  width: 150px;
   overflow: hidden;
   clear: left;
   text-align: right;
@@ -253,7 +253,7 @@ dl dt {
   white-space: nowrap; }
 
 dl dd {
-  margin-left: 180px; }
+  margin-left: 170px; }
 
 h1, h2, h3,
 h4, h5, h6 {
