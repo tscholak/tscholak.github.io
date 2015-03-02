@@ -221,6 +221,17 @@ body {
 code, tt {
   font-family: monospace, sans-serif; }
 
+dl dt {
+  width: 140px;
+  overflow: hidden;
+  clear: left;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap; }
+
+dl dd {
+  margin-left: 160px; }
+
 h1, h2, h3,
 h4, h5, h6 {
   font-family: "Fira Sans", sans-serif; }
