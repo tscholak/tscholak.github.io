@@ -290,3 +290,38 @@ samp {
 
 textarea {
   font-family: inherit; }
+
+.ui-helper-reset {
+  list-style: none; }
+
+.ui-helper-clearfix:before,
+.ui-helper-clearfix:after {
+  display: inline;
+  border-collapse: collapse; }
+
+.ui-helper-clearfix:after {
+  clear: none; }
+
+.ui-helper-clearfix {
+  min-height: 0; }
+
+.ui-tabs {
+  display: inline; }
+
+.ui-tabs .ui-tabs-nav {
+  display: inline;
+  margin: 0;
+  padding: 0; }
+
+.ui-tabs .ui-tabs-nav li {
+  list-style: none;
+  display: inline;
+  margin: 0; }
+
+.ui-tabs .ui-tabs-nav li.ui-tabs-active .ui-tabs-anchor,
+.ui-tabs .ui-tabs-nav li.ui-state-disabled .ui-tabs-anchor,
+.ui-tabs .ui-tabs-nav li.ui-tabs-loading .ui-tabs-anchor {
+  cursor: text; }
+
+.ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-active .ui-tabs-anchor {
+  cursor: pointer; }

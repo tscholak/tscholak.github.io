@@ -8,15 +8,15 @@
     <title>meticulously disordered</title>
     <link>http://tscholak.github.io</link>
     <description>Hi, I am Torsten. I do physics.</description>
-    <pubDate>Sat, 28 Feb 2015 12:28:37 -0500</pubDate>
+    <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
     <item>
-      <title>Welcome to Jekyll!</title>
-      <link>http://tscholak.github.io/jekyll/update/2015/02/28/welcome-to-jekyll/</link>
-      <description>&lt;p&gt;You’ll find this post in your &lt;code&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
+      <title>New blog!</title>
+      <link>http://tscholak.github.io/update/2015/02/28/new-blog.html</link>
+      <description>&lt;p&gt;So much still to do, so little to share (at this point). But that will change soon.&lt;/p&gt;
 </description>
-      <pubDate>Sat, 28 Feb 2015 12:28:37 -0500</pubDate>
-      <dc:date>2015-02-28T12:28:37-05:00</dc:date>
+      <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
+      <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-02-28T12:28:37-05:00</dc:date>
+    <dc:date>2015-02-28T19:00:00-05:00</dc:date>
   </channel>
 </rss>

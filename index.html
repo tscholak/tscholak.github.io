@@ -12,16 +12,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="/assets/css/jquery-ui-1.11.3.min.css" /> -->
     <!-- Customisation  -->
     <link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
 
+    <script type="text/javascript" src="/assets/js/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+    <script type="text/javascript" src="/assets/js/jquery-ui-1.11.3.min.js"></script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', '']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
 </head>
 <body class="home-template">
 
     <header class="main-header " style="background-image: url(/assets/images/cloud.jpg) ">
     <nav class="main-nav overlay clearfix">
             
-        <a class="subscribe-button icon-feed" href="rss.xml">Subscribe</a>
+        <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
     </nav>
     <div class="vertical">
         <div class="main-header-content inner">
@@ -30,8 +56,8 @@
                  Hi, I am Torsten. I do physics. 
             </h2>
             <h2 class="page-description">
-                 More <a href='about.html'>about me</a>. 
-                 And <a href='work.html'>my work</a>. 
+                 More <a href='/about.html'>about me</a>. 
+                 And <a href='/work.html'>my work</a>. 
             </h2>
         </div>
     </div>
@@ -54,11 +80,11 @@
 
     <article class="post">
         <header class="post-header">
-            <h2 class="post-title"><a href="/jekyll/update/2015/02/28/welcome-to-jekyll/">Welcome to Jekyll!</a></h2>
+            <h2 class="post-title"><a href="/update/2015/02/28/new-blog.html">New blog!</a></h2>
         </header>
         <section class="post-excerpt">
-            <p>You’ll find this post in your <code>_posts</code> directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run <code>jekyll serve</code>, which launches a web server and auto-regenerates your site when a file is updated.</p>
- <a class="read-more" href="/jekyll/update/2015/02/28/welcome-to-jekyll/">&raquo;</a>
+            <p>So much still to do, so little to share (at this point). But that will change soon.</p>
+ <a class="read-more" href="/update/2015/02/28/new-blog.html">&raquo;</a>
         </section>
         <footer class="post-meta">
             
@@ -66,7 +92,7 @@
                 Torsten Scholak
             
              
-                on jekyll and update 
+                on update 
             
             <time class="post-date" datetime="2015-02-28">
                 28 Feb 2015
@@ -86,36 +112,12 @@
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="">meticulously disordered</a> &copy; 
+        <a href="/">meticulously disordered</a> &copy; 
                &bull; All rights reserved.
       </section>
       <section class="poweredby">Made with Jekyll using 
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer>
-    
-    <script type="text/javascript" src="/assets/js/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
-    <script type="text/javascript" src="/assets/js/index.js"></script>
-
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
-    </script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-    <!-- Google Analytics Tracking code -->
-    <script type="text/javascript">
-
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', '']);
-      _gaq.push(['_trackPageview']);
-
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-
-    </script>   
+    </footer> 
 </body>
 </html>
