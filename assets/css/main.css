@@ -321,21 +321,16 @@ html {
   font-family: "Fira Sans", sans-serif; }
 
 .page-title {
-  font-size: 4rem;
-  font-family: "Fira Sans", sans-serif;
-  color: rgba(0, 0, 0, 0.8); }
+  font-family: "Fira Sans", sans-serif; }
 
 .page-description {
-  font-size: 2.5rem;
-  font-family: "charterregular", serif;
-  letter-spacing: -0.01rem;
-  color: rgba(0, 0, 0, 0.8); }
+  font-family: "charterregular", serif; }
 
 .page-description a {
-  color: rgba(0, 0, 0, 0.6); }
+  color: rgba(255, 255, 255, 0.6); }
 
 .page-description a:hover {
-  color: rgba(0, 0, 0, 0.8); }
+  color: rgba(255, 255, 255, 0.8); }
 
 .pagination {
   font-family: "Fira Sans", sans-serif; }

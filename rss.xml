@@ -5,9 +5,9 @@
   xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
   xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/">
   <channel>
-    <title>meticulously disordered</title>
+    <title>Meticulous Disorder</title>
     <link>http://tscholak.github.io</link>
-    <description>&lt;span style=&quot;white-space: nowrap;&quot;&gt;Hi, I am Torsten.&lt;/span&gt; &lt;span style=&quot;white-space: nowrap;&quot;&gt;I do physics.&lt;/span&gt;</description>
+    <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
     <pubDate>Sun, 01 Mar 2015 19:00:00 -0500</pubDate>
     <item>
       <title>Finding the right fonts</title>
