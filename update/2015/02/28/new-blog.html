@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
@@ -13,8 +13,9 @@
 
     <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
     <!-- <link rel="stylesheet" type="text/css" href="/assets/css/jquery-ui-1.11.3.min.css" /> -->
-    <!-- Customisation  -->
+
     <link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
     <script type="text/javascript" src="/assets/js/jquery-1.11.2.min.js"></script>
     <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
@@ -41,8 +42,9 @@
       })();
 
     </script>
-</head>
-<body class="post-template">
+  </head>
+
+  <body class="post-template">
 
     <header class="main-header post-head no-cover">
   <nav class="main-nav  clearfix">
@@ -65,7 +67,7 @@
       </section>
     </header>
 
-<!--         <header class="post-header">
+    <!-- <header class="post-header">
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">meticulously disordered</span>
@@ -94,33 +96,56 @@
       
         <figure class="author-image">
           <a class="img" href="/" style="background-image: url(/assets/images/profile.png)">
-          <span class="hidden">Torsten Scholak's Picture</span></a>
+          <span class="hidden">that's me</span></a>
         </figure>
         <section class="author">
           <!-- Author Name -->
           <h4> Torsten Scholak </h4>
           <!-- Author Bio -->
-          <p> 
+          <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
         </section>                
       
 
       <!-- Share links section -->
-      <section class="share">
-    <h4>Share this post</h4>
-    <a class="icon-twitter" href="http://twitter.com/share?text=New blog!&amp;url=http://tscholak.github.io/update/2015/02/28/new-blog.html"
-        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
-        <span class="hidden">Twitter</span>
-    </a>
-    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://tscholak.github.io/update/2015/02/28/new-blog.html"
-        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
-        <span class="hidden">Facebook</span>
-    </a>
-    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://tscholak.github.io/update/2015/02/28/new-blog.html"
-       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
-        <span class="hidden">Google+</span>
-    </a>
+      <!-- <section class="share">
+  <h4>Share this post</h4>
+  <a class="icon-twitter" href="http://twitter.com/share?text=New blog!&amp;url=http://tscholak.github.io/update/2015/02/28/new-blog.html"
+    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+    <span class="hidden">Twitter</span>
+  </a>
+  <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://tscholak.github.io/update/2015/02/28/new-blog.html"
+    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+    <span class="hidden">Facebook</span>
+  </a>
+  <a class="icon-google-plus" href="https://plus.google.com/share?url=http://tscholak.github.io/update/2015/02/28/new-blog.html"
+     onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+    <span class="hidden">Google+</span>
+  </a>
+</section> -->
+
+      <!-- Follow me section -->
+      <section class="follow">
+  <h4>Follow me</h4>
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Facebook');" class="facebook_follow" title="Follow on Facebook" href="http://www.facebook.com/tscholak" target="_blank"><i class="fa fa-lg fa-facebook-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Twitter');" class="twitter_follow" title="Follow on Twitter" href="https://twitter.com/tscholak" target="_blank"><i class="fa fa-lg fa-twitter-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on LinkedIn');" class="linkedin_follow" title="Follow on LinkedIn" href="http://www.linkedin.com/in/tscholak" target="_blank"><i class="fa fa-lg fa-linkedin-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Google+');" class="googleplus_follow" title="Follow on LinkedIn" href="https://plus.google.com/u/0/+TorstenScholak" target="_blank"><i class="fa fa-lg fa-google-plus-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on StackOverflow');" class="stackoverflow_follow" title="Follow on StackOverflow" href="https://stackoverflow.com/users/700435" target="_blank"><i class="fa fa-lg fa-stack-exchange"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
+  
 </section>
       
       <!-- Disqus comments -->
@@ -132,6 +157,7 @@
 
 </main>
 
+
     <footer class="site-footer clearfix">
       <section class="copyright">
         <a href="/">meticulously disordered</a> &copy; 
@@ -141,5 +167,5 @@
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
     </footer> 
-</body>
+  </body>
 </html>
