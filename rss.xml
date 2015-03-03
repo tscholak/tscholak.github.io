@@ -8,7 +8,15 @@
     <title>meticulously disordered</title>
     <link>http://tscholak.github.io</link>
     <description>&lt;span style=&quot;white-space: nowrap;&quot;&gt;Hi, I am Torsten.&lt;/span&gt; &lt;span style=&quot;white-space: nowrap;&quot;&gt;I do physics.&lt;/span&gt;</description>
-    <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
+    <pubDate>Sun, 01 Mar 2015 19:00:00 -0500</pubDate>
+    <item>
+      <title>Finding the right fonts</title>
+      <link>http://tscholak.github.io/update/2015/03/01/finding-the-right-fonts.html</link>
+      <description>&lt;p&gt;Kasper, the theme that I am using for this web site, comes with three fonts: &lt;a href=&quot;http://www.google.com/fonts/specimen/Open+Sans&quot;&gt;Open Sans&lt;/a&gt;, &lt;a href=&quot;http://www.google.com/fonts/specimen/Merriweather&quot;&gt;Merriweather&lt;/a&gt;, and &lt;a href=&quot;https://www.google.com/fonts/specimen/Inconsolata&quot;&gt;Inconsolata&lt;/a&gt;. I did not like these very much, so I set out to find suitable replacements.&lt;/p&gt;
+</description>
+      <pubDate>Sun, 01 Mar 2015 19:00:00 -0500</pubDate>
+      <dc:date>2015-03-01T19:00:00-05:00</dc:date>
+    </item>
     <item>
       <title>New blog!</title>
       <link>http://tscholak.github.io/update/2015/02/28/new-blog.html</link>
@@ -17,6 +25,6 @@
       <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-02-28T19:00:00-05:00</dc:date>
+    <dc:date>2015-03-01T19:00:00-05:00</dc:date>
   </channel>
 </rss>

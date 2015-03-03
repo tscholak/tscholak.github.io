@@ -1,5 +1,5 @@
 /* We need to add display:inline in order to align the '>>' of the 'read more' link */
-@import url(http://fonts.googleapis.com/css?family=Fira+Sans:300,400,500,700,300italic,400italic,500italic,700italic);
+@import url(http://fonts.googleapis.com/css?family=Fira+Sans:300,400,500,700,300italic,400italic,500italic,700italic|Source+Code+Pro:200,300,400,500,600,700,900);
 .post-excerpt p {
   display: inline; }
 
@@ -242,7 +242,7 @@ body {
   font-family: "charterregular", serif; }
 
 code, tt {
-  font-family: monospace, sans-serif; }
+  font-family: "Source Code Pro", monospace, sans-serif; }
 
 dl dt {
   width: 150px;
@@ -297,7 +297,7 @@ html {
   font-family: "Fira Sans", sans-serif; }
 
 pre {
-  font-family: monospace, sans-serif; }
+  font-family: "Source Code Pro", monospace, sans-serif; }
 
 samp {
   font-family: monospace, serif; }
