@@ -1,0 +1,282 @@
+---
+# Let's add a comment to make this file sass-y.
+# Change this file for any custom CSS.
+---
+
+/* We need to add display:inline in order to align the '>>' of the 'read more' link */
+.post-excerpt p {
+	display:inline;
+}
+
+// Import partials from `sass_dir` (defaults to `_sass`)
+@import
+	"syntax"
+;
+
+@import
+  url(http://fonts.googleapis.com/css?family=Fira+Sans:300,400,500,700,300italic,400italic,500italic,700italic|Source+Code+Pro:200,300,400,500,600,700,900)
+;
+
+@font-face {
+  font-family: 'charterbold_italic';
+  src: url('../fonts/charter_bold_italic-webfont.eot');
+  src: url('../fonts/charter_bold_italic-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/charter_bold_italic-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'charterbold';
+  src: url('../fonts/charter_bold-webfont.eot');
+  src: url('../fonts/charter_bold-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/charter_bold-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'charteritalic';
+  src: url('../fonts/charter_italic-webfont.eot');
+  src: url('../fonts/charter_italic-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/charter_italic-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'charterregular';
+  src: url('../fonts/charter_regular-webfont.eot');
+  src: url('../fonts/charter_regular-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/charter_regular-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+aside {
+  display: block;
+  float: left;
+  position: absolute;
+  margin-left: 0;
+  left: 2.5rem;
+  width: 7rem;
+  text-align: right;
+  list-style-type: none;
+  clear:both;
+  margin-bottom: 1rem;
+}
+
+.author-profile .author-meta {
+  font-family: "charterregular", serif;
+  letter-spacing: 0.01rem;
+}
+
+body {
+  font-family: "charterregular", serif;
+}
+
+code, tt {
+  font-family: "Source Code Pro", monospace, sans-serif;
+}
+
+dl dt {
+  width: 150px;
+  overflow: hidden;
+  clear: left;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+dl dd {
+  margin-left: 170px;
+}
+
+.post-footer .author {
+  margin-right: 200px;
+}
+.post-footer .follow {
+  position: absolute;
+  top: 6rem;
+  right: 0;
+  width: 160px;
+}
+.post-footer .follow a {
+  font-size: 1.8rem;
+  display: inline-block;
+  margin: 1rem 0rem 1.6rem 0rem;
+  color: #BBC7CC;
+  text-decoration: none;
+}
+.post-footer .follow a.facebook_follow {
+  color: #5676A4;
+}
+.post-footer .follow a.twitter_follow {
+  color: #53B6D8;
+}
+.post-footer .follow a.linkedin_follow {
+  color: #65A9D0;
+}
+.post-footer .follow a.googleplus_follow {
+  color: #dd4b39;
+}
+.post-footer .follow a.stackoverflow_follow {
+  color: #FF9900;
+}
+.post-footer .follow a.github_follow {
+  color: #000;
+}
+.post-footer .follow a:hover {
+  color: #50585D;
+}
+@media only screen and (max-width: 500px) {
+  .post-footer .author {
+    margin: 0 0 2rem 0;
+  }
+  .post-footer .follow {
+    position: static;
+    width: auto;
+  }
+  .post-footer .follow a {
+    margin: 1.4rem 0rem 0rem 0rem;
+  }
+}
+
+h1, h2, h3,
+h4, h5, h6 {
+  font-family: "Fira Sans", sans-serif;
+}
+
+h1 {
+  letter-spacing: -1px;
+  text-indent: -1px;
+}
+
+h2 {
+  font-size: 3.6rem;
+  letter-spacing: -.5px;
+}
+
+html {
+  font-family: "Fira Sans", sans-serif;
+}
+
+.main-nav a {
+  font-family: "Fira Sans", sans-serif;
+}
+
+.page-title {
+  font-family: "Fira Sans", sans-serif;
+}
+.page-description {
+  font-family: "charterregular", serif;
+}
+.page-description a {
+  color: rgba(255,255,255,0.6);
+}
+.page-description a:hover {
+  color: rgba(255,255,255,0.8);
+}
+
+.pagination {
+  font-family: "Fira Sans", sans-serif;
+}
+
+.post-meta {
+  font-family: "Fira Sans", sans-serif;
+}
+
+pre {
+  font-family: "Source Code Pro", monospace, sans-serif;
+}
+
+samp {
+  font-family: monospace, serif;
+}
+
+.site-footer {
+  font-family: "Fira Sans", sans-serif;
+}
+
+textarea {
+  font-family: inherit;
+}
+
+.ui-helper-reset {
+  list-style: none;
+}
+.ui-helper-clearfix:before,
+.ui-helper-clearfix:after {
+  display: inline;
+  border-collapse: collapse;
+}
+.ui-helper-clearfix:after {
+  clear: none;
+}
+.ui-helper-clearfix {
+  min-height: 0;
+}
+.ui-tabs {
+  display: inline;
+}
+.ui-tabs .ui-tabs-nav {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+.ui-tabs .ui-tabs-nav li {
+  list-style: none;
+  display: inline;
+  margin: 0;
+}
+.ui-tabs .ui-tabs-nav .ui-tabs-anchor {
+}
+.ui-tabs .ui-tabs-nav li.ui-tabs-active {
+}
+.ui-tabs .ui-tabs-nav li.ui-tabs-active .ui-tabs-anchor,
+.ui-tabs .ui-tabs-nav li.ui-state-disabled .ui-tabs-anchor,
+.ui-tabs .ui-tabs-nav li.ui-tabs-loading .ui-tabs-anchor {
+  cursor: text;
+}
+.ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-active .ui-tabs-anchor {
+  cursor: pointer;
+}
+.ui-tabs .ui-tabs-panel {
+}
+.ui-widget {
+}
+.ui-widget .ui-widget {
+}
+.ui-widget-content {
+}
+.ui-widget-header {
+}
+.ui-state-default,
+.ui-widget-content .ui-state-default,
+.ui-widget-header .ui-state-default {
+}
+.ui-state-default a,
+.ui-state-default a:link,
+.ui-state-default a:visited {
+}
+.ui-state-hover,
+.ui-widget-content .ui-state-hover,
+.ui-widget-header .ui-state-hover,
+.ui-state-focus,
+.ui-widget-content .ui-state-focus,
+.ui-widget-header .ui-state-focus {
+}
+.ui-state-hover a,
+.ui-state-hover a:hover,
+.ui-state-hover a:link,
+.ui-state-hover a:visited,
+.ui-state-focus a,
+.ui-state-focus a:hover,
+.ui-state-focus a:link,
+.ui-state-focus a:visited {
+}
+.ui-state-active,
+.ui-widget-content .ui-state-active,
+.ui-widget-header .ui-state-active {
+}
+.ui-state-active a,
+.ui-state-active a:link,
+.ui-state-active a:visited {
+}

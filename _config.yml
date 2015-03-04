@@ -1,14 +1,65 @@
 # Site settings
-title: Your awesome title
-email: your-email@domain.com
-description: > # this means to ignore newlines until "baseurl:"
-  Write an awesome description for your new site here. You can edit this
-  line in _config.yml. It will appear in your document head meta (for
-  Google search results) and in your feed.xml site description.
-baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://yourdomain.com" # the base hostname & protocol for your site
-twitter_username: jekyllrb
-github_username:  jekyll
+name: Meticulous Disorder
+author: 'Torsten Scholak'
+author-image: '/assets/images/profile.png'
+author-image-alt: "that's me"
+author-bio: "Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics"
+email: 'torsten.scholak@googlemail.com'
+description: 'Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.'
+meta_description: "a hodgepodge of theoretical quantum physics, computing, and typophilia, buried under a thick layer of forgettable kerfuffle"
+baseurl: /
+domain_name: 'http://tscholak.github.io'
+url: 'http://tscholak.github.io'
+google_analytics: 'UA-60317908-1'
+
+# Social Media
+facebook: tscholak
+twitter: tscholak
+linkedin: tscholak
+googleplus: TorstenScholak
+stackoverflow: 700435
+github: tscholak
 
 # Build settings
-markdown: kramdown
+markdown: redcarpet
+highlighter: pygments
+logo: false
+paginate: 15
+
+include:
+  - .nojekyll
+
+exclude:
+  - "bower_components"
+  - "bower.json"
+  - "node_modules"
+  - "package.json"
+  - "Gruntfile.js"
+
+gems:
+  - jekyll/scholar
+
+scholar:
+  style: assets/bibliography/tscholak.csl
+  locale: en
+ 
+  sort_by: year, month
+  order: descending
+ 
+  source: assets/bibliography
+  bibliography: tscholak.bib
+  repository: assets/bibliography
+
+#  bibtex_filters: [ ]
+ 
+  replace_strings: true
+  join_strings: true
+
+#  details_dir: bibliography
+#  details_layout: bib_details.html
+#  details_link: Details
+
+  bibliography_template: bib
+ 
+  query: "@*"
+

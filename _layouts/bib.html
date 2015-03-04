@@ -1,0 +1,40 @@
+---
+---
+{{reference}}
+
+<div id="{{key}}-tabs">
+  View
+  <ul>
+    {% if entry.annote %}
+    <li><a href="#{{key}}-tabs-1">short outline</a>,</li>
+    {% endif %}
+    {% if entry.abstract %}
+    <li><a href="#{{key}}-tabs-2">abstract</a>,</li>
+    {% endif %}
+    <li><a href="#{{key}}-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  {% if link %}
+  Download <a href="{{link}}">PDF</a>.
+  {% endif %}
+  {% if entry.annote %}
+  <div id="{{key}}-tabs-1">
+    <p>{{entry.annote}}</p>
+  </div>
+  {% endif %}
+  {% if entry.abstract %}
+  <div id="{{key}}-tabs-2">
+    <p>{{entry.abstract}}</p>
+  </div>
+  {% endif %}
+  <div id="{{key}}-tabs-3">
+    <pre>{{entry.bibtex}}</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#{{key}}-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script>
