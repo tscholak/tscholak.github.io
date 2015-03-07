@@ -21,6 +21,7 @@
     <script type="text/javascript" src="/vendor/js/jquery.fitvids.js"></script>
     <script type="text/javascript" src="/assets/js/index.js"></script>
     <script type="text/javascript" src="/vendor/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.lettering.js"></script>
 
     <script type="text/x-mathjax-config">
       MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
@@ -55,11 +56,16 @@
       <h1 class="page-title">Meticulous Disorder</h1>
       <h2 class="page-description">
          Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist. 
-         <span style="white-space: nowrap;">More <a href='/about.html'>about Torsten</a>.<span> 
-         <span style="white-space: nowrap;">And <a href='/work.html'>his work</a>.</span> 
+         More <a href='/about.html'>about Torsten</a>. 
+         And <a href='/work.html'>his work</a>. 
       </h2>
     </div>
   </div>
+  <script>
+    $(document).ready(function() {
+      $(".page-title").lettering();
+    });
+  </script>
   <a class="scroll-down icon-arrow-left" href="#content" data-offset="-45"><span class="hidden">Scroll Down</span></a>
 </header>
 
@@ -72,6 +78,30 @@
      
 </nav>
   </div>
+
+  
+
+  <article class="post">
+    <header class="post-header">
+      <h2 class="post-title"><a href="/update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html">Jekyll and GitHub Pages</a></h2>
+    </header>
+    <section class="post-excerpt">
+      <p>By the time you read this, I will have tossed my old obsolete <a href="wordpress">Wordpress website</a> in favor of this one, a modern <a href="jekyll">Jekyll</a> powered <a href="github">GitHub</a> page. I have started from scratch. The old site didn&#39;t have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. I&#39;m sure. This article is just the beginning. It&#39;s like ... me and blogging forever ... and ever. A hundred years me and blogging ... about some things. Something all day long. <a href="http://www.adultswim.com/videos/rick-and-morty/">Forever a hundred times ...</a> </p>
+ <a class="read-more" href="/update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html">&raquo;</a>
+    </section>
+    <footer class="post-meta">
+      
+        <img class="author-thumb" src="/assets/images/profile.png" alt="that's me" nopin="nopin" />
+        Torsten Scholak
+      
+       
+        on update, guide, and jekyll 
+      
+      <time class="post-date" datetime="2015-03-06">
+        06 Mar 2015
+      </time> 
+    </footer>
+  </article>
 
   
 

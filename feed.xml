@@ -5,9 +5,446 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 03 Mar 2015 19:32:47 -0500</pubDate>
-    <lastBuildDate>Tue, 03 Mar 2015 19:32:47 -0500</lastBuildDate>
+    <pubDate>Sat, 07 Mar 2015 00:19:11 -0500</pubDate>
+    <lastBuildDate>Sat, 07 Mar 2015 00:19:11 -0500</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
+    
+      <item>
+        <title>Jekyll and GitHub Pages</title>
+        <description>&lt;p&gt;By the time you read this, I will have tossed my old obsolete &lt;a href=&quot;wordpress&quot;&gt;Wordpress website&lt;/a&gt; in favor of this one, a modern &lt;a href=&quot;jekyll&quot;&gt;Jekyll&lt;/a&gt; powered &lt;a href=&quot;github&quot;&gt;GitHub&lt;/a&gt; page. I have started from scratch. The old site didn&amp;#39;t have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. I&amp;#39;m sure. This article is just the beginning. It&amp;#39;s like ... me and blogging forever ... and ever. A hundred years me and blogging ... about some things. Something all day long. &lt;a href=&quot;http://www.adultswim.com/videos/rick-and-morty/&quot;&gt;Forever a hundred times ...&lt;/a&gt; &lt;/p&gt;
+
+&lt;p&gt;Err, ok. So, what are Jekyll and GitHub, and why should &lt;em&gt;you&lt;/em&gt; care?&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s first talk about Jekyll. Jekyll is a static blog generator. And it is awesome. Well, that seems to be the consensus of an &lt;a href=&quot;jekyll-examples&quot;&gt;ever-growing hacker crowd&lt;/a&gt; on the web that uses Jekyll for blogging. Indeed, after the initial hassle to set it up and to customize it to your liking, it allows for a very efficient work-flow. I am writing these lines in &lt;a href=&quot;sublime&quot;&gt;Sublime&lt;/a&gt; on my laptop using the &lt;a href=&quot;markdown&quot;&gt;Markdown&lt;/a&gt; markup language. Later, when I&amp;#39;m done (i.e., from your point of view, in the past), I invoke a short series of terminal commands to submit the article to my blog, where it immediately appears for everybody to read. The work-flow is similar to writing, compiling, and deploying program code.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/sublime.jpg&quot; alt=&quot;working hard on this blog post&quot; class=&quot;full-img&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;gh-pages&quot;&gt;GitHub Pages&lt;/a&gt; are public web pages hosted by GitHub, a private Git repository hosting service. Word has it that GitHub is awesome, too. Several reasons for that come to mind. First, hosting on GitHub is free. If you can live with a static web page and the github.io domain, then GitHub is definitely worth a look. Second, the setup of a GitHub page is fairly easy. If you are familiar with the process of setting up GitHub repositories, then you already know everything you need to know about GitHub Pages. And third, &lt;a href=&quot;gh-pages-jekyll&quot;&gt;GitHub runs Jekyll&lt;/a&gt; automatically on your uploaded Markdown code. It converts it into shiny static HTML that&amp;#39;s on-line instantly. All this magic would not be possible without a few limitations, though. For instance, for security reasons, GitHub supports only a few hand-selected Jekyll plugins. Check &lt;a href=&quot;gh-jekyll-supported&quot;&gt;here&lt;/a&gt; to see if your favorite Jekyll plugin is among them. If it&amp;#39;s not, then think for a moment or two if you truly need it. In the affirmative, I&amp;#39;m afraid, you will have to resort to some nifty shenanigans to get what you want. This is the path I recently ventured on, and, for what it&amp;#39;s worth, I dedicate the rest of this article to outlining my solution.&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h1&gt;Unsupported Jekyll plugins&lt;/h1&gt;
+
+&lt;p&gt;So, how exactly can you use custom Jekyll plugins on GitHub Pages?&lt;/p&gt;
+
+&lt;p&gt;There is of course ample prior work on that subject, and I make no secret that I borrowed heavily from &lt;a href=&quot;http://www.aymerick.com/2014/07/22/jekyll-github-pages-bower-bootstrap.html&quot;&gt;earlier&lt;/a&gt; &lt;a href=&quot;http://james-oldfield.co/blog/jekyll-plugins-with-gh-pages/&quot;&gt;howtos&lt;/a&gt; &lt;a href=&quot;http://paulstamatiou.com/responsive-retina-blog-development-part-1/&quot;&gt;and&lt;/a&gt; &lt;a href=&quot;https://blog.5apps.com/2014/05/29/deploying-static-apps-with-grunt-build-control-on-5apps-deploy.html&quot;&gt;tutorials&lt;/a&gt; in order to combine them into something elegant that works for me &lt;em&gt;personally&lt;/em&gt;. However, by my estimates, there is a finite chance that my solution is the right one for you, too. This is one reason I decided to write it up. The other reason is that I want to help out future me who indubitably will have forgotten all this stuff.&lt;/p&gt;
+
+&lt;p&gt;At the heart of the solution is &lt;em&gt;local&lt;/em&gt; Jekyll processing. Yes, we are going to opt out of the awesome Jekyll processing on GitHub. We do this despite the fact that local Jekyll processing is, done wrong, unbearably tedious. The good news is that there exist sophisticated automation tools that will help to keep us calm.&lt;/p&gt;
+
+&lt;h2&gt;Bower and Grunt to the rescue&lt;/h2&gt;
+
+&lt;p&gt;Below, we discuss two automation tools, a build tool called Grunt and a package manager called Bower.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://bower.io&quot;&gt;Bower&lt;/a&gt; is a lightweight package management system for the web that depends on &lt;a href=&quot;http://nodejs.org&quot;&gt;Node.js&lt;/a&gt; and &lt;a href=&quot;https://www.npmjs.com&quot;&gt;npm&lt;/a&gt;, the package manager for Node.js. Bower helps with installing vendor provided client-side scripts, for instance &lt;a href=&quot;http://jquery.com&quot;&gt;jQuery&lt;/a&gt;, &lt;a href=&quot;http://getbootstrap.com&quot;&gt;Bootstrap&lt;/a&gt;, or &lt;a href=&quot;http://handlebarsjs.com&quot;&gt;Handlebars&lt;/a&gt;. This is software your web site will most likely be built on. &lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://gruntjs.com&quot;&gt;Grunt&lt;/a&gt; is an automation tool that assists you with repetitive tasks, i.e. tasks like building and deploying a Jekyll powered web page. It fulfills a similar purpose as that of &lt;a href=&quot;http://www.gnu.org/software/make/&quot;&gt;GNU make&lt;/a&gt;. The similarity is apparent from the way Grunt and GNU make are fed instructions. &lt;code&gt;make&lt;/code&gt; executes rules and commands from a &lt;code&gt;Makefile&lt;/code&gt;, and &lt;code&gt;grunt&lt;/code&gt; gets its instructions from a &lt;code&gt;Gruntfile&lt;/code&gt;. However, the syntax of these files is completely different. But more about that later.&lt;/p&gt;
+
+&lt;p&gt;Bower and Grunt are part of the illustrious &lt;a href=&quot;http://yeoman.io&quot;&gt;Yeoman work-flow&lt;/a&gt; that also includes a CLI tool called &lt;a href=&quot;https://github.com/yeoman/yo&quot;&gt;yo&lt;/a&gt;. We won&amp;#39;t be needing yo in the following, though.&lt;/p&gt;
+
+&lt;h2&gt;The basics&lt;/h2&gt;
+
+&lt;p&gt;The first step is to install Jekyll and Node.js on your computer. I am running Mac OS X and the &lt;a href=&quot;https://www.macports.org&quot;&gt;MacPorts&lt;/a&gt; package management system on mine. Although my notes address this particular environment, you should be able to make use of most of the instructions also on other platforms and with different package managers. To this end, you will need to work in the terminal. And, you will need root privileges.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:~ tscholak$ sudo port selfupdate
+lipbite:~ tscholak$ sudo port install py27-pygments nodejs npm
+lipbite:~ tscholak$ sudo gem install \
+&amp;gt;   github-pages \
+&amp;gt;   jekyll \
+&amp;gt;   jekyll-redirect-from \
+&amp;gt;   jekyll-scholar \
+&amp;gt;   kramdown \
+&amp;gt;   rdiscount \
+&amp;gt;   rouge \
+&amp;gt;   redcarpet
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running these commands updates the MacPorts ports tree, installs Node.js with npm, and prepares Jekyll with some extensions. (Mac OS X Yosemite ships with &lt;a href=&quot;https://www.ruby-lang.org/en/&quot;&gt;Ruby 2.0&lt;/a&gt; as the default, there is no need to mess with that.) All these packages are installed system-wide. This may not be what you want, especially if you &lt;a href=&quot;http://stackoverflow.com/questions/4938592/how-why-does-npm-recommend-not-running-as-root#answers&quot;&gt;don&amp;#39;t trust unsigned software&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://github.com/inukshuk/jekyll-scholar&quot;&gt;Jekyll-Scholar&lt;/a&gt; plugin is an awesome way to create bibliographies. I use it &lt;a href=&quot;/work.html#publications&quot;&gt;here&lt;/a&gt;. It is not available on GitHub Pages and may be reason enough for you to switch to local processing.&lt;/p&gt;
+
+&lt;p&gt;Let us now create a new, empty Jekyll instance somewhere in the home folder:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:~ tscholak$ jekyll new tscholak.github.io
+New jekyll site installed in /Users/tscholak/tscholak.github.io.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I chose the name &lt;code&gt;tscholak.github.io&lt;/code&gt; because it&amp;#39;s the address of my personal page (this page) and also the name of its GitHub repository. For you, it will be &lt;code&gt;[username].github.io&lt;/code&gt;, where &lt;code&gt;[username]&lt;/code&gt; is your GitHub user name. Next we create an empty git repository in that folder and add all existing files to it:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:~ tscholak$ cd tscholak.github.io
+lipbite:tscholak.github.io tscholak$ git init
+Initialized empty Git repository in /Users/tscholak/tscholak.github.io /.git/
+lipbite:tscholak.github.io tscholak$ git add .
+lipbite:tscholak.github.io tscholak$ git commit -m &amp;quot;Generated by Jekyll&amp;quot;
+lipbite:tscholak.github.io tscholak$ git remote add origin git@github.com:tscholak/tscholak.github.io.git
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The last line connects the local repository to a remote one. In this example, the remote is my GitHub Pages repository. It is given the label &lt;code&gt;origin&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;GitHub expects to find the processed, static HTML code in the &lt;code&gt;master&lt;/code&gt; branch of the repository. That means whatever is in &lt;code&gt;master&lt;/code&gt; will be displayed at &lt;code&gt;http://tscholak.github.io&lt;/code&gt;. All other branches are ignored. We can thus use another branch, say, &lt;code&gt;source&lt;/code&gt;, to store the source code of the page. This is the subject of the next section.&lt;/p&gt;
+
+&lt;h3&gt;Set up the &lt;code&gt;source&lt;/code&gt; branch&lt;/h3&gt;
+
+&lt;p&gt;First, we have to create the &lt;code&gt;source&lt;/code&gt; branch. We use the local copy of &lt;code&gt;master&lt;/code&gt; as a starting point:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git checkout -b source master
+Switched to a new branch ‘source&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Calling &lt;code&gt;git checkout&lt;/code&gt; with the argument &lt;code&gt;-b&lt;/code&gt; first creates and then switches to the new branch. It is the same as first calling &lt;code&gt;git branch&lt;/code&gt; and then git-checking it out.&lt;/p&gt;
+
+&lt;p&gt;Now is a good time to make sure that your remote repository &lt;code&gt;[username].github.io&lt;/code&gt; actually exists on GitHub. If it does not, go to &lt;code&gt;https://github.com/[username]&lt;/code&gt; and &lt;a href=&quot;https://help.github.com/articles/creating-a-new-repository/&quot;&gt;create it&lt;/a&gt;. Furthermore, in order to establish a secure connection between your computer and GitHub, you have to &lt;a href=&quot;https://help.github.com/articles/keeping-your-ssh-keys-and-application-access-tokens-safe/&quot;&gt;review your SSH keys&lt;/a&gt; and, if necessary, &lt;a href=&quot;https://help.github.com/articles/generating-ssh-keys/&quot;&gt;add your local key to your GitHub account&lt;/a&gt;. You will also need to configure the &lt;code&gt;ssh-agent&lt;/code&gt; program:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ eval &amp;quot;$(ssh-agent -s)&amp;quot;
+Agent pid 9829
+lipbite:tscholak.github.io tscholak$ ssh-add ~/.ssh/id_rsa
+Identity added: /Users/tscholak/.ssh/id_rsa (/Users/tscholak/.ssh/id_rsa)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Ssh-agent&quot;&gt;ssh-agent&lt;/a&gt; is a secure key chain for your private SSH keys. It comes with your Mac. The last command adds the private RSA key in your home folder to the chain. You may be asked to enter its passphrase.&lt;/p&gt;
+
+&lt;p&gt;Let us now test the connection by pushing the &lt;code&gt;source&lt;/code&gt; branch to &lt;code&gt;origin&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git push -u origin source
+Counting objects: 23, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (21/21), done.
+Writing objects: 100% (23/23), 8.55 KiB | 0 bytes/s, done.
+Total 23 (delta 1), reused 0 (delta 0)
+To git@github.com:tscholak/tscholak.github.io.git
+ * [new branch]      source -&amp;gt; source
+Branch source set up to track remote branch source from origin.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Your output should look like this or similar. Now go to GitHub and verify that your Jekyll instance has found its way to the server. Since you are there, I recommend making the &lt;code&gt;source&lt;/code&gt; branch the default on GitHub. Consult &lt;a href=&quot;https://help.github.com/articles/setting-the-default-branch/&quot;&gt;this link&lt;/a&gt; for instructions.&lt;/p&gt;
+
+&lt;h3&gt;Set up the &lt;code&gt;master&lt;/code&gt; branch&lt;/h3&gt;
+
+&lt;p&gt;Next we need to wipe the &lt;code&gt;master&lt;/code&gt; branch. The most thorough way to do this is to first delete and then to recreate it. We couldn&amp;#39;t have done this before the &lt;code&gt;source&lt;/code&gt; branch was created because GitHub doesn&amp;#39;t allow you to delete the last remaining branch. We issue:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git branch -D master
+Deleted branch master (was e161a95).
+lipbite:tscholak.github.io tscholak$ git push origin :master
+To git@github.com:tscholak/tscholak.github.io.git
+ - [deleted]         master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That gets rid of &lt;code&gt;master&lt;/code&gt; both locally and remotely. Next we create a new, orphaned &lt;code&gt;master&lt;/code&gt; branch. In the git jargon, orphaned means not derived or inherited from anything else.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git checkout --orphan master
+Switched to a new branch &amp;#39;master&amp;#39;
+lipbite:tscholak.github.io tscholak$ git reset .
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The latter command is the opposite of &lt;code&gt;git add .&lt;/code&gt; and can reverse its effect. Since &lt;code&gt;master&lt;/code&gt; is empty, it puts the index (the next proposed commit snapshot) into an equally empty state. It remains to clear the working directory:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ rm -r *
+lipbite:tscholak.github.io tscholak$ rm .gitignore
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;master&lt;/code&gt; is now a clean slate. Let us push it to GitHub:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git commit -m &amp;quot;clean slate&amp;quot;
+lipbite:tscholak.github.io tscholak$ git push -u origin master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you go now to GitHub, you will find that &lt;code&gt;master&lt;/code&gt; has been added, and, in contrast to &lt;code&gt;source&lt;/code&gt;, is completely empty. We are done here, we can switch back to the &lt;code&gt;source&lt;/code&gt; branch:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git checkout source
+Switched to branch &amp;#39;source&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Checking out &lt;code&gt;master&lt;/code&gt; into &lt;code&gt;_site&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;On GitHub we have separated the unprocessed web site source and the processed web site code into two different branches. Locally, we will also need to separate them somehow. There is an obvious way to do that. When you run &lt;code&gt;jekyll build&lt;/code&gt; on your Jekyll instance (from within your local &lt;code&gt;~/[username].github.io&lt;/code&gt; directory), the generated site is saved into the &lt;code&gt;~/[username].github.io/_site&lt;/code&gt; folder. This is were we will checkout the &lt;code&gt;master&lt;/code&gt; branch into:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git clone git@github.com:tscholak/tscholak.github.io.git -b master _site
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Next we want to let Jekyll build the web site. To this end, we need to update the &lt;code&gt;baseurl&lt;/code&gt; configuration option (learn about it &lt;a href=&quot;https://byparker.com/blog/2014/clearing-up-confusion-around-baseurl/&quot;&gt;here&lt;/a&gt;) in Jekyll&amp;#39;s &lt;code&gt;_config.yml&lt;/code&gt; file. It needs to read &lt;code&gt;/&lt;/code&gt; because we are deploying a GitHub User Page. On this occasion, we also might want to adjust the &lt;code&gt;url&lt;/code&gt; and the &lt;code&gt;domain_name&lt;/code&gt; variable:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;baseurl&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;/&lt;/span&gt;
+&lt;span class=&quot;l-Scalar-Plain&quot;&gt;domain_name&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;http://tscholak.github.io&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;l-Scalar-Plain&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;http://tscholak.github.io&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We can now build the site:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ jekyll build
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You should preview it in your browser using:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ jekyll serve
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If everything checks out, switch to the &lt;code&gt;_site&lt;/code&gt; folder and push the result to GitHub:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ cd _site
+lipbite:_site tscholak$ ls
+about   css   feed.xml  index.html  jekyll
+lipbite:_site tscholak$ git add .
+lipbite:_site tscholak$ git commit -m &amp;quot;first build&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now browse to &lt;code&gt;http://[username].github.io&lt;/code&gt;. Your web page should be displayed exactly as it has been from your local Jekyll server.&lt;/p&gt;
+
+&lt;h3&gt;Turning off Jekyll on GitHub&lt;/h3&gt;
+
+&lt;p&gt;Since our primary goal is to replace remote by local Jekyll processing, we need to disable the former. The people from GitHub explain how that can be achieved in a &lt;a href=&quot;https://help.github.com/articles/using-jekyll-with-pages/index.html#turning-jekyll-off&quot;&gt;short support article&lt;/a&gt;. Following this article, we first have to add an empty &lt;code&gt;.nojekyll&lt;/code&gt; file to the Jekyll instance:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ touch .nojekyll
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Whenever we invoke &lt;code&gt;jekyll build&lt;/code&gt;, we need Jekyll to copy that file to the &lt;code&gt;_site&lt;/code&gt; folder. Thus, second, to make Jekyll aware of the file, we need to add&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;include&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;.nojekyll&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;to &lt;code&gt;_config.yml&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This concludes the first part of this tutorial. We can now use Jekyll plugins with GitHub Pages. However, with this basic configuration, whenever we wish to deploy changes to the GitHub Page, we need to do four different things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;run &lt;code&gt;git add -A &amp;amp;&amp;amp; git commit -m &amp;quot;[message]&amp;quot; &amp;amp;&amp;amp; git push&lt;/code&gt; in the local Jekyll instance to push the changes to the remote &lt;code&gt;source&lt;/code&gt; branch,&lt;/li&gt;
+&lt;li&gt;invoke &lt;code&gt;jekyll build&lt;/code&gt; to commence processing of the changes,&lt;/li&gt;
+&lt;li&gt;then switch to the &lt;code&gt;_site&lt;/code&gt; directory, and finally&lt;/li&gt;
+&lt;li&gt;run &lt;code&gt;git add -A &amp;amp;&amp;amp; git commit -m &amp;quot;[another_message_referencing_the_first_message]&amp;quot; &amp;amp;&amp;amp; git push&lt;/code&gt; again from there to push also the regenerated static files.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Note that, in step 1, Git ignores everything under &lt;code&gt;_site&lt;/code&gt;, because that folder is not tracked by default (have a look into &lt;code&gt;.gitignore&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Having to complete four steps every time you make a change may be a nuisance to you. It certainly is for me. With automation, we can replace the steps 2 to 4 by a single command: &lt;code&gt;grunt deploy&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2&gt;Set up Bower&lt;/h2&gt;
+
+&lt;p&gt;Before I talk about Grunt, I want to introduce you to Bower, the packet manager. I use Bower to manage vendor provided software, in particular, jQuery. Setting up Bower before we turn to Grunt has the advantage to have Bower tied neatly into Grunt from the very beginning. Indeed, Bower and Grunt play very well together. Grunt is ideal for making sure that the Jekyll build is not polluted by dead weight coming with third-party software.&lt;/p&gt;
+
+&lt;p&gt;Bower is installed using npm:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:~ tscholak$ sudo npm install -g bower
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It is configured using the &lt;code&gt;bower init&lt;/code&gt; command:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ bower init
+? name: tscholak.github.io
+? version: 0.0.0
+? description: Meticulous Disorder
+? main file: 
+? what types of modules does this package expose?: node
+? keywords: 
+? authors: Torsten Scholak &amp;lt;torsten.scholak@googlemail.com&amp;gt;
+? license: MIT
+? homepage: https://github.com/tscholak/tscholak.github.io
+? set currently installed components as dependencies?: Yes
+? add commonly ignored files to ignore list?: Yes
+? would you like to mark this package as private which prevents it from being accidentally published to the registry?: Yes
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Answering these questions in the above way lets you end up with a &lt;code&gt;bower.json&lt;/code&gt; file native to the &lt;code&gt;tscholak.github.io&lt;/code&gt; directory with the following content:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-json&quot; data-lang=&quot;json&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;name&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;tscholak.github.io&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;version&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;0.0.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;homepage&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://github.com/tscholak/tscholak.github.io&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;authors&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;Torsten Scholak &amp;lt;torsten.scholak@googlemail.com&amp;gt;&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;description&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Meticulous Disorder&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;moduleType&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;node&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;license&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;MIT&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;private&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;ignore&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;**/.*&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;node_modules&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;bower_components&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;test&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;tests&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Keep it like that (or similar). With these settings in place, packages can be installed from within the &lt;code&gt;tscholak.github.io&lt;/code&gt; directory with &lt;code&gt;bower install&lt;/code&gt;. So far, on my page, I use &lt;a href=&quot;http://jquery.com&quot;&gt;jQuery&lt;/a&gt;, &lt;a href=&quot;http://jqueryui.com&quot;&gt;jQuery UI&lt;/a&gt;, &lt;a href=&quot;http://fitvidsjs.com&quot;&gt;FitVids.js&lt;/a&gt;, and &lt;a href=&quot;http://letteringjs.com&quot;&gt;Lettering.js&lt;/a&gt;. Let&amp;#39;s pretend you also have a need for these:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ bower install jquery jquery-ui fitvids letteringjs --save
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The components (and their auxiliary payload) are installed into &lt;code&gt;./bower_components&lt;/code&gt;. Since the Bower components, including &lt;code&gt;bower.json&lt;/code&gt;, should not end up on-line on your web page, we need to exclude them from the Jekyll build. Edit &lt;code&gt;_config.yml&lt;/code&gt; and add:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;exclude&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;bower_components&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;bower.json&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Git should also be unaware of Bower. We can make it ignore the Bower components by adding the following line to the &lt;code&gt;.gitignore&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;/bower_components/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Set up npm&lt;/h2&gt;
+
+&lt;p&gt;npm, the package manager of the Node.js project, is needed for Grunt. Its configuration is similar to that of Bower. First we execute:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ npm init
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Like Bower, npm will ask you a couple of question. I answered them like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;name: (tscholak.github.io) 
+version: (1.0.0) 0.0.0
+description: Meticulous Disorder
+entry point: (index.js) _site/index.html
+test command: 
+git repository: (https://github.com/tscholak/tscholak.github.io.git) 
+keywords: 
+author: Torsten Scholak &amp;lt;torsten.scholak@googlemail.com&amp;gt;
+license: (ISC) MIT
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It should be easy for you to find the answers that fit your case. They will be saved to the file &lt;code&gt;package.json&lt;/code&gt; in your &lt;code&gt;[username].github.io&lt;/code&gt; folder. Like Bower components, Node.js modules should not end up on the web. These files can be excluded from the Jekyll build by adding&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;  - &amp;quot;node_modules&amp;quot;
+  - &amp;quot;package.json&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;to the &lt;code&gt;exclude&lt;/code&gt; section of your &lt;code&gt;_config.yml&lt;/code&gt; file. Furthermore, Git will ignore the Node.js files only if you add &lt;code&gt;/node_modules/&lt;/code&gt; to &lt;code&gt;.gitignore&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2&gt;Set up Grunt&lt;/h2&gt;
+
+&lt;p&gt;We are now finally ready to set up the Grunt build system. First, we install a system-wide &lt;a href=&quot;https://www.npmjs.com/package/grunt-cli#readme&quot;&gt;command line interface for grunt&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ sudo npm install -g grunt-cli
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then we install Grunt and a few of its plugins into our project folder:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ npm install \
+&amp;gt;   grunt \
+&amp;gt;   grunt-bower-task \
+&amp;gt;   grunt-contrib-connect \
+&amp;gt;   grunt-contrib-copy \
+&amp;gt;   grunt-contrib-watch \
+&amp;gt;   grunt-exec \
+&amp;gt;   grunt-build-control --save-dev
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let me quickly iterate on all these packages:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.npmjs.com/package/grunt-bower-task#readme&quot;&gt;grunt-bower-task&lt;/a&gt; lets you automatize the installation of Bower packages. I&amp;#39;m not using it yet, but plan to do so. A possible use case is discussed &lt;a href=&quot;https://www.erianna.com/better-asset-management-with-bower#integrating-bower-with-grunt&quot;&gt;here&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.npmjs.com/package/grunt-contrib-connect#readme&quot;&gt;grunt-contrib-connect&lt;/a&gt; lets you start a web server. It can replace &lt;code&gt;jekyll serve&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.npmjs.com/package/grunt-contrib-copy#readme&quot;&gt;grunt-contrib-copy&lt;/a&gt; can be used to copy files and folders.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.npmjs.com/package/grunt-contrib-watch#readme&quot;&gt;grunt-contrib-watch&lt;/a&gt; runs a predefined task whenever it detects changes in the watched files and folders. For instance, in combination with a build task, it can replace &lt;code&gt;jekyll build --watch&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.npmjs.com/package/grunt-exec#readme&quot;&gt;grunt-exec&lt;/a&gt; is a simple plugin for executing external commands.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.npmjs.com/package/grunt-build-control#readme&quot;&gt;grunt-build-control&lt;/a&gt; is a brilliant plugin that helps you deploy built code to GitHub.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The setup of Grunt is concluded by adding a &lt;a href=&quot;http://gruntjs.com/getting-started#the-gruntfile&quot;&gt;Gruntfile&lt;/a&gt; to our project. Our Gruntfile will be named &lt;code&gt;Gruntfile.js&lt;/code&gt; and will be written in JavaScript. We exclude it from the Jekyll build by adding&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Gruntfile.js&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;to &lt;code&gt;_config.yml&lt;/code&gt; in the exclude section. The contents of the &lt;code&gt;Gruntfile.js&lt;/code&gt; should look like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;initConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;jquery&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;expand&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;cwd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;bower_components/jquery/dist/&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;jquery.min.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vendor/js/&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;jqueryui&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;expand&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;cwd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;bower_components/jquery-ui/&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;jquery-ui.min.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vendor/js/&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;fitvids&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;expand&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;cwd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;bower_components/fitvids/&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;jquery.fitvids.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vendor/js/&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;lettering&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;expand&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;cwd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;bower_components/letteringjs/&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;jquery.lettering.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vendor/js/&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;exec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;jekyll&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;jekyll build --trace&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;jekyll_drafts&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;jekyll build --trace --drafts&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;watch&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;_config.yml&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;_drafts/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;_includes/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;_layouts/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;_plugins/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;_posts/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;_sass/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;assets/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;*.html&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;*.md&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;s1&quot;&gt;&amp;#39;feed.xml&amp;#39;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;tasks&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;exec:jekyll_drafts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;      
+        &lt;span class=&quot;nx&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;livereload&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;server&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;base&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;_site&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;livereload&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;buildcontrol&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;dir&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;_site&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;commit&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Built %sourceName% from commit %sourceCommit% on branch %sourceBranch%&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;pages&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;remote&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;git@github.com:tscholak/tscholak.github.io.git&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;branch&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;master&amp;#39;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadNpmTasks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;grunt-bower-task&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadNpmTasks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;grunt-contrib-connect&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadNpmTasks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;grunt-contrib-copy&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadNpmTasks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;grunt-contrib-watch&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadNpmTasks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;grunt-exec&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadNpmTasks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;grunt-build-control&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;registerTask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;build&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;copy&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;exec:jekyll&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;registerTask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;build_drafts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;copy&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;exec:jekyll_drafts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;registerTask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;serve&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;build_drafts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;connect:server&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;watch&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;registerTask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;deploy&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;build&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;buildcontrol:pages&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;registerTask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;deploy&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let me attempt a short explanation for each of the tasks defined in that file:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;grunt connect:server&lt;/code&gt; starts the web server from the grunt-contrib-connect plugin. According to the above options, the web server responds on port 4000 and serves files from the &lt;code&gt;_site&lt;/code&gt; directory.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;grunt copy&lt;/code&gt; copies the specified Bower JavaScript components to the &lt;code&gt;vendor/js&lt;/code&gt; directory. That directory will be copied as is by Jekyll to &lt;code&gt;_site&lt;/code&gt;. It doesn&amp;#39;t make sense to push &lt;code&gt;vendor&lt;/code&gt; to the &lt;code&gt;source&lt;/code&gt; branch. You may exclude it from Git by adding &lt;code&gt;/vendor/&lt;/code&gt; to an empty line in the &lt;code&gt;.gitignore&lt;/code&gt; file.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;grunt exec:jekyll&lt;/code&gt; calls &lt;code&gt;jekyll build&lt;/code&gt; to build the site into &lt;code&gt;_site&lt;/code&gt; directory. &lt;code&gt;grunt exec:jekyll_drafts&lt;/code&gt; also includes documents in the &lt;code&gt;_drafts&lt;/code&gt; folder into the build.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;grunt watch&lt;/code&gt; calls &lt;code&gt;grunt exec:jekyll_drafts&lt;/code&gt; upon source file changes. Which files are watched is specified with the &lt;code&gt;files&lt;/code&gt; option. The &lt;code&gt;livereload&lt;/code&gt; option causes your web browser to refresh the site after a rebuild is triggered.&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;buildcontrol:pages&lt;/code&gt; subtask deploys the &lt;code&gt;_site&lt;/code&gt; directory to the &lt;code&gt;master&lt;/code&gt; branch on GitHub. Safety checks to make sure the source repository is clean, so that built code always corresponds to a source code commit. (i think, that means that the content of &lt;code&gt;_site&lt;/code&gt; has to correspond always to a &lt;code&gt;jekyll build&lt;/code&gt; run on the last commit of the &lt;code&gt;source&lt;/code&gt; branch.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The last couple of lines register new aliases for a task or a list of tasks that are executed in the order of their appearance.&lt;/p&gt;
+
+&lt;h2&gt;Test Grunt configuration&lt;/h2&gt;
+
+&lt;p&gt;If everything is according to plan, then Grunt should now be able build and deploy the Jekyll page. Let us test these functions. Run:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ grunt -v build
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Have a look at the verbose output and look for errors. If everything checks out, try:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ grunt -v serve
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and fire the page up in your browser. If you are satisfied with the result, abort the server and run the following:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git add -A 
+lipbite:tscholak.github.io tscholak$ git commit -m &amp;quot;[message]&amp;quot;
+lipbite:tscholak.github.io tscholak$ git push origin source
+lipbite:tscholak.github.io tscholak$ grunt -v deploy
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And boom, your static page is on-line on GitHub Pages!&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;ve now got everything we came for. This setup allows you to build your Jekyll site with whatever plugin (or Ruby code) you like. The site is generated locally and then deployed to GitHub.&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h1&gt;Further Remark(s)&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;If you are working in Sublime Text like me, you may want to install &lt;a href=&quot;https://github.com/tvooo/sublime-grunt&quot;&gt;sublime-grunt&lt;/a&gt;, available via Package Control.&lt;/li&gt;
+&lt;li&gt;tbc ...&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Fri, 06 Mar 2015 19:00:00 -0500</pubDate>
+        <link>http://tscholak.github.io//update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html</guid>
+        
+        
+        <category>update</category>
+        
+        <category>guide</category>
+        
+        <category>jekyll</category>
+        
+      </item>
     
       <item>
         <title>Finding the right fonts</title>

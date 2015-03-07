@@ -8,7 +8,15 @@
     <title>Meticulous Disorder</title>
     <link>http://tscholak.github.io</link>
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
-    <pubDate>Sun, 01 Mar 2015 19:00:00 -0500</pubDate>
+    <pubDate>Fri, 06 Mar 2015 19:00:00 -0500</pubDate>
+    <item>
+      <title>Jekyll and GitHub Pages</title>
+      <link>http://tscholak.github.io/update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html</link>
+      <description>&lt;p&gt;By the time you read this, I will have tossed my old obsolete &lt;a href=&quot;wordpress&quot;&gt;Wordpress website&lt;/a&gt; in favor of this one, a modern &lt;a href=&quot;jekyll&quot;&gt;Jekyll&lt;/a&gt; powered &lt;a href=&quot;github&quot;&gt;GitHub&lt;/a&gt; page. I have started from scratch. The old site didn&amp;#39;t have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. I&amp;#39;m sure. This article is just the beginning. It&amp;#39;s like ... me and blogging forever ... and ever. A hundred years me and blogging ... about some things. Something all day long. &lt;a href=&quot;http://www.adultswim.com/videos/rick-and-morty/&quot;&gt;Forever a hundred times ...&lt;/a&gt; &lt;/p&gt;
+</description>
+      <pubDate>Fri, 06 Mar 2015 19:00:00 -0500</pubDate>
+      <dc:date>2015-03-06T19:00:00-05:00</dc:date>
+    </item>
     <item>
       <title>Finding the right fonts</title>
       <link>http://tscholak.github.io/update/2015/03/01/finding-the-right-fonts.html</link>
@@ -25,6 +33,6 @@
       <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-03-01T19:00:00-05:00</dc:date>
+    <dc:date>2015-03-06T19:00:00-05:00</dc:date>
   </channel>
 </rss>

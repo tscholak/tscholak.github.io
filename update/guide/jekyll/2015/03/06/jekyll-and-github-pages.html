@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>Meticulous Disorder by Torsten Scholak</title>
+    <meta name="description" content="a hodgepodge of theoretical quantum physics, computing, and typophilia, buried under a thick layer of forgettable kerfuffle" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="/assets/css/jquery-ui-1.11.3.min.css" /> -->
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <script type="text/javascript" src="/vendor/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.lettering.js"></script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-60317908-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+  </head>
+
+  <body class="post-template">
+
+    <header class="main-header post-head no-cover">
+  <nav class="main-nav  clearfix">
+    <a class="back-button icon-arrow-left" href="/">Home</a>
+    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+  </nav>
+</header>
+
+<main class="content" role="main">
+
+  <article class="post">
+
+    <header class="post-header">
+      <h1 class="post-title">Jekyll and GitHub Pages</h1>
+      <section class="post-meta">                
+        <time class="post-date" datetime="2015-03-06">06 Mar 2015</time>
+         
+          on update, guide, and jekyll 
+        
+      </section>
+    </header>
+
+    <!-- <header class="post-header">
+      <a id="blog-logo" href="http://tscholak.github.io">
+        
+          <span class="blog-title">Meticulous Disorder</span>
+         
+      </a>
+    </header> -->
+    
+    <!-- <span class="post-meta">
+      <time datetime="2015-03-06">06 Mar 2015</time>
+       
+        on update, guide, and jekyll 
+      
+    </span> -->
+
+    <!-- <h1 class="post-title">Jekyll and GitHub Pages</h1> -->
+
+    <section class="post-content">
+      <p>By the time you read this, I will have tossed my old obsolete <a href="wordpress">Wordpress website</a> in favor of this one, a modern <a href="jekyll">Jekyll</a> powered <a href="github">GitHub</a> page. I have started from scratch. The old site didn&#39;t have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. I&#39;m sure. This article is just the beginning. It&#39;s like ... me and blogging forever ... and ever. A hundred years me and blogging ... about some things. Something all day long. <a href="http://www.adultswim.com/videos/rick-and-morty/">Forever a hundred times ...</a> </p>
+
+<p>Err, ok. So, what are Jekyll and GitHub, and why should <em>you</em> care?</p>
+
+<p>Let&#39;s first talk about Jekyll. Jekyll is a static blog generator. And it is awesome. Well, that seems to be the consensus of an <a href="jekyll-examples">ever-growing hacker crowd</a> on the web that uses Jekyll for blogging. Indeed, after the initial hassle to set it up and to customize it to your liking, it allows for a very efficient work-flow. I am writing these lines in <a href="sublime">Sublime</a> on my laptop using the <a href="markdown">Markdown</a> markup language. Later, when I&#39;m done (i.e., from your point of view, in the past), I invoke a short series of terminal commands to submit the article to my blog, where it immediately appears for everybody to read. The work-flow is similar to writing, compiling, and deploying program code.</p>
+
+<p><img src="/assets/images/sublime.jpg" alt="working hard on this blog post" class="full-img"></p>
+
+<p><a href="gh-pages">GitHub Pages</a> are public web pages hosted by GitHub, a private Git repository hosting service. Word has it that GitHub is awesome, too. Several reasons for that come to mind. First, hosting on GitHub is free. If you can live with a static web page and the github.io domain, then GitHub is definitely worth a look. Second, the setup of a GitHub page is fairly easy. If you are familiar with the process of setting up GitHub repositories, then you already know everything you need to know about GitHub Pages. And third, <a href="gh-pages-jekyll">GitHub runs Jekyll</a> automatically on your uploaded Markdown code. It converts it into shiny static HTML that&#39;s on-line instantly. All this magic would not be possible without a few limitations, though. For instance, for security reasons, GitHub supports only a few hand-selected Jekyll plugins. Check <a href="gh-jekyll-supported">here</a> to see if your favorite Jekyll plugin is among them. If it&#39;s not, then think for a moment or two if you truly need it. In the affirmative, I&#39;m afraid, you will have to resort to some nifty shenanigans to get what you want. This is the path I recently ventured on, and, for what it&#39;s worth, I dedicate the rest of this article to outlining my solution.</p>
+
+<hr>
+
+<h1>Unsupported Jekyll plugins</h1>
+
+<p>So, how exactly can you use custom Jekyll plugins on GitHub Pages?</p>
+
+<p>There is of course ample prior work on that subject, and I make no secret that I borrowed heavily from <a href="http://www.aymerick.com/2014/07/22/jekyll-github-pages-bower-bootstrap.html">earlier</a> <a href="http://james-oldfield.co/blog/jekyll-plugins-with-gh-pages/">howtos</a> <a href="http://paulstamatiou.com/responsive-retina-blog-development-part-1/">and</a> <a href="https://blog.5apps.com/2014/05/29/deploying-static-apps-with-grunt-build-control-on-5apps-deploy.html">tutorials</a> in order to combine them into something elegant that works for me <em>personally</em>. However, by my estimates, there is a finite chance that my solution is the right one for you, too. This is one reason I decided to write it up. The other reason is that I want to help out future me who indubitably will have forgotten all this stuff.</p>
+
+<p>At the heart of the solution is <em>local</em> Jekyll processing. Yes, we are going to opt out of the awesome Jekyll processing on GitHub. We do this despite the fact that local Jekyll processing is, done wrong, unbearably tedious. The good news is that there exist sophisticated automation tools that will help to keep us calm.</p>
+
+<h2>Bower and Grunt to the rescue</h2>
+
+<p>Below, we discuss two automation tools, a build tool called Grunt and a package manager called Bower.</p>
+
+<p><a href="http://bower.io">Bower</a> is a lightweight package management system for the web that depends on <a href="http://nodejs.org">Node.js</a> and <a href="https://www.npmjs.com">npm</a>, the package manager for Node.js. Bower helps with installing vendor provided client-side scripts, for instance <a href="http://jquery.com">jQuery</a>, <a href="http://getbootstrap.com">Bootstrap</a>, or <a href="http://handlebarsjs.com">Handlebars</a>. This is software your web site will most likely be built on. </p>
+
+<p><a href="http://gruntjs.com">Grunt</a> is an automation tool that assists you with repetitive tasks, i.e. tasks like building and deploying a Jekyll powered web page. It fulfills a similar purpose as that of <a href="http://www.gnu.org/software/make/">GNU make</a>. The similarity is apparent from the way Grunt and GNU make are fed instructions. <code>make</code> executes rules and commands from a <code>Makefile</code>, and <code>grunt</code> gets its instructions from a <code>Gruntfile</code>. However, the syntax of these files is completely different. But more about that later.</p>
+
+<p>Bower and Grunt are part of the illustrious <a href="http://yeoman.io">Yeoman work-flow</a> that also includes a CLI tool called <a href="https://github.com/yeoman/yo">yo</a>. We won&#39;t be needing yo in the following, though.</p>
+
+<h2>The basics</h2>
+
+<p>The first step is to install Jekyll and Node.js on your computer. I am running Mac OS X and the <a href="https://www.macports.org">MacPorts</a> package management system on mine. Although my notes address this particular environment, you should be able to make use of most of the instructions also on other platforms and with different package managers. To this end, you will need to work in the terminal. And, you will need root privileges.</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:~ tscholak$ sudo port selfupdate
+lipbite:~ tscholak$ sudo port install py27-pygments nodejs npm
+lipbite:~ tscholak$ sudo gem install \
+&gt;   github-pages \
+&gt;   jekyll \
+&gt;   jekyll-redirect-from \
+&gt;   jekyll-scholar \
+&gt;   kramdown \
+&gt;   rdiscount \
+&gt;   rouge \
+&gt;   redcarpet
+</code></pre></div>
+<p>Running these commands updates the MacPorts ports tree, installs Node.js with npm, and prepares Jekyll with some extensions. (Mac OS X Yosemite ships with <a href="https://www.ruby-lang.org/en/">Ruby 2.0</a> as the default, there is no need to mess with that.) All these packages are installed system-wide. This may not be what you want, especially if you <a href="http://stackoverflow.com/questions/4938592/how-why-does-npm-recommend-not-running-as-root#answers">don&#39;t trust unsigned software</a>.</p>
+
+<p>The <a href="https://github.com/inukshuk/jekyll-scholar">Jekyll-Scholar</a> plugin is an awesome way to create bibliographies. I use it <a href="/work.html#publications">here</a>. It is not available on GitHub Pages and may be reason enough for you to switch to local processing.</p>
+
+<p>Let us now create a new, empty Jekyll instance somewhere in the home folder:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:~ tscholak$ jekyll new tscholak.github.io
+New jekyll site installed in /Users/tscholak/tscholak.github.io.
+</code></pre></div>
+<p>I chose the name <code>tscholak.github.io</code> because it&#39;s the address of my personal page (this page) and also the name of its GitHub repository. For you, it will be <code>[username].github.io</code>, where <code>[username]</code> is your GitHub user name. Next we create an empty git repository in that folder and add all existing files to it:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:~ tscholak$ cd tscholak.github.io
+lipbite:tscholak.github.io tscholak$ git init
+Initialized empty Git repository in /Users/tscholak/tscholak.github.io /.git/
+lipbite:tscholak.github.io tscholak$ git add .
+lipbite:tscholak.github.io tscholak$ git commit -m &quot;Generated by Jekyll&quot;
+lipbite:tscholak.github.io tscholak$ git remote add origin git@github.com:tscholak/tscholak.github.io.git
+</code></pre></div>
+<p>The last line connects the local repository to a remote one. In this example, the remote is my GitHub Pages repository. It is given the label <code>origin</code>.</p>
+
+<p>GitHub expects to find the processed, static HTML code in the <code>master</code> branch of the repository. That means whatever is in <code>master</code> will be displayed at <code>http://tscholak.github.io</code>. All other branches are ignored. We can thus use another branch, say, <code>source</code>, to store the source code of the page. This is the subject of the next section.</p>
+
+<h3>Set up the <code>source</code> branch</h3>
+
+<p>First, we have to create the <code>source</code> branch. We use the local copy of <code>master</code> as a starting point:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ git checkout -b source master
+Switched to a new branch ‘source&#39;
+</code></pre></div>
+<p>Calling <code>git checkout</code> with the argument <code>-b</code> first creates and then switches to the new branch. It is the same as first calling <code>git branch</code> and then git-checking it out.</p>
+
+<p>Now is a good time to make sure that your remote repository <code>[username].github.io</code> actually exists on GitHub. If it does not, go to <code>https://github.com/[username]</code> and <a href="https://help.github.com/articles/creating-a-new-repository/">create it</a>. Furthermore, in order to establish a secure connection between your computer and GitHub, you have to <a href="https://help.github.com/articles/keeping-your-ssh-keys-and-application-access-tokens-safe/">review your SSH keys</a> and, if necessary, <a href="https://help.github.com/articles/generating-ssh-keys/">add your local key to your GitHub account</a>. You will also need to configure the <code>ssh-agent</code> program:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ eval &quot;$(ssh-agent -s)&quot;
+Agent pid 9829
+lipbite:tscholak.github.io tscholak$ ssh-add ~/.ssh/id_rsa
+Identity added: /Users/tscholak/.ssh/id_rsa (/Users/tscholak/.ssh/id_rsa)
+</code></pre></div>
+<p><a href="https://en.wikipedia.org/wiki/Ssh-agent">ssh-agent</a> is a secure key chain for your private SSH keys. It comes with your Mac. The last command adds the private RSA key in your home folder to the chain. You may be asked to enter its passphrase.</p>
+
+<p>Let us now test the connection by pushing the <code>source</code> branch to <code>origin</code>:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ git push -u origin source
+Counting objects: 23, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (21/21), done.
+Writing objects: 100% (23/23), 8.55 KiB | 0 bytes/s, done.
+Total 23 (delta 1), reused 0 (delta 0)
+To git@github.com:tscholak/tscholak.github.io.git
+ * [new branch]      source -&gt; source
+Branch source set up to track remote branch source from origin.
+</code></pre></div>
+<p>Your output should look like this or similar. Now go to GitHub and verify that your Jekyll instance has found its way to the server. Since you are there, I recommend making the <code>source</code> branch the default on GitHub. Consult <a href="https://help.github.com/articles/setting-the-default-branch/">this link</a> for instructions.</p>
+
+<h3>Set up the <code>master</code> branch</h3>
+
+<p>Next we need to wipe the <code>master</code> branch. The most thorough way to do this is to first delete and then to recreate it. We couldn&#39;t have done this before the <code>source</code> branch was created because GitHub doesn&#39;t allow you to delete the last remaining branch. We issue:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ git branch -D master
+Deleted branch master (was e161a95).
+lipbite:tscholak.github.io tscholak$ git push origin :master
+To git@github.com:tscholak/tscholak.github.io.git
+ - [deleted]         master
+</code></pre></div>
+<p>That gets rid of <code>master</code> both locally and remotely. Next we create a new, orphaned <code>master</code> branch. In the git jargon, orphaned means not derived or inherited from anything else.</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ git checkout --orphan master
+Switched to a new branch &#39;master&#39;
+lipbite:tscholak.github.io tscholak$ git reset .
+</code></pre></div>
+<p>The latter command is the opposite of <code>git add .</code> and can reverse its effect. Since <code>master</code> is empty, it puts the index (the next proposed commit snapshot) into an equally empty state. It remains to clear the working directory:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ rm -r *
+lipbite:tscholak.github.io tscholak$ rm .gitignore
+</code></pre></div>
+<p><code>master</code> is now a clean slate. Let us push it to GitHub:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ git commit -m &quot;clean slate&quot;
+lipbite:tscholak.github.io tscholak$ git push -u origin master
+</code></pre></div>
+<p>If you go now to GitHub, you will find that <code>master</code> has been added, and, in contrast to <code>source</code>, is completely empty. We are done here, we can switch back to the <code>source</code> branch:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ git checkout source
+Switched to branch &#39;source&#39;
+</code></pre></div>
+<h3>Checking out <code>master</code> into <code>_site</code></h3>
+
+<p>On GitHub we have separated the unprocessed web site source and the processed web site code into two different branches. Locally, we will also need to separate them somehow. There is an obvious way to do that. When you run <code>jekyll build</code> on your Jekyll instance (from within your local <code>~/[username].github.io</code> directory), the generated site is saved into the <code>~/[username].github.io/_site</code> folder. This is were we will checkout the <code>master</code> branch into:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ git clone git@github.com:tscholak/tscholak.github.io.git -b master _site
+</code></pre></div>
+<p>Next we want to let Jekyll build the web site. To this end, we need to update the <code>baseurl</code> configuration option (learn about it <a href="https://byparker.com/blog/2014/clearing-up-confusion-around-baseurl/">here</a>) in Jekyll&#39;s <code>_config.yml</code> file. It needs to read <code>/</code> because we are deploying a GitHub User Page. On this occasion, we also might want to adjust the <code>url</code> and the <code>domain_name</code> variable:</p>
+<div class="highlight"><pre><code class="language-yaml" data-lang="yaml"><span class="l-Scalar-Plain">baseurl</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/</span>
+<span class="l-Scalar-Plain">domain_name</span><span class="p-Indicator">:</span> <span class="s">&#39;http://tscholak.github.io&#39;</span>
+<span class="l-Scalar-Plain">url</span><span class="p-Indicator">:</span> <span class="s">&#39;http://tscholak.github.io&#39;</span>
+</code></pre></div>
+<p>We can now build the site:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ jekyll build
+</code></pre></div>
+<p>You should preview it in your browser using:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ jekyll serve
+</code></pre></div>
+<p>If everything checks out, switch to the <code>_site</code> folder and push the result to GitHub:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ cd _site
+lipbite:_site tscholak$ ls
+about   css   feed.xml  index.html  jekyll
+lipbite:_site tscholak$ git add .
+lipbite:_site tscholak$ git commit -m &quot;first build&quot;
+</code></pre></div>
+<p>Now browse to <code>http://[username].github.io</code>. Your web page should be displayed exactly as it has been from your local Jekyll server.</p>
+
+<h3>Turning off Jekyll on GitHub</h3>
+
+<p>Since our primary goal is to replace remote by local Jekyll processing, we need to disable the former. The people from GitHub explain how that can be achieved in a <a href="https://help.github.com/articles/using-jekyll-with-pages/index.html#turning-jekyll-off">short support article</a>. Following this article, we first have to add an empty <code>.nojekyll</code> file to the Jekyll instance:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ touch .nojekyll
+</code></pre></div>
+<p>Whenever we invoke <code>jekyll build</code>, we need Jekyll to copy that file to the <code>_site</code> folder. Thus, second, to make Jekyll aware of the file, we need to add</p>
+<div class="highlight"><pre><code class="language-yaml" data-lang="yaml"><span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span>
+  <span class="p-Indicator">-</span> <span class="s">&quot;.nojekyll&quot;</span>
+</code></pre></div>
+<p>to <code>_config.yml</code>.</p>
+
+<p>This concludes the first part of this tutorial. We can now use Jekyll plugins with GitHub Pages. However, with this basic configuration, whenever we wish to deploy changes to the GitHub Page, we need to do four different things:</p>
+
+<ol>
+<li>run <code>git add -A &amp;&amp; git commit -m &quot;[message]&quot; &amp;&amp; git push</code> in the local Jekyll instance to push the changes to the remote <code>source</code> branch,</li>
+<li>invoke <code>jekyll build</code> to commence processing of the changes,</li>
+<li>then switch to the <code>_site</code> directory, and finally</li>
+<li>run <code>git add -A &amp;&amp; git commit -m &quot;[another_message_referencing_the_first_message]&quot; &amp;&amp; git push</code> again from there to push also the regenerated static files.</li>
+</ol>
+
+<p>Note that, in step 1, Git ignores everything under <code>_site</code>, because that folder is not tracked by default (have a look into <code>.gitignore</code>).</p>
+
+<p>Having to complete four steps every time you make a change may be a nuisance to you. It certainly is for me. With automation, we can replace the steps 2 to 4 by a single command: <code>grunt deploy</code>.</p>
+
+<h2>Set up Bower</h2>
+
+<p>Before I talk about Grunt, I want to introduce you to Bower, the packet manager. I use Bower to manage vendor provided software, in particular, jQuery. Setting up Bower before we turn to Grunt has the advantage to have Bower tied neatly into Grunt from the very beginning. Indeed, Bower and Grunt play very well together. Grunt is ideal for making sure that the Jekyll build is not polluted by dead weight coming with third-party software.</p>
+
+<p>Bower is installed using npm:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:~ tscholak$ sudo npm install -g bower
+</code></pre></div>
+<p>It is configured using the <code>bower init</code> command:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ bower init
+? name: tscholak.github.io
+? version: 0.0.0
+? description: Meticulous Disorder
+? main file: 
+? what types of modules does this package expose?: node
+? keywords: 
+? authors: Torsten Scholak &lt;torsten.scholak@googlemail.com&gt;
+? license: MIT
+? homepage: https://github.com/tscholak/tscholak.github.io
+? set currently installed components as dependencies?: Yes
+? add commonly ignored files to ignore list?: Yes
+? would you like to mark this package as private which prevents it from being accidentally published to the registry?: Yes
+</code></pre></div>
+<p>Answering these questions in the above way lets you end up with a <code>bower.json</code> file native to the <code>tscholak.github.io</code> directory with the following content:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tscholak.github.io&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.0.0&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/tscholak/tscholak.github.io&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;authors&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;Torsten Scholak &lt;torsten.scholak@googlemail.com&gt;&quot;</span>
+  <span class="p">],</span>
+  <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Meticulous Disorder&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;moduleType&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;node&quot;</span>
+  <span class="p">],</span>
+  <span class="nt">&quot;license&quot;</span><span class="p">:</span> <span class="s2">&quot;MIT&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;private&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="nt">&quot;ignore&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;**/.*&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;node_modules&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bower_components&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tests&quot;</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Keep it like that (or similar). With these settings in place, packages can be installed from within the <code>tscholak.github.io</code> directory with <code>bower install</code>. So far, on my page, I use <a href="http://jquery.com">jQuery</a>, <a href="http://jqueryui.com">jQuery UI</a>, <a href="http://fitvidsjs.com">FitVids.js</a>, and <a href="http://letteringjs.com">Lettering.js</a>. Let&#39;s pretend you also have a need for these:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ bower install jquery jquery-ui fitvids letteringjs --save
+</code></pre></div>
+<p>The components (and their auxiliary payload) are installed into <code>./bower_components</code>. Since the Bower components, including <code>bower.json</code>, should not end up on-line on your web page, we need to exclude them from the Jekyll build. Edit <code>_config.yml</code> and add:</p>
+<div class="highlight"><pre><code class="language-yaml" data-lang="yaml"><span class="l-Scalar-Plain">exclude</span><span class="p-Indicator">:</span>
+  <span class="p-Indicator">-</span> <span class="s">&quot;bower_components&quot;</span>
+  <span class="p-Indicator">-</span> <span class="s">&quot;bower.json&quot;</span>
+</code></pre></div>
+<p>Git should also be unaware of Bower. We can make it ignore the Bower components by adding the following line to the <code>.gitignore</code> file:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">/bower_components/
+</code></pre></div>
+<h2>Set up npm</h2>
+
+<p>npm, the package manager of the Node.js project, is needed for Grunt. Its configuration is similar to that of Bower. First we execute:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ npm init
+</code></pre></div>
+<p>Like Bower, npm will ask you a couple of question. I answered them like this:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">name: (tscholak.github.io) 
+version: (1.0.0) 0.0.0
+description: Meticulous Disorder
+entry point: (index.js) _site/index.html
+test command: 
+git repository: (https://github.com/tscholak/tscholak.github.io.git) 
+keywords: 
+author: Torsten Scholak &lt;torsten.scholak@googlemail.com&gt;
+license: (ISC) MIT
+</code></pre></div>
+<p>It should be easy for you to find the answers that fit your case. They will be saved to the file <code>package.json</code> in your <code>[username].github.io</code> folder. Like Bower components, Node.js modules should not end up on the web. These files can be excluded from the Jekyll build by adding</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">  - &quot;node_modules&quot;
+  - &quot;package.json&quot;
+</code></pre></div>
+<p>to the <code>exclude</code> section of your <code>_config.yml</code> file. Furthermore, Git will ignore the Node.js files only if you add <code>/node_modules/</code> to <code>.gitignore</code>.</p>
+
+<h2>Set up Grunt</h2>
+
+<p>We are now finally ready to set up the Grunt build system. First, we install a system-wide <a href="https://www.npmjs.com/package/grunt-cli#readme">command line interface for grunt</a>:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ sudo npm install -g grunt-cli
+</code></pre></div>
+<p>Then we install Grunt and a few of its plugins into our project folder:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ npm install \
+&gt;   grunt \
+&gt;   grunt-bower-task \
+&gt;   grunt-contrib-connect \
+&gt;   grunt-contrib-copy \
+&gt;   grunt-contrib-watch \
+&gt;   grunt-exec \
+&gt;   grunt-build-control --save-dev
+</code></pre></div>
+<p>Let me quickly iterate on all these packages:</p>
+
+<ul>
+<li><a href="https://www.npmjs.com/package/grunt-bower-task#readme">grunt-bower-task</a> lets you automatize the installation of Bower packages. I&#39;m not using it yet, but plan to do so. A possible use case is discussed <a href="https://www.erianna.com/better-asset-management-with-bower#integrating-bower-with-grunt">here</a>.</li>
+<li><a href="https://www.npmjs.com/package/grunt-contrib-connect#readme">grunt-contrib-connect</a> lets you start a web server. It can replace <code>jekyll serve</code>.</li>
+<li><a href="https://www.npmjs.com/package/grunt-contrib-copy#readme">grunt-contrib-copy</a> can be used to copy files and folders.</li>
+<li><a href="https://www.npmjs.com/package/grunt-contrib-watch#readme">grunt-contrib-watch</a> runs a predefined task whenever it detects changes in the watched files and folders. For instance, in combination with a build task, it can replace <code>jekyll build --watch</code>.</li>
+<li><a href="https://www.npmjs.com/package/grunt-exec#readme">grunt-exec</a> is a simple plugin for executing external commands.</li>
+<li><a href="https://www.npmjs.com/package/grunt-build-control#readme">grunt-build-control</a> is a brilliant plugin that helps you deploy built code to GitHub.</li>
+</ul>
+
+<p>The setup of Grunt is concluded by adding a <a href="http://gruntjs.com/getting-started#the-gruntfile">Gruntfile</a> to our project. Our Gruntfile will be named <code>Gruntfile.js</code> and will be written in JavaScript. We exclude it from the Jekyll build by adding</p>
+<div class="highlight"><pre><code class="language-yaml" data-lang="yaml">  <span class="p-Indicator">-</span> <span class="s">&quot;Gruntfile.js&quot;</span>
+</code></pre></div>
+<p>to <code>_config.yml</code> in the exclude section. The contents of the <code>Gruntfile.js</code> should look like this:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">grunt</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span><span class="p">({</span>
+    <span class="nx">copy</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">jquery</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">files</span><span class="o">:</span> <span class="p">[{</span>
+          <span class="nx">expand</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+          <span class="nx">cwd</span><span class="o">:</span> <span class="s1">&#39;bower_components/jquery/dist/&#39;</span><span class="p">,</span>
+          <span class="nx">src</span><span class="o">:</span> <span class="s1">&#39;jquery.min.js&#39;</span><span class="p">,</span>
+          <span class="nx">dest</span><span class="o">:</span> <span class="s1">&#39;vendor/js/&#39;</span><span class="p">,</span>
+        <span class="p">}]</span>
+      <span class="p">},</span>
+      <span class="nx">jqueryui</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">files</span><span class="o">:</span> <span class="p">[{</span>
+          <span class="nx">expand</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+          <span class="nx">cwd</span><span class="o">:</span> <span class="s1">&#39;bower_components/jquery-ui/&#39;</span><span class="p">,</span>
+          <span class="nx">src</span><span class="o">:</span> <span class="s1">&#39;jquery-ui.min.js&#39;</span><span class="p">,</span>
+          <span class="nx">dest</span><span class="o">:</span> <span class="s1">&#39;vendor/js/&#39;</span><span class="p">,</span>
+        <span class="p">}]</span>
+      <span class="p">},</span>
+      <span class="nx">fitvids</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">files</span><span class="o">:</span> <span class="p">[{</span>
+          <span class="nx">expand</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+          <span class="nx">cwd</span><span class="o">:</span> <span class="s1">&#39;bower_components/fitvids/&#39;</span><span class="p">,</span>
+          <span class="nx">src</span><span class="o">:</span> <span class="s1">&#39;jquery.fitvids.js&#39;</span><span class="p">,</span>
+          <span class="nx">dest</span><span class="o">:</span> <span class="s1">&#39;vendor/js/&#39;</span><span class="p">,</span>
+        <span class="p">}]</span>
+      <span class="p">},</span>
+      <span class="nx">lettering</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">files</span><span class="o">:</span> <span class="p">[{</span>
+          <span class="nx">expand</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+          <span class="nx">cwd</span><span class="o">:</span> <span class="s1">&#39;bower_components/letteringjs/&#39;</span><span class="p">,</span>
+          <span class="nx">src</span><span class="o">:</span> <span class="s1">&#39;jquery.lettering.js&#39;</span><span class="p">,</span>
+          <span class="nx">dest</span><span class="o">:</span> <span class="s1">&#39;vendor/js/&#39;</span><span class="p">,</span>
+        <span class="p">}]</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nx">exec</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">jekyll</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">cmd</span><span class="o">:</span> <span class="s1">&#39;jekyll build --trace&#39;</span>
+      <span class="p">},</span>
+      <span class="nx">jekyll_drafts</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">cmd</span><span class="o">:</span> <span class="s1">&#39;jekyll build --trace --drafts&#39;</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nx">watch</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">source</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">files</span><span class="o">:</span> <span class="p">[</span>
+          <span class="s1">&#39;_config.yml&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;_drafts/**/*&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;_includes/**/*&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;_layouts/**/*&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;_plugins/**/*&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;_posts/**/*&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;_sass/**/*&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;assets/**/*&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;*.html&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;*.md&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;feed.xml&#39;</span>
+        <span class="p">],</span>
+        <span class="nx">tasks</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;exec:jekyll_drafts&#39;</span><span class="p">],</span>      
+        <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">livereload</span><span class="o">:</span> <span class="kc">true</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nx">connect</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">server</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">port</span><span class="o">:</span> <span class="mi">4000</span><span class="p">,</span>
+          <span class="nx">base</span><span class="o">:</span> <span class="s1">&#39;_site&#39;</span><span class="p">,</span>
+          <span class="nx">livereload</span><span class="o">:</span> <span class="kc">true</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nx">buildcontrol</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">dir</span><span class="o">:</span> <span class="s1">&#39;_site&#39;</span><span class="p">,</span>
+        <span class="nx">commit</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">push</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Built %sourceName% from commit %sourceCommit% on branch %sourceBranch%&#39;</span>
+      <span class="p">},</span>
+      <span class="nx">pages</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">remote</span><span class="o">:</span> <span class="s1">&#39;git@github.com:tscholak/tscholak.github.io.git&#39;</span><span class="p">,</span>
+          <span class="nx">branch</span><span class="o">:</span> <span class="s1">&#39;master&#39;</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span><span class="p">(</span><span class="s1">&#39;grunt-bower-task&#39;</span><span class="p">);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span><span class="p">(</span><span class="s1">&#39;grunt-contrib-connect&#39;</span><span class="p">);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span><span class="p">(</span><span class="s1">&#39;grunt-contrib-copy&#39;</span><span class="p">);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span><span class="p">(</span><span class="s1">&#39;grunt-contrib-watch&#39;</span><span class="p">);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span><span class="p">(</span><span class="s1">&#39;grunt-exec&#39;</span><span class="p">);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span><span class="p">(</span><span class="s1">&#39;grunt-build-control&#39;</span><span class="p">);</span>
+
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">registerTask</span><span class="p">(</span><span class="s1">&#39;build&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;copy&#39;</span><span class="p">,</span> <span class="s1">&#39;exec:jekyll&#39;</span><span class="p">]);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">registerTask</span><span class="p">(</span><span class="s1">&#39;build_drafts&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;copy&#39;</span><span class="p">,</span> <span class="s1">&#39;exec:jekyll_drafts&#39;</span><span class="p">]);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">registerTask</span><span class="p">(</span><span class="s1">&#39;serve&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;build_drafts&#39;</span><span class="p">,</span> <span class="s1">&#39;connect:server&#39;</span><span class="p">,</span> <span class="s1">&#39;watch&#39;</span><span class="p">]);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">registerTask</span><span class="p">(</span><span class="s1">&#39;deploy&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;build&#39;</span><span class="p">,</span> <span class="s1">&#39;buildcontrol:pages&#39;</span><span class="p">]);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">registerTask</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;deploy&#39;</span><span class="p">]);</span>
+
+<span class="p">};</span>
+</code></pre></div>
+<p>Let me attempt a short explanation for each of the tasks defined in that file:</p>
+
+<ul>
+<li><code>grunt connect:server</code> starts the web server from the grunt-contrib-connect plugin. According to the above options, the web server responds on port 4000 and serves files from the <code>_site</code> directory.</li>
+<li><code>grunt copy</code> copies the specified Bower JavaScript components to the <code>vendor/js</code> directory. That directory will be copied as is by Jekyll to <code>_site</code>. It doesn&#39;t make sense to push <code>vendor</code> to the <code>source</code> branch. You may exclude it from Git by adding <code>/vendor/</code> to an empty line in the <code>.gitignore</code> file.</li>
+<li><code>grunt exec:jekyll</code> calls <code>jekyll build</code> to build the site into <code>_site</code> directory. <code>grunt exec:jekyll_drafts</code> also includes documents in the <code>_drafts</code> folder into the build.</li>
+<li><code>grunt watch</code> calls <code>grunt exec:jekyll_drafts</code> upon source file changes. Which files are watched is specified with the <code>files</code> option. The <code>livereload</code> option causes your web browser to refresh the site after a rebuild is triggered.</li>
+<li>The <code>buildcontrol:pages</code> subtask deploys the <code>_site</code> directory to the <code>master</code> branch on GitHub. Safety checks to make sure the source repository is clean, so that built code always corresponds to a source code commit. (i think, that means that the content of <code>_site</code> has to correspond always to a <code>jekyll build</code> run on the last commit of the <code>source</code> branch.)</li>
+</ul>
+
+<p>The last couple of lines register new aliases for a task or a list of tasks that are executed in the order of their appearance.</p>
+
+<h2>Test Grunt configuration</h2>
+
+<p>If everything is according to plan, then Grunt should now be able build and deploy the Jekyll page. Let us test these functions. Run:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ grunt -v build
+</code></pre></div>
+<p>Have a look at the verbose output and look for errors. If everything checks out, try:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ grunt -v serve
+</code></pre></div>
+<p>and fire the page up in your browser. If you are satisfied with the result, abort the server and run the following:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">lipbite:tscholak.github.io tscholak$ git add -A 
+lipbite:tscholak.github.io tscholak$ git commit -m &quot;[message]&quot;
+lipbite:tscholak.github.io tscholak$ git push origin source
+lipbite:tscholak.github.io tscholak$ grunt -v deploy
+</code></pre></div>
+<p>And boom, your static page is on-line on GitHub Pages!</p>
+
+<p>We&#39;ve now got everything we came for. This setup allows you to build your Jekyll site with whatever plugin (or Ruby code) you like. The site is generated locally and then deployed to GitHub.</p>
+
+<hr>
+
+<h1>Further Remark(s)</h1>
+
+<ul>
+<li>If you are working in Sublime Text like me, you may want to install <a href="https://github.com/tvooo/sublime-grunt">sublime-grunt</a>, available via Package Control.</li>
+<li>tbc ...</li>
+</ul>
+
+    </section>
+
+    
+
+    <footer class="post-footer">
+      <!-- If we want to display author's name and bio -->
+      
+        <figure class="author-image">
+          <a class="img" href="/" style="background-image: url(/assets/images/profile.png)">
+          <span class="hidden">that's me</span></a>
+        </figure>
+        <section class="author">
+          <!-- Author Name -->
+          <h4> Torsten Scholak </h4>
+          <!-- Author Bio -->
+          <p>
+            Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
+          </p>
+        </section>                
+      
+
+      <!-- Share links section -->
+      <!-- <section class="share">
+  <h4>Share this post</h4>
+  <a class="icon-twitter" href="http://twitter.com/share?text=Jekyll and GitHub Pages&amp;url=http://tscholak.github.io/update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html"
+    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+    <span class="hidden">Twitter</span>
+  </a>
+  <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://tscholak.github.io/update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html"
+    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+    <span class="hidden">Facebook</span>
+  </a>
+  <a class="icon-google-plus" href="https://plus.google.com/share?url=http://tscholak.github.io/update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html"
+     onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+    <span class="hidden">Google+</span>
+  </a>
+</section> -->
+
+      <!-- Follow me section -->
+      <section class="follow">
+  <h4>Follow me</h4>
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Facebook');" class="facebook_follow" title="Follow on Facebook" href="http://www.facebook.com/tscholak" target="_blank"><i class="fa fa-lg fa-facebook-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Twitter');" class="twitter_follow" title="Follow on Twitter" href="https://twitter.com/tscholak" target="_blank"><i class="fa fa-lg fa-twitter-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on LinkedIn');" class="linkedin_follow" title="Follow on LinkedIn" href="http://www.linkedin.com/in/tscholak" target="_blank"><i class="fa fa-lg fa-linkedin-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Google+');" class="googleplus_follow" title="Follow on LinkedIn" href="https://plus.google.com/u/0/+TorstenScholak" target="_blank"><i class="fa fa-lg fa-google-plus-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on StackOverflow');" class="stackoverflow_follow" title="Follow on StackOverflow" href="https://stackoverflow.com/users/700435" target="_blank"><i class="fa fa-lg fa-stack-exchange"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
+  
+</section>
+      
+      <!-- Disqus comments -->
+      
+      
+    </footer>
+
+  </article>
+
+</main>
+
+
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/">Meticulous Disorder</a> &copy; 
+               &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer> 
+  </body>
+</html>
