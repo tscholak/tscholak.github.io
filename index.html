@@ -20,11 +20,16 @@ work: 'work.html'
       <h1 class="page-title">{{ site.name }}</h1>
       <h2 class="page-description">
         {% if site.description %} {{ site.description }} {% endif %}
-        {% if page.about %} <span style="white-space: nowrap;">More <a href='{{ site.baseurl }}{{ page.about }}'>about Torsten</a>.<span> {% endif %}
-        {% if page.work %} <span style="white-space: nowrap;">And <a href='{{ site.baseurl }}{{ page.work }}'>his work</a>.</span> {% endif %}
+        {% if page.about %} More <a href='{{ site.baseurl }}{{ page.about }}'>about Torsten</a>. {% endif %}
+        {% if page.work %} And <a href='{{ site.baseurl }}{{ page.work }}'>his work</a>. {% endif %}
       </h2>
     </div>
   </div>
+  <script>
+    $(document).ready(function() {
+      $(".page-title").lettering();
+    });
+  </script>
   <a class="scroll-down icon-arrow-left" href="#content" data-offset="-45"><span class="hidden">Scroll Down</span></a>
 </header>
 

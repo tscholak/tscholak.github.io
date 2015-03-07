@@ -77,16 +77,28 @@ code, tt {
 }
 
 dl dt {
-  width: 150px;
+  width: 180px;
   overflow: hidden;
   clear: left;
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 dl dd {
-  margin-left: 170px;
+  margin-left: 200px;
+}
+@media only screen and (max-width: 500px) {
+  dl dt {
+    width: 90px;
+    overflow: visible;
+    clear: left;
+    text-align: right;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  dl dd {
+    margin-left: 110px;
+  }
 }
 
 .post-footer .author {
@@ -164,6 +176,18 @@ html {
 
 .page-title {
   font-family: "Fira Sans", sans-serif;
+}
+.page-title .char14 {
+  position: relative;
+  top: .1em;
+}
+.page-title .char16 {
+  position: relative;
+  top: -.025em;
+}
+.page-title .char17 {
+  position: relative;
+  top: -.075em;
 }
 .page-description {
   font-family: "charterregular", serif;

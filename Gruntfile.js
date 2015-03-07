@@ -25,11 +25,22 @@ module.exports = function(grunt) {
           src: 'jquery.fitvids.js',
           dest: 'vendor/js/',
         }]
+      },
+      lettering: {
+        files: [{
+          expand: true,
+          cwd: 'bower_components/letteringjs/',
+          src: 'jquery.lettering.js',
+          dest: 'vendor/js/',
+        }]
       }
     },
     exec: {
       jekyll: {
         cmd: 'jekyll build --trace'
+      },
+      jekyll_drafts: {
+        cmd: 'jekyll build --trace --drafts'
       }
     },
     watch: {
@@ -47,7 +58,7 @@ module.exports = function(grunt) {
           '*.md',
           'feed.xml'
         ],
-        tasks: ['exec:jekyll'],      
+        tasks: ['exec:jekyll_drafts'],      
         options: {
           livereload: true
         }
@@ -86,7 +97,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-build-control');
 
   grunt.registerTask('build', ['copy', 'exec:jekyll']);
-  grunt.registerTask('serve', ['build', 'connect:server', 'watch']);
+  grunt.registerTask('build_drafts', ['copy', 'exec:jekyll_drafts']);
+  grunt.registerTask('serve', ['build_drafts', 'connect:server', 'watch']);
   grunt.registerTask('deploy', ['build', 'buildcontrol:pages']);
   grunt.registerTask('default', ['deploy']);
 
