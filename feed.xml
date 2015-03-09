@@ -5,9 +5,452 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sat, 07 Mar 2015 00:19:11 -0500</pubDate>
-    <lastBuildDate>Sat, 07 Mar 2015 00:19:11 -0500</lastBuildDate>
+    <pubDate>Mon, 09 Mar 2015 00:25:38 -0400</pubDate>
+    <lastBuildDate>Mon, 09 Mar 2015 00:25:38 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
+    
+      <item>
+        <title>Meet histogramr</title>
+        <description>&lt;p&gt;histogramr is a piece of software that produces multivariate histograms from numerical data. I started working on histogramr during my PhD and have been using and improving it ever since. It has been instrumental in many of my scientific achievements &lt;a href=&quot;#scholak2010transport&quot;&gt;(Scholak et al. 2010; Scholak et al. 2011; Scholak, Wellens, and Buchleitner 2011; Scholak, Wellens, and Buchleitner 2011; Scholak et al. 2011; Zech et al. 2013; Scholak, Wellens, and Buchleitner 2014)&lt;/a&gt;, because it has allowed for the statistical analysis of extremely large scientific data sets.&lt;/p&gt;
+
+&lt;p&gt;histogramr reads and writes &lt;a href=&quot;http://www.hdfgroup.org/HDF5/&quot;&gt;HDF5&lt;/a&gt; files. An HDF5 file is a hierarchical, file-system-like data structure arranged in groups of groups or data sets. Groups are like folders of a file system, and data sets are like files containing one- or multidimensional arrays of a single data type. The elements of a simple data set are just numbers, characters, or small arrays thereof, whereas the elements of more complex data sets have compounded types. HDF5 compounds are similar to &lt;a href=&quot;http://en.wikipedia.org/wiki/Struct_(C_programming_language)&quot;&gt;C structs&lt;/a&gt;. Like them, they are composed of other data types. The elements of a compound type are called members, and they must be given unique names. histogramr works on compound member data only. The data can be from a single or a number of data sets in the file. From this data, the software generates a multivariate histogram, i.e. an approximate multivariate probability density function (PDF) discretized on a multidimensional rectangular regular grid of predefined shape. Each dimension of that grid corresponds to one compound member. histogramr offers control over the histogram limits, the binning (i.e. the grid spacing), and whether or not the input data is log-transformed prior to processing. histogramr stores the PDF in a simple data set of an HDF5 output file.&lt;/p&gt;
+
+&lt;h1&gt;histogramr is now on GitHub!&lt;/h1&gt;
+
+&lt;p&gt;Today I release histogramr under the GPLv3 &lt;a href=&quot;https://github.com/tscholak/histogramr&quot;&gt;on GitHub&lt;/a&gt;. You can download and use it for &lt;em&gt;free&lt;/em&gt;. The easiest way to do so is by using &lt;a href=&quot;http://git-scm.com&quot;&gt;Git&lt;/a&gt;. In Linux or Mac OS X, fire up a terminal and run:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ git clone git@github.com:tscholak/histogramr.git
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This downloads the most recent version of histogramr into the directory &lt;code&gt;histogramr&lt;/code&gt;. After that, &lt;code&gt;cd&lt;/code&gt; into that folder and run:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ autogen.sh
+$ ./configure
+$ make
+$ ln -sf ./src/histogramr ~/bin
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You can now &lt;a href=&quot;#usage&quot;&gt;use histogramr&lt;/a&gt; for your own data. Or, since you&amp;#39;ve got the source code, you can change histogramr or use pieces of it in new free software.&lt;/p&gt;
+
+&lt;h1&gt;&lt;a name=&quot;usage&quot;&gt;&lt;/a&gt;Usage&lt;/h1&gt;
+
+&lt;p&gt;histogramr reads in the input files one-by-one and commits the data to the histogram data structure. The output file is written multiple times, whenever a predetermined number of input files has been processed. Below the output of &lt;code&gt;histogramr --help&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;histogramr: create multivariate histograms of continuous data
+
+Usage: histogramr -d &amp;lt;dsname1&amp;gt; -m &amp;lt;mname1[:mname2...]&amp;gt;
+  -b &amp;lt;size1[:size2...]&amp;gt; -l &amp;lt;range1[:range2...]&amp;gt;
+  [-L &amp;lt;boolean1[:boolean2...]&amp;gt;] [-d &amp;lt;dsname2&amp;gt; ...] [-e &amp;lt;number&amp;gt;]
+  -o &amp;lt;outfile&amp;gt; &amp;lt;infile1&amp;gt; [&amp;lt;infile2&amp;gt; ...]
+
+Mandatory options:
+  -d, --dataset &amp;lt;dsname&amp;gt;     data set(s) must be specified first
+  -m, --member &amp;lt;mname&amp;gt;       data set member(s)
+  -b, --binning &amp;lt;size&amp;gt;       histogram binning(s)
+  -l, --limit &amp;lt;range&amp;gt;        histogram limits
+  -o, --output &amp;lt;outfile&amp;gt;     name the output file
+
+Optional options:
+  -e, --save-every &amp;lt;number&amp;gt;  save every &amp;lt;number&amp;gt; of files
+                             (default: 1)
+  -L, --l10 &amp;lt;boolean&amp;gt;        logarithmic transform (default: false)
+
+Other options:
+  -h|--help                  print this help message and quit
+  -v|--version               print version information and quit
+
+Report bugs to: torsten.scholak+histogramr@googlemail.com
+histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I will provide real-life examples of big-data work-flows with histogramr in another blog post.&lt;/p&gt;
+
+&lt;h1&gt;Impact&lt;/h1&gt;
+
+&lt;p&gt;So far, histogramr has processed data for the following publications:&lt;/p&gt;
+
+&lt;ol class=&quot;bibliography&quot;&gt;&lt;li&gt;&lt;span id=&quot;scholak2014spectral&quot;&gt;Scholak, Torsten, Thomas Wellens, and Andreas Buchleitner, 2014, “Spectral Backbone of Excitation Transport in Ultracold Rydberg Gases,” Phys. Rev. A &lt;b&gt;90&lt;/b&gt; (American Physical Society), 063415. doi:10.1103/PhysRevA.90.063415.&lt;/span&gt;
+
+&lt;div id=&quot;scholak2014spectral-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2014spectral-tabs-1&quot;&gt;short outline&lt;/a&gt;,&lt;/li&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2014spectral-tabs-2&quot;&gt;abstract&lt;/a&gt;,&lt;/li&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2014spectral-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  Download &lt;a href=&quot;/assets/bibliography/scholak2014spectral.pdf&quot;&gt;PDF&lt;/a&gt;.
+  
+  
+  &lt;div id=&quot;scholak2014spectral-tabs-1&quot;&gt;
+    &lt;p&gt;Studied spectral structure underlying excitonic energy transfer in ultracold Rydberg gases ⋅ Found evidence for a critical energy that separates delocalized eigenstates from states that are localized at pairs or clusters of atoms separated by less than the typical nearest-neighbor distance ⋅ Discovered that the dipole blockade effect in Rydberg gases can be leveraged to manipulate the localization transition.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  
+  &lt;div id=&quot;scholak2014spectral-tabs-2&quot;&gt;
+    &lt;p&gt;The spectral structure underlying excitonic energy transfer in ultracold Rydberg gases is studied numerically, in the framework of random matrix theory, and via self-consistent diagrammatic techniques. Rydberg gases are made up of randomly distributed, highly polarizable atoms that interact via strong dipolar forces. Dynamics in such a system is fundamentally different from cases in which the interactions are of short range, and is ultimately determined by the spectral and eigenvector structure. In the energy levels’ spacing statistics, we find evidence for a critical energy that separates delocalized eigenstates from states that are localized at pairs or clusters of atoms separated by less than the typical nearest-neighbor distance. We argue that the dipole blockade effect in Rydberg gases can be leveraged to manipulate this transition across a wide range: As the blockade radius increases, the relative weight of localized states is reduced. At the same time, the spectral statistics, in particular, the density of states and the nearest-neighbor level-spacing statistics, exhibits a transition from approximately a 1-stable Lévy to a Gaussian orthogonal ensemble. Deviations from random matrix statistics are shown to stem from correlations between interatomic interaction strengths that lead to an asymmetry of the spectral density and profoundly affect localization properties. We discuss approximations to the self-consistent Matsubara-Toyozawa locator expansion that incorporate these effects.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  &lt;div id=&quot;scholak2014spectral-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{scholak2014spectral,
+  annote = {Studied spectral structure underlying excitonic energy transfer in ultracold Rydberg gases ⋅ Found evidence for a critical energy that separates delocalized eigenstates from states that are localized at pairs or clusters of atoms separated by less than the typical nearest-neighbor distance ⋅ Discovered that the dipole blockade effect in Rydberg gases can be leveraged to manipulate the localization transition.},
+  author = {Scholak, Torsten and Wellens, Thomas and Buchleitner, Andreas},
+  date-added = {2015-03-01 05:21:02 +0000},
+  date-modified = {2015-03-01 05:48:42 +0000},
+  doi = {10.1103/PhysRevA.90.063415},
+  journal = {Phys. Rev. A},
+  month = {dec},
+  number = {6},
+  pages = {063415},
+  publisher = {American Physical Society},
+  title = {Spectral backbone of excitation transport in ultracold Rydberg gases},
+  volume = {90},
+  year = {2014},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevA.90.063415}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#scholak2014spectral-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;zech2013quantum&quot;&gt;Zech, Tobias, Mattia Walschaers, Torsten Scholak, Roberto Mulet, Thomas Wellens, and Andreas Buchleitner, 2013, “Quantum Transport in Biological Functional Units: Noise, Disorder, Structure,” Fluct. Noise Lett. &lt;b&gt;12&lt;/b&gt; (World Scientific Publishing Company), 1340007. doi:10.1142/S0219477513400075.&lt;/span&gt;
+
+&lt;div id=&quot;zech2013quantum-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#zech2013quantum-tabs-1&quot;&gt;short outline&lt;/a&gt;,&lt;/li&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#zech2013quantum-tabs-2&quot;&gt;abstract&lt;/a&gt;,&lt;/li&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#zech2013quantum-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  Download &lt;a href=&quot;/assets/bibliography/zech2013quantum.pdf&quot;&gt;PDF&lt;/a&gt;.
+  
+  
+  &lt;div id=&quot;zech2013quantum-tabs-1&quot;&gt;
+    &lt;p&gt;Showed that 3D structures characterized by centro-symmetric Hamiltonians exhibit on average higher transport efficiencies than random configurations.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  
+  &lt;div id=&quot;zech2013quantum-tabs-2&quot;&gt;
+    &lt;p&gt;Through simulations of quantum coherent transport on disordered molecular networks, we show that three dimensional structures characterized by centro-symmetric Hamiltonians exhibit on average higher transport efficiencies than random configurations. Furthermore, configurations that optimize constructive quantum interference from input to output site yield systematically shorter transfer times than classical transport induced by ambient dephasing noise.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  &lt;div id=&quot;zech2013quantum-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{zech2013quantum,
+  annote = {Showed that 3D structures characterized by centro-symmetric Hamiltonians exhibit on average higher transport efficiencies than random configurations.},
+  author = {Zech, Tobias and Walschaers, Mattia and Scholak, Torsten and Mulet, Roberto and Wellens, Thomas and Buchleitner, Andreas},
+  date-added = {2015-03-01 05:21:07 +0000},
+  date-modified = {2015-03-01 05:47:35 +0000},
+  doi = {10.1142/S0219477513400075},
+  journal = {Fluct. Noise Lett.},
+  month = {jun},
+  number = {02},
+  pages = {1340007},
+  publisher = {World Scientific Publishing Company},
+  title = {Quantum Transport in Biological Functional Units: Noise, Disorder, Structure},
+  volume = {12},
+  year = {2013},
+  bdsk-url-1 = {http://dx.doi.org/10.1142/S0219477513400075}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#zech2013quantum-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;scholak2011disorder&quot;&gt;Scholak, Torsten, Tobias Zech, Thomas Wellens, and Andreas Buchleitner, 2011, “Disorder-Assisted Exciton Transport,” Acta Phys. Pol. A &lt;b&gt;120&lt;/b&gt; (Institute of Physics, Polish Academy of Science), 89. Available at: http://przyrbwn.icm.edu.pl/APP/ABSTR/120/a120-6a-52.html.&lt;/span&gt;
+
+&lt;div id=&quot;scholak2011disorder-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011disorder-tabs-1&quot;&gt;short outline&lt;/a&gt;,&lt;/li&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011disorder-tabs-2&quot;&gt;abstract&lt;/a&gt;,&lt;/li&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011disorder-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  Download &lt;a href=&quot;/assets/bibliography/scholak2011disorder.pdf&quot;&gt;PDF&lt;/a&gt;.
+  
+  
+  &lt;div id=&quot;scholak2011disorder-tabs-1&quot;&gt;
+    &lt;p&gt;Discussed the role of disorder for the optimization of exciton transport in the FMO (Fenna-Matthews-Olson) light harvesting complex ⋅ Demonstrated the existence of a small fraction of optimal, though highly asymmetric, non-periodic conformations, which yield near-to-optimal coherent excitation transport.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  
+  &lt;div id=&quot;scholak2011disorder-tabs-2&quot;&gt;
+    &lt;p&gt;We discuss the possibly constructive role of disorder for the optimization of exciton transport in the FMO (Fenna􏰂Matthews􏰂Olson) light harvesting complex. Our analysis, which models the FMO as a 3D random graph, demonstrates the existence of a small fraction of optimal, though highly asymmetric, non-periodic conformations, which yield near-to-optimal coherent excitation transport. We argue that, on transient time scales, such quantum interference enhanced transport does always better than stochastic activation.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  &lt;div id=&quot;scholak2011disorder-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{scholak2011disorder,
+  annote = {Discussed the role of disorder for the optimization of exciton transport in the FMO (Fenna-Matthews-Olson) light harvesting complex ⋅ Demonstrated the existence of a small fraction of optimal, though highly asymmetric, non-periodic conformations, which yield near-to-optimal coherent excitation transport.},
+  author = {Scholak, Torsten and Zech, Tobias and Wellens, Thomas and Buchleitner, Andreas},
+  date-added = {2015-03-01 05:21:08 +0000},
+  date-modified = {2015-03-01 15:55:23 +0000},
+  journal = {Acta Phys. Pol. A},
+  month = {dec},
+  number = {6A},
+  pages = {89},
+  publisher = {Institute of Physics, Polish Academy of Science},
+  title = {Disorder-Assisted Exciton Transport},
+  url = {http://przyrbwn.icm.edu.pl/APP/ABSTR/120/a120-6a-52.html},
+  volume = {120},
+  year = {2011},
+  bdsk-url-1 = {http://przyrbwn.icm.edu.pl/APP/ABSTR/120/a120-6a-52.html}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#scholak2011disorder-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;scholak2011optimal&quot;&gt;Scholak, Torsten, Thomas Wellens, and Andreas Buchleitner, 2011, “Optimal Networks for Excitonic Energy Transport,” J. Phys. B &lt;b&gt;44&lt;/b&gt; (IOP Publishing), 184012. doi:10.1088/0953-4075/44/18/184012.&lt;/span&gt;
+
+&lt;div id=&quot;scholak2011optimal-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011optimal-tabs-1&quot;&gt;short outline&lt;/a&gt;,&lt;/li&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011optimal-tabs-2&quot;&gt;abstract&lt;/a&gt;,&lt;/li&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011optimal-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  Download &lt;a href=&quot;/assets/bibliography/scholak2011optimal.pdf&quot;&gt;PDF&lt;/a&gt;.
+  
+  
+  &lt;div id=&quot;scholak2011optimal-tabs-1&quot;&gt;
+    &lt;p&gt;Investigated coherent and incoherent excitation transfer in a random network with dipole-dipole interactions as a model system describing energy transport, e.g., in photosynthetic light-harvesting complexes or gases of cold Rydberg atoms.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  
+  &lt;div id=&quot;scholak2011optimal-tabs-2&quot;&gt;
+    &lt;p&gt;We investigate coherent and incoherent excitation transfer in a random network with dipole–dipole interactions as a model system describing energy transport, e.g., in photosynthetic light-harvesting complexes or gases of cold Rydberg atoms. For this purpose, we introduce and compare two different measures (the maximum output probability and the average transfer time) for the efficiency of transport from the input to the output site. We especially focus on optimal configurations which maximize the transfer efficiency and the impact of dephasing noise on the transport dynamics. For most configurations of the random network, the transfer efficiency increases when adding noise, giving rise to essentially classical transport. These noise-assisted configurations are, however, systematically less efficient than the optimal configurations. The latter reach their highest efficiency for purely coherent dynamics, i.e. in the absence of noise.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  &lt;div id=&quot;scholak2011optimal-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{scholak2011optimal,
+  annote = {Investigated coherent and incoherent excitation transfer in a random network with dipole-dipole interactions as a model system describing energy transport, e.g., in photosynthetic light-harvesting complexes or gases of cold Rydberg atoms.},
+  author = {Scholak, Torsten and Wellens, Thomas and Buchleitner, Andreas},
+  date-added = {2015-03-01 05:21:09 +0000},
+  date-modified = {2015-03-01 05:45:12 +0000},
+  doi = {10.1088/0953-4075/44/18/184012},
+  journal = {J. Phys. B},
+  month = {sep},
+  number = {18},
+  pages = {184012},
+  publisher = {IOP Publishing},
+  title = {Optimal networks for excitonic energy transport},
+  volume = {44},
+  year = {2011},
+  bdsk-url-1 = {http://dx.doi.org/10.1088/0953-4075/44/18/184012}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#scholak2011optimal-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;scholak2011optimization&quot;&gt;———, 2011, “The Optimization Topography of Exciton Transport,” Europhys. Lett. &lt;b&gt;96&lt;/b&gt; (IOP Publishing), 10001. doi:10.1209/0295-5075/96/10001.&lt;/span&gt;
+
+&lt;div id=&quot;scholak2011optimization-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011optimization-tabs-1&quot;&gt;short outline&lt;/a&gt;,&lt;/li&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011optimization-tabs-2&quot;&gt;abstract&lt;/a&gt;,&lt;/li&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011optimization-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  Download &lt;a href=&quot;/assets/bibliography/scholak2011optimization.pdf&quot;&gt;PDF&lt;/a&gt;.
+  
+  
+  &lt;div id=&quot;scholak2011optimization-tabs-1&quot;&gt;
+    &lt;p&gt;Showed that configurations of a random molecular network that optimize constructive quantum interference from input to output site yield systematically shorter transfer times than classical transport induced by ambient dephasing noise.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  
+  &lt;div id=&quot;scholak2011optimization-tabs-2&quot;&gt;
+    &lt;p&gt;Stunningly large exciton transfer rates in the light harvesting complex of photosynthesis, together with recent experimental 2D spectroscopic data, have spurred a vivid debate on the possible quantum origin of such efficiency. Here we show that configurations of a random molecular network that optimize constructive quantum interference from input to output site yield systematically shorter transfer times than classical transport induced by ambient dephasing noise.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  &lt;div id=&quot;scholak2011optimization-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{scholak2011optimization,
+  annote = {Showed that configurations of a random molecular network that optimize constructive quantum interference from input to output site yield systematically shorter transfer times than classical transport induced by ambient dephasing noise.},
+  author = {Scholak, Torsten and Wellens, Thomas and Buchleitner, Andreas},
+  date-added = {2015-03-01 05:21:10 +0000},
+  date-modified = {2015-03-01 05:46:22 +0000},
+  doi = {10.1209/0295-5075/96/10001},
+  journal = {Europhys. Lett.},
+  month = {aug},
+  number = {1},
+  pages = {10001},
+  publisher = {IOP Publishing},
+  title = {The optimization topography of exciton transport},
+  volume = {96},
+  year = {2011},
+  bdsk-url-1 = {http://dx.doi.org/10.1209/0295-5075/96/10001}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#scholak2011optimization-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;scholak2011efficient&quot;&gt;Scholak, Torsten, Fernando de Melo, Thomas Wellens, Florian Mintert, and Andreas Buchleitner, 2011, “Efficient and Coherent Excitation Transfer across Disordered Molecular Networks,” Phys. Rev. E &lt;b&gt;83&lt;/b&gt; (American Physical Society), 021912. doi:10.1103/PhysRevE.83.021912.&lt;/span&gt;
+
+&lt;div id=&quot;scholak2011efficient-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011efficient-tabs-1&quot;&gt;short outline&lt;/a&gt;,&lt;/li&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011efficient-tabs-2&quot;&gt;abstract&lt;/a&gt;,&lt;/li&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2011efficient-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  Download &lt;a href=&quot;/assets/bibliography/scholak2011efficient.pdf&quot;&gt;PDF&lt;/a&gt;.
+  
+  
+  &lt;div id=&quot;scholak2011efficient-tabs-1&quot;&gt;
+    &lt;p&gt;Showed that finite-size, disordered molecular networks can mediate highly efficient, coherent excitation transfer that is robust against ambient dephasing and is associated with strong multisite entanglement ⋅ Offered an explanation for the efficient energy transfer in the photosynthetic Fenna-Matthews-Olson complex.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  
+  &lt;div id=&quot;scholak2011efficient-tabs-2&quot;&gt;
+    &lt;p&gt;We show that finite-size, disordered molecular networks can mediate highly efficient, coherent excitation transfer which is robust against ambient dephasing and associated with strong multisite entanglement. Such optimal, random molecular conformations may explain efficient energy transfer in the photosynthetic Fenna-Matthews-Olson complex.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  &lt;div id=&quot;scholak2011efficient-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{scholak2011efficient,
+  annote = {Showed that finite-size, disordered molecular networks can mediate highly efficient, coherent excitation transfer that is robust against ambient dephasing and is associated with strong multisite entanglement ⋅ Offered an explanation for the efficient energy transfer in the photosynthetic Fenna-Matthews-Olson complex.},
+  author = {Scholak, Torsten and de Melo, Fernando and Wellens, Thomas and Mintert, Florian and Buchleitner, Andreas},
+  date-added = {2015-03-01 05:21:09 +0000},
+  date-modified = {2015-03-01 05:44:18 +0000},
+  doi = {10.1103/PhysRevE.83.021912},
+  journal = {Phys. Rev. E},
+  month = {feb},
+  number = {2},
+  pages = {021912},
+  publisher = {American Physical Society},
+  title = {Efficient and coherent excitation transfer across disordered molecular networks},
+  volume = {83},
+  year = {2011},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevE.83.021912}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#scholak2011efficient-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;scholak2010transport&quot;&gt;Scholak, Torsten, Florian Mintert, Thomas Wellens, and Andreas Buchleitner, 2010, “Transport and Entanglement,” in &lt;i&gt;Quantum Efficiency in Complex Systems, Part I: Biomolecular Systems, Part 1&lt;/i&gt;. Vol. 83. Semiconductors and Semimetals (Elsevier Science), pp. 1–38. doi:10.1016/B978-0-12-375042-6.00001-8.&lt;/span&gt;
+
+&lt;div id=&quot;scholak2010transport-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2010transport-tabs-1&quot;&gt;short outline&lt;/a&gt;,&lt;/li&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2010transport-tabs-2&quot;&gt;abstract&lt;/a&gt;,&lt;/li&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#scholak2010transport-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  &lt;div id=&quot;scholak2010transport-tabs-1&quot;&gt;
+    &lt;p&gt;Showed that excitation transport across molecular networks mimicking the FMO light-harvesting complex can be enhanced by quantum coherence on transient timescales.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  
+  &lt;div id=&quot;scholak2010transport-tabs-2&quot;&gt;
+    &lt;p&gt;This chapter reviews the essential ingredients of quantum transport in disordered systems, and introduces measures of quantum coherence and entanglement in multisite systems. It explains excitation transport in Fenna–Matthews–Olsen (FMO)-like structures under strictly coherent conditions as well as in presence of a dephasing environment. The statistical treatment of excitation transport across a molecular network mimicking the FMO light-harvesting complex shows the potential of quantum coherence to enhance transport, on transient timescales. The transfer probability thus achieved can reach 100%—a value unachievable by classically diffusive, unbiased transport. Furthermore, because such quantum transfer is brought about by constructive multipath interference along intermediate sites of the molecular complex, coherent quantum transport is certainly faster than classically diffusive transport for comparable inter-site coupling strengths. Taking both transfer probability and transfer time together, coherence thus defines levels of quantum efficiency unreached by a classical transport process on the same network. The quantum coherence holds the potential to steer quantum transport efficiencies in engineered devices as abundant in semiconductor technology.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  &lt;div id=&quot;scholak2010transport-tabs-3&quot;&gt;
+    &lt;pre&gt;@inbook{scholak2010transport,
+  annote = {Showed that excitation transport across molecular networks mimicking the FMO light-harvesting complex can be enhanced by quantum coherence on transient timescales.},
+  author = {Scholak, Torsten and Mintert, Florian and Wellens, Thomas and Buchleitner, Andreas},
+  chapter = {1},
+  date-added = {2015-03-01 05:21:11 +0000},
+  date-modified = {2015-03-01 16:56:55 +0000},
+  doi = {10.1016/B978-0-12-375042-6.00001-8},
+  journal = {Quantum Efficiency in Complex Systems, Part I: Biomolecular Systems, Part 1},
+  month = {dec},
+  pages = {1--38},
+  publisher = {Elsevier Science},
+  series = {Semiconductors and semimetals},
+  title = {Transport and entanglement},
+  volume = {83},
+  year = {2010},
+  bdsk-url-1 = {http://dx.doi.org/10.1016/B978-0-12-375042-6.00001-8}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#scholak2010transport-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;&lt;/ol&gt;
+</description>
+        <pubDate>Sat, 07 Mar 2015 19:00:00 -0500</pubDate>
+        <link>http://tscholak.github.io//code/big%20data/2015/03/07/histogramr.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//code/big%20data/2015/03/07/histogramr.html</guid>
+        
+        
+        <category>code</category>
+        
+        <category>big data</category>
+        
+      </item>
     
       <item>
         <title>Jekyll and GitHub Pages</title>

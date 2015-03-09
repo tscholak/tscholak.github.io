@@ -8,7 +8,15 @@
     <title>Meticulous Disorder</title>
     <link>http://tscholak.github.io</link>
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
-    <pubDate>Fri, 06 Mar 2015 19:00:00 -0500</pubDate>
+    <pubDate>Sat, 07 Mar 2015 19:00:00 -0500</pubDate>
+    <item>
+      <title>Meet histogramr</title>
+      <link>http://tscholak.github.io/code/big%20data/2015/03/07/histogramr.html</link>
+      <description>&lt;p&gt;histogramr is a piece of software that produces multivariate histograms from numerical data. I started working on histogramr during my PhD and have been using and improving it ever since. It has been instrumental in many of my scientific achievements <a href="#scholak2010transport">(Scholak et al. 2010; Scholak et al. 2011; Scholak, Wellens, and Buchleitner 2011; Scholak, Wellens, and Buchleitner 2011; Scholak et al. 2011; Zech et al. 2013; Scholak, Wellens, and Buchleitner 2014)</a>, because it has allowed for the statistical analysis of extremely large scientific data sets.&lt;/p&gt;
+</description>
+      <pubDate>Sat, 07 Mar 2015 19:00:00 -0500</pubDate>
+      <dc:date>2015-03-07T19:00:00-05:00</dc:date>
+    </item>
     <item>
       <title>Jekyll and GitHub Pages</title>
       <link>http://tscholak.github.io/update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html</link>
@@ -33,6 +41,6 @@
       <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-03-06T19:00:00-05:00</dc:date>
+    <dc:date>2015-03-07T19:00:00-05:00</dc:date>
   </channel>
 </rss>
