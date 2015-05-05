@@ -20,10 +20,10 @@ $ git clone git@github.com:tscholak/histogramr.git
 This downloads the most recent version of histogramr into the directory `histogramr`. After that, `cd` into that folder and run:
 
 ```
-$ autogen.sh
+$ ./autogen.sh
 $ ./configure
 $ make
-$ ln -sf ./src/histogramr ~/bin
+$ ln -sf "`pwd`/src/histogramr" ~/bin
 ```
 
 You can now [use histogramr](#usage) for your own data. Or, since you've got the source code, you can change histogramr or use pieces of it in new free software.
