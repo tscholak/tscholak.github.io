@@ -5,8 +5,8 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 09 Mar 2015 01:00:22 -0400</pubDate>
-    <lastBuildDate>Mon, 09 Mar 2015 01:00:22 -0400</lastBuildDate>
+    <pubDate>Mon, 04 May 2015 23:17:22 -0400</pubDate>
+    <lastBuildDate>Mon, 04 May 2015 23:17:22 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
@@ -21,10 +21,10 @@
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ git clone git@github.com:tscholak/histogramr.git
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;This downloads the most recent version of histogramr into the directory &lt;code&gt;histogramr&lt;/code&gt;. After that, &lt;code&gt;cd&lt;/code&gt; into that folder and run:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ autogen.sh
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ ./autogen.sh
 $ ./configure
 $ make
-$ ln -sf ./src/histogramr ~/bin
+$ ln -sf &amp;quot;`pwd`/src/histogramr&amp;quot; ~/bin
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;You can now &lt;a href=&quot;#usage&quot;&gt;use histogramr&lt;/a&gt; for your own data. Or, since you&amp;#39;ve got the source code, you can change histogramr or use pieces of it in new free software.&lt;/p&gt;
 

@@ -95,10 +95,10 @@
 <div class="highlight"><pre><code class="language-text" data-lang="text">$ git clone git@github.com:tscholak/histogramr.git
 </code></pre></div>
 <p>This downloads the most recent version of histogramr into the directory <code>histogramr</code>. After that, <code>cd</code> into that folder and run:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$ autogen.sh
+<div class="highlight"><pre><code class="language-text" data-lang="text">$ ./autogen.sh
 $ ./configure
 $ make
-$ ln -sf ./src/histogramr ~/bin
+$ ln -sf &quot;`pwd`/src/histogramr&quot; ~/bin
 </code></pre></div>
 <p>You can now <a href="#usage">use histogramr</a> for your own data. Or, since you&#39;ve got the source code, you can change histogramr or use pieces of it in new free software.</p>
 
