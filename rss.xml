@@ -8,7 +8,15 @@
     <title>Meticulous Disorder</title>
     <link>http://tscholak.github.io</link>
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
-    <pubDate>Sat, 07 Mar 2015 19:00:00 -0500</pubDate>
+    <pubDate>Tue, 05 May 2015 20:00:00 -0400</pubDate>
+    <item>
+      <title>Unfold with unfoldr</title>
+      <link>http://tscholak.github.io/code/physics/2015/05/05/unfoldr.html</link>
+      <description>&lt;p&gt;unfoldr is the second program of my complex systems software suite that I open-source. (&lt;a href=&quot;%7B%%20post_url%202015-03-08-histogramr%20%%7D&quot;&gt;histogramr&lt;/a&gt; was the first one.) For those of you who study the spectral features of complex systems such as random networks I think unfoldr will prove quite useful. Given the eigenvalues of an ensemble of random matrices, unfoldr calculates the nearest-neighbor level spacings of the unfolded spectrum, either as a whole or for &lt;em&gt;slices&lt;/em&gt; of it. You can specify how you want to cut the spectrum into slices — linearly, logarithmically —, and unfoldr will calculate the level spacings for each slice individually. With this you can study how the level spacing statistics change with energy and whether or not there is a phase transition in the spectrum. I have used this technique to pinpoint the localization transition in the energy spectrum of an ultra-cold Rydberg gas, <a href="#scholak2014spectral">(Scholak, Wellens, and Buchleitner 2014)</a>. I comment on the purpose and the scientific value of nearest-neighbor level spacings statistics &lt;a href=&quot;#nearest-neighbor-level-spacing-statistics&quot;&gt;below&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Tue, 05 May 2015 20:00:00 -0400</pubDate>
+      <dc:date>2015-05-05T20:00:00-04:00</dc:date>
+    </item>
     <item>
       <title>Meet histogramr</title>
       <link>http://tscholak.github.io/code/big%20data/2015/03/07/histogramr.html</link>
@@ -41,6 +49,6 @@
       <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-03-07T19:00:00-05:00</dc:date>
+    <dc:date>2015-05-05T20:00:00-04:00</dc:date>
   </channel>
 </rss>

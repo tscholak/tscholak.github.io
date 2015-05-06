@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>Meticulous Disorder by Torsten Scholak</title>
+    <meta name="description" content="a hodgepodge of theoretical quantum physics, computing, and typophilia, buried under a thick layer of forgettable kerfuffle" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="/assets/css/jquery-ui-1.11.3.min.css" /> -->
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <script type="text/javascript" src="/vendor/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.lettering.js"></script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-60317908-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+  </head>
+
+  <body class="post-template">
+
+    <header class="main-header post-head no-cover">
+  <nav class="main-nav  clearfix">
+    <a class="back-button icon-arrow-left" href="/">Home</a>
+    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+  </nav>
+</header>
+
+<main class="content" role="main">
+
+  <article class="post">
+
+    <header class="post-header">
+      <h1 class="post-title">Unfold with unfoldr</h1>
+      <section class="post-meta">                
+        <time class="post-date" datetime="2015-05-05">05 May 2015</time>
+         
+          on code and physics 
+        
+      </section>
+    </header>
+
+    <!-- <header class="post-header">
+      <a id="blog-logo" href="http://tscholak.github.io">
+        
+          <span class="blog-title">Meticulous Disorder</span>
+         
+      </a>
+    </header> -->
+    
+    <!-- <span class="post-meta">
+      <time datetime="2015-05-05">05 May 2015</time>
+       
+        on code and physics 
+      
+    </span> -->
+
+    <!-- <h1 class="post-title">Unfold with unfoldr</h1> -->
+
+    <section class="post-content">
+      <p>unfoldr is the second program of my complex systems software suite that I open-source. (<a href="/code/big%20data/2015/03/07/histogramr.html">histogramr</a> was the first one.) For those of you who study the spectral features of complex systems such as random networks I think unfoldr will prove quite useful. Given the eigenvalues of an ensemble of random matrices, unfoldr calculates the nearest-neighbor level spacings of the unfolded spectrum, either as a whole or for <em>slices</em> of it. You can specify how you want to cut the spectrum into slices — linearly, logarithmically —, and unfoldr will calculate the level spacings for each slice individually. With this you can study how the level spacing statistics change with energy and whether or not there is a phase transition in the spectrum. I have used this technique to pinpoint the localization transition in the energy spectrum of an ultra-cold Rydberg gas, <a href="#scholak2014spectral">(Scholak, Wellens, and Buchleitner 2014)</a>. I comment on the purpose and the scientific value of nearest-neighbor level spacings statistics <a href="#nearest-neighbor-level-spacing-statistics">below</a>.</p>
+
+<p>Like histogramr, unfoldr reads and writes <a href="http://www.hdfgroup.org/HDF5/">HDF5</a> files. HDF5 files are organized in a hierarchical, file-system-like data structure. HDF5 is commonly used in scientific environments. It is designed to handle big scientific data sets. Please see my <a href="/code/big%20data/2015/03/07/histogramr.html">earlier blog post</a> for a description of HDF5 and how it is used.</p>
+
+<h1>Get unfoldr today from GitHub!</h1>
+
+<p>You can <a href="https://github.com/tscholak/unfoldr">download unfoldr from GitHub</a>. In Linux or Mac OS X, open a terminal session and run:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">$ git clone git@github.com:tscholak/unfoldr.git
+</code></pre></div>
+<p>(get Git <a href="http://git-scm.com">here</a>). Since I released unfoldr under the GPLv3, you can use it for <em>free</em>. unfoldr is written in Python and uses the <a href="https://pypi.python.org/pypi/setuptools">setuptools</a>. From within the source code directory, run:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">python setup.py install
+</code></pre></div>
+<p>Make sure your Python&#39;s <code>bin</code> directory is in your <code>$PATH</code>. On Mac OS X, if you use Macports and haven&#39;t done so already, add</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">export PATH=/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin:$PATH
+</code></pre></div>
+<p>to your <code>~/.bash_login</code> or <code>~/.bash_profile</code> file. Once done, you can call unfoldr from the command line by invoking <code>unfoldr</code>. <code>unfoldr -h</code> will show you the command line arguments.</p>
+
+<h1>What exactly is unfoldr good for?</h1>
+
+<p>To understand the use cases of unfoldr, I first have to review some complex system theory. If you know all that stuff, skip to <a href="#nearest-neighbor-level-spacing-statistics">below</a>.</p>
+
+<p>Suppose you are dealing with a complex system, i.e. a large, complicated, but deterministic system or a system whose complexity comes from some intrinsic randomness. Suppose further that you do not seek a full and exact theory describing all phenomena that could possibly manifest in your complex system. Maybe you tried to derive such a theory, but you realized the impossibility of such a task. In fact, your resentment of the task has made you become ignorant of all the details of the system that were once so precious to you. Believe it or not, that is not at all a bad thing. There is a way out of your dilemma, and it involves to replace the Hamiltonian, the weighted adjacency matrix, Laplacian matrix, or whatever description of your system you have by a <em>random matrix</em> (or an ensemble of random matrices) that has the same invariances and symmetry properties as your system. As radical as it may sound, in most cases, it works surprisingly well. The theory that makes all this possible is called <em>random matrix theory</em> (RMT) <a href="#Wigner:1967nu">(Wigner 1967; Dyson 1970; Mehta 1991; Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)</a>.</p>
+
+<h2>Random matrix theory and Gaussian ensembles</h2>
+
+<p>RMT is concerned with the statistical properties (particularly, of eigenvalues and eigenvectors) of large $N \times N$ matrices $M$ with random elements $M_{i j}$. Within RMT, all results are derived from the probability density function $f_{M}$ of $M$. RMT is relevant in math <a href="#Tao:2012kx">(Tao 2012)</a>, theoretical physics (think complex nuclei, quantum and microwave billiards, metals with randomly distributed impurities, Rydberg gases, Boson sampling, ...), finance <a href="#Bouchaud:2009uq">(Bouchaud and Potters 2009)</a>, and the study of networks and communities (social networks, computer networks, etc.). In physics, for instance, $M$ can be the matrix representation of a realization of the system&#39;s Hamiltonian.</p>
+
+<p>Of course, for all interesting complex systems, the density $f_{M}$ is highly nontrivial, impossible to obtain from first principles, and thus simply not known. The first step in an RMT treatment of a complex system is therefore to attempt to simplify or to guesstimate $f_{M}$. As mentioned above, these attempts are guided by the invariance properties of the complex system. There are three seminal random matrix ensembles that result from such considerations: the Gaussian orthogonal ensemble (GOE), the Gaussian unitary ensemble (GUE) and the Gaussian symplectic ensemble (GSE). As the names suggest, the densities $f_{M}$ of these ensembles respect the invariance with respect to orthogonal, unitary, or symplectic similarity transformations. In other words, the integral assumption of these ensembles is that all real (respectively, complex, quaternion) basis sets are equally well suited to describe the system. All matrix elements $M_{i j}$ are independent and identically distributed, and the joint probability densities $f_{M}$ separate into products of their marginals, $f_{M} = f_{M_{1,1}} f_{M_{1,2}} \cdots f_{M_{N,N}}$. The marginals $f_{M_{i j}}$ are normally distributed with zero mean and fixed variance. For the GOE, they read</p>
+
+<p>\[
+  \begin{align*}
+    f_{M_{i i}}(m) &amp; = \frac{1}{\sqrt{2 \pi \sigma^2}} \, \mathrm{e}^{- \frac{m}{2 \sigma^2}}, \\
+    f_{M_{i j}}(m) &amp; = \frac{1}{\sqrt{\pi \sigma^2}} \, \mathrm{e}^{- \frac{m}{\sigma^2}},
+  \end{align*}
+\]</p>
+
+<p>where $\sigma^2$ is the variance of the diagonal elements $M_{i i}$. </p>
+
+<p>The three Gaussian random matrix ensembles have been studied at nauseam. The eigenvalue density is known (it&#39;s the Wigner semi-circle), the eigenstate localization properties are known (they are extended, i.e. every eigenvector extends over a fraction of the system that scales as the system size $N$), the level-spacing distribution is known (it&#39;s Wigner&#39;s surmise, see below), etc. The importance of the Gaussian ensembles stems from the fact that they are <em>universal</em>. If a closed system&#39;s behavior is chaotic in the classical limit, then, statistically speaking, it&#39;s corresponding wave or quantum behavior coincides with one of the Gaussian ensembles <a href="#Mehta:1991ph">(Mehta 1991)</a>. Integrable (non-chaotic) systems, on the other hand, have a completely different statistical fingerprint. If your complex system turns out to coincide with universal Gaussian statistics, then you are done. There is nothing left to solver or discover, because everything you possibly would like to know about your system (and can be known) has already been discovered. And if your complex system turns out to be different, then there is still a good chance that it&#39;s statistics are described by one of the other important random matrix ensembles: the circular random matrices <a href="#Guhr:1998fk">(Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)</a>, the stable random matrices <a href="#Cizeau:1994ml">(Cizeau and Bouchaud 1994)</a>, the Euclidean random matrices <a href="#Goetschy:2013df">(Goetschy and Skipetrov 2013)</a>, the power-law banded random matrices <a href="#Mirlin:1996aa">(Mirlin et al. 1996)</a>, the Laplacians of Erdős–Rényi (Poissonian) random graphs <a href="#Bollobas:2001sf">(Bollobás 2001)</a>, to name a few.</p>
+
+<h2>Eigenvalue correlations</h2>
+
+<p>At this point, you may wonder: How can I find out about the statistics of my complex system? How do I get its statistical fingerprint? How can I compare my system with the random matrix ensembles?</p>
+
+<p>One of the most useful statistical metrics for random matrix ensembles is the nearest-neighbor level spacing density (NNLS), $f_{S}$, where $f_{S} (s) \, \mathrm{d}s$ is the ensemble averaged probability to sample two adjacent eigenvalues $\Lambda_{\nu}$, $\Lambda_{\nu+1}$ that are separated by an energy $S$ between $s$ and $s + \mathrm{d}s$. I assume here that, for each realization, your eigenvalues $\Lambda_{\nu}$ are sorted in ascending order, $\Lambda_{1} \le \Lambda_{2} \le \ldots \le \Lambda_{N}$.</p>
+
+<p><strong>unfoldr computes the level spacings for you. Afterwards, you can use histogramr to get the NNLS density.</strong></p>
+
+<p>The NNLS density depends on the correlations between <em>all</em> eigenvalues of the random matrix. These correlations have a deterministic system-dependent part and a random universal part. Only the latter part may be used to compare the NNLS statistics with the universal random matrix ensembles. To extract the universal part, the spectrum of your complex system must be <em>unfolded</em>. Spectral unfolding is a commonly performed transformation that maps the ensemble averaged level spacing,</p>
+
+<p>\[
+  \overline{S} = \int_{0}^{\infty} s \, f_{S} (s) \, \mathrm{d}s
+\]</p>
+
+<p>to a constant, i.e. $\overline{S} = 1$. unfoldr will do that for you.</p>
+
+<h2>Unfolding theory</h2>
+
+<p>Below I explain how unfolding works. As an auxiliary tool, I first define the cumulative spectral function which is sometimes also called the <em>staircase function</em>:</p>
+
+<p>\[
+  \eta(\lambda) = \sum_{\nu = 1}^N \Theta\left(\lambda - \Lambda_{\nu}\right),
+\]</p>
+
+<p>where $\Theta(\lambda) = \int_\infty^\lambda \delta(\lambda&#39;) \, \mathrm{d}\lambda&#39;$ is the Heaviside step function. The function $\eta(\lambda)$ counts the number of eigenvalues $\Lambda_{\nu}$ with an energy smaller than or equal to $\lambda$. We separate $\eta(E)$ into a smooth part,</p>
+
+<p>\[
+  \overline{\eta}(\lambda) = N F_{\Lambda}(\lambda) = N \int_{-\infty}^{\lambda} f_{\Lambda}(\lambda&#39;) \, \mathrm{d}\lambda&#39;,
+\]</p>
+
+<p>and a fluctuating part, $\eta(\lambda) - \overline{\eta}(\lambda)$, i.e. into the ensemble average given by the cumulative energy level distribution function $F_{\Lambda}$ and the difference between the realization&#39;s value of $\eta(\lambda)$ and the ensemble average, respectively.</p>
+
+<p>The unfolding procedure is defined as the mapping</p>
+
+<p>\[
+  \Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu} = \overline{\eta}\left(\Lambda_{\nu}\right)
+\]</p>
+
+<p>executed for all eigenvalues ${\Lambda_{\nu}}$ of a given realization. Thus, by construction, the ensemble averaged staircase function of the unfolded spectrum ${\tilde{\Lambda}_{\nu}}$ evaluated for the scaled energy $\lambda$ is equal to $\lambda$ itself, and the corresponding unfolded mean level spacing equals one, such that the level spacing density $f_{S}$ of the unfolded eigenvalues is normalized with respect to</p>
+
+<p>\[
+  \int_0^\infty f_{S}(s) \, \mathrm{d}s = 1, \
+  \int_0^\infty s \, f_{\mathrm{s}}(s) \, \mathrm{d}s = \overline{s} = 1.
+\]</p>
+
+<h1>References</h1>
+
+<ol class="bibliography"><li><span id="scholak2014spectral">Scholak, Torsten, Thomas Wellens, and Andreas Buchleitner, 2014, “Spectral Backbone of Excitation Transport in Ultracold Rydberg Gases,” Phys. Rev. A <b>90</b> (American Physical Society), 063415. doi:10.1103/PhysRevA.90.063415.</span>
+
+<div id="scholak2014spectral-tabs">
+  View
+  <ul>
+    
+    <li><a href="#scholak2014spectral-tabs-1">short outline</a>,</li>
+    
+    
+    <li><a href="#scholak2014spectral-tabs-2">abstract</a>,</li>
+    
+    <li><a href="#scholak2014spectral-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  Download <a href="/assets/bibliography/scholak2014spectral.pdf">PDF</a>.
+  
+  
+  <div id="scholak2014spectral-tabs-1">
+    <p>Studied spectral structure underlying excitonic energy transfer in ultracold Rydberg gases ⋅ Found evidence for a critical energy that separates delocalized eigenstates from states that are localized at pairs or clusters of atoms separated by less than the typical nearest-neighbor distance ⋅ Discovered that the dipole blockade effect in Rydberg gases can be leveraged to manipulate the localization transition.</p>
+  </div>
+  
+  
+  <div id="scholak2014spectral-tabs-2">
+    <p>The spectral structure underlying excitonic energy transfer in ultracold Rydberg gases is studied numerically, in the framework of random matrix theory, and via self-consistent diagrammatic techniques. Rydberg gases are made up of randomly distributed, highly polarizable atoms that interact via strong dipolar forces. Dynamics in such a system is fundamentally different from cases in which the interactions are of short range, and is ultimately determined by the spectral and eigenvector structure. In the energy levels’ spacing statistics, we find evidence for a critical energy that separates delocalized eigenstates from states that are localized at pairs or clusters of atoms separated by less than the typical nearest-neighbor distance. We argue that the dipole blockade effect in Rydberg gases can be leveraged to manipulate this transition across a wide range: As the blockade radius increases, the relative weight of localized states is reduced. At the same time, the spectral statistics, in particular, the density of states and the nearest-neighbor level-spacing statistics, exhibits a transition from approximately a 1-stable Lévy to a Gaussian orthogonal ensemble. Deviations from random matrix statistics are shown to stem from correlations between interatomic interaction strengths that lead to an asymmetry of the spectral density and profoundly affect localization properties. We discuss approximations to the self-consistent Matsubara-Toyozawa locator expansion that incorporate these effects.</p>
+  </div>
+  
+  <div id="scholak2014spectral-tabs-3">
+    <pre>@article{scholak2014spectral,
+  annote = {Studied spectral structure underlying excitonic energy transfer in ultracold Rydberg gases ⋅ Found evidence for a critical energy that separates delocalized eigenstates from states that are localized at pairs or clusters of atoms separated by less than the typical nearest-neighbor distance ⋅ Discovered that the dipole blockade effect in Rydberg gases can be leveraged to manipulate the localization transition.},
+  author = {Scholak, Torsten and Wellens, Thomas and Buchleitner, Andreas},
+  date-added = {2015-05-06 20:28:24 +0000},
+  date-modified = {2015-05-06 20:28:24 +0000},
+  doi = {10.1103/PhysRevA.90.063415},
+  journal = {Phys. Rev. A},
+  month = {dec},
+  number = {6},
+  pages = {063415},
+  publisher = {American Physical Society},
+  title = {Spectral backbone of excitation transport in ultracold Rydberg gases},
+  volume = {90},
+  year = {2014},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevA.90.063415}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#scholak2014spectral-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Goetschy:2013df">Goetschy, A., and S. E. Skipetrov, 2013, “Euclidean Random Matrices and Their Applications in Physics.”</span>
+
+<div id="Goetschy:2013df-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Goetschy:2013df-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Goetschy:2013df-tabs-3">
+    <pre>@article{Goetschy:2013df,
+  archiveprefix = {arXiv},
+  author = {Goetschy, A. and Skipetrov, S. E.},
+  date-added = {2015-05-06 20:44:37 +0000},
+  date-modified = {2015-05-06 21:27:11 +0000},
+  eprint = {1303.2880},
+  primaryclass = {math-ph},
+  title = {Euclidean random matrices and their applications in physics},
+  year = {2013}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Goetschy:2013df-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Tao:2012kx">Tao, T., 2012, <i>Topics in Random Matrix Theory</i>. Graduate Studies in Mathematics (American Mathematical Society). Available at: https://books.google.ca/books?id=L51VAwAAQBAJ.</span>
+
+<div id="Tao:2012kx-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Tao:2012kx-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Tao:2012kx-tabs-3">
+    <pre>@book{Tao:2012kx,
+  author = {Tao, T.},
+  date-added = {2015-05-06 20:15:35 +0000},
+  date-modified = {2015-05-06 20:15:36 +0000},
+  isbn = {9780821874301},
+  lccn = {2011045194},
+  publisher = {American Mathematical Society},
+  series = {Graduate studies in mathematics},
+  title = {Topics in Random Matrix Theory},
+  url = {https://books.google.ca/books?id=L51VAwAAQBAJ},
+  year = {2012}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Tao:2012kx-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Bouchaud:2009uq">Bouchaud, J.~P., and M. Potters, 2009, “Financial Applications of Random Matrix Theory: a Short Review,” ArXiv e-prints.</span>
+
+<div id="Bouchaud:2009uq-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Bouchaud:2009uq-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Bouchaud:2009uq-tabs-3">
+    <pre>@article{Bouchaud:2009uq,
+  adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+  adsurl = {http://adsabs.harvard.edu/abs/2009arXiv0910.1205B},
+  archiveprefix = {arXiv},
+  author = {{Bouchaud}, J.~P. and {Potters}, M.},
+  date-added = {2015-05-06 20:14:06 +0000},
+  date-modified = {2015-05-06 20:14:07 +0000},
+  eprint = {0910.1205},
+  journal = {ArXiv e-prints},
+  keywords = {Quantitative Finance - Statistical Finance, Condensed Matter - Disordered Systems and Neural Networks, Quantitative Finance - Risk Management},
+  month = {oct},
+  primaryclass = {q-fin.ST},
+  title = {{Financial Applications of Random Matrix Theory: a short review}},
+  year = {2009}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Bouchaud:2009uq-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Bollobas:2001sf">Bollobás, B., 2001, <i>Random Graphs</i> (Cambridge University Press). Available at: https://books.google.ca/books?id=o9WecWgilzYC.</span>
+
+<div id="Bollobas:2001sf-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Bollobas:2001sf-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Bollobas:2001sf-tabs-3">
+    <pre>@book{Bollobas:2001sf,
+  author = {Bollob{\'a}s, B.},
+  date-added = {2015-05-06 20:24:48 +0000},
+  date-modified = {2015-05-06 20:24:48 +0000},
+  isbn = {9780521797221},
+  publisher = {Cambridge University Press},
+  title = {Random Graphs},
+  title1 = {Cambridge Studies in Advanced Mathematics},
+  ty = {BOOK},
+  url = {https://books.google.ca/books?id=o9WecWgilzYC},
+  year = {2001},
+  bdsk-url-1 = {https://books.google.ca/books?id=o9WecWgilzYC}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Bollobas:2001sf-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Stockmann:1999gd">Stöckmann, H.-J., 1999, <i>Quantum Chaos: An Introduction</i> (Cambridge University Press, Cambridge, United Kingdom).</span>
+
+<div id="Stockmann:1999gd-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Stockmann:1999gd-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Stockmann:1999gd-tabs-3">
+    <pre>@book{Stockmann:1999gd,
+  address = {Cambridge, United Kingdom},
+  author = {St\"{o}ckmann, H.-J.},
+  date-added = {2015-05-06 19:30:30 +0000},
+  date-modified = {2015-05-06 19:30:30 +0000},
+  publisher = {Cambridge University Press},
+  title = {Quantum chaos: An introduction},
+  year = {1999}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Stockmann:1999gd-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Guhr:1998fk">Guhr, Thomas, Axel Müller–Groeling, and Hans A. Weidenmüller, 1998, “Random-Matrix Theories in Quantum Physics: Common Concepts,” Physics Reports <b>299</b>, 189–425. doi:http://dx.doi.org/10.1016/S0370-1573(97)00088-4.</span>
+
+<div id="Guhr:1998fk-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Guhr:1998fk-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Guhr:1998fk-tabs-3">
+    <pre>@article{Guhr:1998fk,
+  author = {Guhr, Thomas and M{\"u}ller--Groeling, Axel and Weidenm{\"u}ller, Hans A.},
+  date-modified = {2015-05-06 19:15:26 +0000},
+  doi = {http://dx.doi.org/10.1016/S0370-1573(97)00088-4},
+  issn = {0370-1573},
+  journal = {Physics Reports},
+  keywords = {Disordered solids},
+  number = {4--6},
+  pages = {189 - 425},
+  title = {Random-matrix theories in quantum physics: common concepts},
+  url = {http://www.sciencedirect.com/science/article/pii/S0370157397000884},
+  volume = {299},
+  year = {1998},
+  bdsk-url-1 = {http://www.sciencedirect.com/science/article/pii/S0370157397000884},
+  bdsk-url-2 = {http://dx.doi.org/10.1016/S0370-1573(97)00088-4}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Guhr:1998fk-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Mirlin:1996aa">Mirlin, Alexander D., Yan V. Fyodorov, Frank-Michael Dittes, Javier Quezada, and Thomas H. Seligman, 1996, “Transition from Localized to Extended Eigenstates in the Ensemble of Power-Law Random Banded Matrices,” Phys. Rev. E <b>54</b>, 3221.</span>
+
+<div id="Mirlin:1996aa-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Mirlin:1996aa-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Mirlin:1996aa-tabs-3">
+    <pre>@article{Mirlin:1996aa,
+  author = {Mirlin, Alexander D. and Fyodorov, Yan V. and Dittes, Frank-Michael and Quezada, Javier and Seligman, Thomas H.},
+  date-added = {2015-05-06 20:37:05 +0000},
+  date-modified = {2015-05-06 20:37:05 +0000},
+  journal = {Phys. Rev. E},
+  pages = {3221},
+  title = {Transition from localized to extended eigenstates in the ensemble of power-law random banded matrices},
+  volume = {54},
+  year = {1996}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Mirlin:1996aa-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Cizeau:1994ml">Cizeau, P., and J. P. Bouchaud, 1994, “Theory of Lévy Matrices,” Phys. Rev. E <b>50</b>, 1810.</span>
+
+<div id="Cizeau:1994ml-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Cizeau:1994ml-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Cizeau:1994ml-tabs-3">
+    <pre>@article{Cizeau:1994ml,
+  author = {Cizeau, P. and Bouchaud, J. P.},
+  date-added = {2015-05-06 20:22:03 +0000},
+  date-modified = {2015-05-06 20:22:03 +0000},
+  journal = {Phys. Rev. E},
+  pages = {1810},
+  title = {Theory of L{\'e}vy matrices},
+  volume = {50},
+  year = {1994}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Cizeau:1994ml-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Mehta:1991ph">Mehta, M. L., 1991, <i>Random Matrices</i>. 2nd ed (Academic Press, San Diego, California).</span>
+
+<div id="Mehta:1991ph-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Mehta:1991ph-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Mehta:1991ph-tabs-3">
+    <pre>@book{Mehta:1991ph,
+  address = {San Diego, California},
+  author = {Mehta, M. L.},
+  date-added = {2015-05-06 19:31:11 +0000},
+  date-modified = {2015-05-06 19:31:11 +0000},
+  edition = {2nd},
+  publisher = {Academic Press},
+  title = {Random matrices},
+  year = {1991}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Mehta:1991ph-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Dyson:1970mf">Dyson, Freeman J., 1970, “Correlations between Eigenvalues of a Random Matrix,” Comm. Math. Phys. <b>19</b>, 235.</span>
+
+<div id="Dyson:1970mf-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Dyson:1970mf-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Dyson:1970mf-tabs-3">
+    <pre>@article{Dyson:1970mf,
+  author = {Dyson, Freeman J.},
+  date-added = {2015-05-06 20:33:42 +0000},
+  date-modified = {2015-05-06 20:33:42 +0000},
+  journal = {Comm. Math. Phys.},
+  number = {3},
+  pages = {235},
+  title = {Correlations between eigenvalues of a random matrix},
+  volume = {19},
+  year = {1970}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Dyson:1970mf-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Wigner:1967nu">Wigner, E., 1967, “Random Matrices in Physics,” SIAM Rev. <b>9</b>, 1.</span>
+
+<div id="Wigner:1967nu-tabs">
+  View
+  <ul>
+    
+    <li><a href="#Wigner:1967nu-tabs-1">short outline</a>,</li>
+    
+    
+    <li><a href="#Wigner:1967nu-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  <div id="Wigner:1967nu-tabs-1">
+    <p>doi: 10.1137/1009001</p>
+  </div>
+  
+  
+  <div id="Wigner:1967nu-tabs-3">
+    <pre>@article{Wigner:1967nu,
+  annote = {doi: 10.1137/1009001},
+  author = {Wigner, E.},
+  date-added = {2015-05-06 20:33:33 +0000},
+  date-modified = {2015-05-06 20:33:33 +0000},
+  journal = {SIAM Rev.},
+  number = {1},
+  pages = {1},
+  title = {Random Matrices in Physics},
+  volume = {9},
+  year = {1967}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Wigner:1967nu-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li></ol>
+
+    </section>
+
+    
+
+    <footer class="post-footer">
+      <!-- If we want to display author's name and bio -->
+      
+        <figure class="author-image">
+          <a class="img" href="/" style="background-image: url(/assets/images/profile.png)">
+          <span class="hidden">that's me</span></a>
+        </figure>
+        <section class="author">
+          <!-- Author Name -->
+          <h4> Torsten Scholak </h4>
+          <!-- Author Bio -->
+          <p>
+            Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
+          </p>
+        </section>                
+      
+
+      <!-- Share links section -->
+      <!-- <section class="share">
+  <h4>Share this post</h4>
+  <a class="icon-twitter" href="http://twitter.com/share?text=Unfold with unfoldr&amp;url=http://tscholak.github.io/code/physics/2015/05/05/unfoldr.html"
+    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+    <span class="hidden">Twitter</span>
+  </a>
+  <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://tscholak.github.io/code/physics/2015/05/05/unfoldr.html"
+    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+    <span class="hidden">Facebook</span>
+  </a>
+  <a class="icon-google-plus" href="https://plus.google.com/share?url=http://tscholak.github.io/code/physics/2015/05/05/unfoldr.html"
+     onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+    <span class="hidden">Google+</span>
+  </a>
+</section> -->
+
+      <!-- Follow me section -->
+      <section class="follow">
+  <h4>Follow me</h4>
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Facebook');" class="facebook_follow" title="Follow on Facebook" href="http://www.facebook.com/tscholak" target="_blank"><i class="fa fa-lg fa-facebook-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Twitter');" class="twitter_follow" title="Follow on Twitter" href="https://twitter.com/tscholak" target="_blank"><i class="fa fa-lg fa-twitter-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on LinkedIn');" class="linkedin_follow" title="Follow on LinkedIn" href="http://www.linkedin.com/in/tscholak" target="_blank"><i class="fa fa-lg fa-linkedin-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Google+');" class="googleplus_follow" title="Follow on LinkedIn" href="https://plus.google.com/u/0/+TorstenScholak" target="_blank"><i class="fa fa-lg fa-google-plus-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on StackOverflow');" class="stackoverflow_follow" title="Follow on StackOverflow" href="https://stackoverflow.com/users/700435" target="_blank"><i class="fa fa-lg fa-stack-exchange"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
+  
+</section>
+      
+      <!-- Disqus comments -->
+      
+      
+    </footer>
+
+  </article>
+
+</main>
+
+
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/">Meticulous Disorder</a> &copy; 
+               &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer> 
+  </body>
+</html>
