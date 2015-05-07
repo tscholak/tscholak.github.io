@@ -5,22 +5,69 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 06 May 2015 17:30:26 -0400</pubDate>
-    <lastBuildDate>Wed, 06 May 2015 17:30:26 -0400</lastBuildDate>
+    <pubDate>Thu, 07 May 2015 17:02:04 -0400</pubDate>
+    <lastBuildDate>Thu, 07 May 2015 17:02:04 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
         <title>Unfold with unfoldr</title>
-        <description>&lt;p&gt;unfoldr is the second program of my complex systems software suite that I open-source. (&lt;a href=&quot;/code/big%20data/2015/03/07/histogramr.html&quot;&gt;histogramr&lt;/a&gt; was the first one.) For those of you who study the spectral features of complex systems such as random networks I think unfoldr will prove quite useful. Given the eigenvalues of an ensemble of random matrices, unfoldr calculates the nearest-neighbor level spacings of the unfolded spectrum, either as a whole or for &lt;em&gt;slices&lt;/em&gt; of it. You can specify how you want to cut the spectrum into slices — linearly, logarithmically —, and unfoldr will calculate the level spacings for each slice individually. With this you can study how the level spacing statistics change with energy and whether or not there is a phase transition in the spectrum. I have used this technique to pinpoint the localization transition in the energy spectrum of an ultra-cold Rydberg gas, &lt;a href=&quot;#scholak2014spectral&quot;&gt;(Scholak, Wellens, and Buchleitner 2014)&lt;/a&gt;. I comment on the purpose and the scientific value of nearest-neighbor level spacings statistics &lt;a href=&quot;#nearest-neighbor-level-spacing-statistics&quot;&gt;below&lt;/a&gt;.&lt;/p&gt;
+        <description>&lt;p&gt;unfoldr is the second program of my complex systems software suite that I open-source. (&lt;a href=&quot;/code/big%20data/2015/03/07/histogramr.html&quot;&gt;histogramr&lt;/a&gt; was the first one.) For those of you who study the spectral features of complex systems such as random networks I think unfoldr will prove quite useful. Given the eigenvalues of an ensemble of random matrices, unfoldr calculates the nearest-neighbor level spacings of the unfolded spectrum, either as a whole or for &lt;em&gt;slices&lt;/em&gt; of it. You can specify how you want to cut the spectrum into slices — linearly, logarithmically —, and unfoldr will calculate the level spacings for each slice individually. With this you can study how the level spacing statistics change with energy and whether or not there is a phase transition in the spectrum. I have used this technique to pinpoint the localization transition in the energy spectrum of an ultra-cold Rydberg gas, &lt;a href=&quot;#scholak2014spectral&quot;&gt;(Scholak, Wellens, and Buchleitner 2014)&lt;/a&gt;. I comment on the purpose and the scientific value of the nearest-neighbor level spacings statistics &lt;a href=&quot;#theory&quot;&gt;below&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;Like histogramr, unfoldr reads and writes &lt;a href=&quot;http://www.hdfgroup.org/HDF5/&quot;&gt;HDF5&lt;/a&gt; files. HDF5 files are organized in a hierarchical, file-system-like data structure. HDF5 is commonly used in scientific environments. It is designed to handle big scientific data sets. Please see my &lt;a href=&quot;/code/big%20data/2015/03/07/histogramr.html&quot;&gt;earlier blog post&lt;/a&gt; for a description of HDF5 and how it is used.&lt;/p&gt;
+&lt;p&gt;Like histogramr, unfoldr reads and writes &lt;a href=&quot;http://www.hdfgroup.org/HDF5/&quot;&gt;HDF5&lt;/a&gt; files. HDF5 files are organized in a hierarchical, file-system-like data structure. HDF5 is &lt;a href=&quot;https://www.hdfgroup.org/users.html&quot;&gt;commonly used in scientific environments&lt;/a&gt;. It is designed to handle big scientific data sets. Please see my &lt;a href=&quot;/code/big%20data/2015/03/07/histogramr.html&quot;&gt;earlier blog post&lt;/a&gt; for a description of HDF5 and how it is used.&lt;/p&gt;
+
+&lt;p&gt;unfoldr and histogramr are designed to work in tandem. Output from unfoldr can (but doesn&amp;#39;t have to) be processed by histogramr. unfoldr produces a HDF5 file that contains the level spacings in a single data set:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;unfoldr -d &amp;quot;spectrum&amp;quot; -m &amp;quot;eigval&amp;quot; -o nnls.h5 spectra.h5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And histogramr then creates a discretized probability density function from it:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;histogramr -d &amp;quot;inf&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0,10 -o nnlsd.h5 nnls.h5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Boom! You&amp;#39;ve got the nearest-neighbor level spacing distribution stored nicely in &lt;code&gt;nnlsd.h5&lt;/code&gt;. Then you can do this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;import numpy as np
+import h5py
+import plotly.plotly as py
+from plotly.graph_objs import *
+
+fS_Poisson = np.array((lambda x: [x, np.exp(-x)])(np.linspace(0, 4, 100))).transpose()
+fS_GOE = np.array((lambda x: [x, np.pi*x*np.exp(-np.pi*x**2./4.)/2.])(np.linspace(0, 4, 100))).transpose()
+
+h5file = h5py.File(&amp;#39;nnlsd.h5&amp;#39;,&amp;#39;r&amp;#39;)
+fS_unfoldr = np.array(h5file[&amp;#39;probability density&amp;#39;])
+h5file.close()
+
+trace_Poisson = Scatter(x=fS_Poisson[:,0],
+                        y=fS_Poisson[:,1],
+                        mode=&amp;#39;lines&amp;#39;,
+                        name=u&amp;quot;Poisson distribution&amp;quot;)
+trace_GOE = Scatter(x=fS_GOE[:,0],
+                    y=fS_GOE[:,1],
+                    mode=&amp;#39;lines&amp;#39;,
+                    name=u&amp;quot;Wigner&amp;#39;s surmise&amp;quot;)
+trace_unfoldr = Scatter(x=fS_unfoldr[:,0],
+                        y=fS_unfoldr[:,1],
+                        mode=&amp;#39;markers&amp;#39;,
+                        name=u&amp;#39;unfoldr data&amp;#39;,
+                        marker=Marker(symbol=&amp;#39;square&amp;#39;))
+data = Data([trace_Poisson, trace_GOE, trace_unfoldr])
+layout = Layout(title=u&amp;#39;Nearest-neighbor level spacing distribution&amp;#39;)
+fig = Figure(data=data, layout=layout)
+
+py.iplot(fig, filename=&amp;quot;unfoldr-demonstration&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The output is:&lt;/p&gt;
+
+&lt;div&gt;
+  &lt;a href=&quot;https://plot.ly/~tscholak/26/&quot; target=&quot;_blank&quot; title=&quot;Nearest-neighbor level spacing distribution&quot; style=&quot;display: block; text-align: center;&quot;&gt;&lt;img src=&quot;https://plot.ly/~tscholak/26.png&quot; alt=&quot;Nearest-neighbor level spacing distribution&quot; style=&quot;max-width: 100%;&quot;  onerror=&quot;this.onerror=null;this.src=&#39;https://plot.ly/404.png&#39;;&quot; /&gt;&lt;/a&gt;
+  &lt;script data-plotly=&quot;tscholak:26&quot; src=&quot;https://plot.ly/embed.js&quot; async&gt;&lt;/script&gt;
+&lt;/div&gt;
+
+&lt;p&gt;It looks like the data (squares) agrees with &lt;a href=&quot;#Wigners-surmise&quot;&gt;Wigner&amp;#39;s surmise&lt;/a&gt;!&lt;/p&gt;
 
 &lt;h1&gt;Get unfoldr today from GitHub!&lt;/h1&gt;
 
 &lt;p&gt;You can &lt;a href=&quot;https://github.com/tscholak/unfoldr&quot;&gt;download unfoldr from GitHub&lt;/a&gt;. In Linux or Mac OS X, open a terminal session and run:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ git clone git@github.com:tscholak/unfoldr.git
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;(get Git &lt;a href=&quot;http://git-scm.com&quot;&gt;here&lt;/a&gt;). Since I released unfoldr under the GPLv3, you can use it for &lt;em&gt;free&lt;/em&gt;. unfoldr is written in Python and uses the &lt;a href=&quot;https://pypi.python.org/pypi/setuptools&quot;&gt;setuptools&lt;/a&gt;. From within the source code directory, run:&lt;/p&gt;
+&lt;p&gt;(get Git &lt;a href=&quot;http://git-scm.com&quot;&gt;here&lt;/a&gt;). Since I released unfoldr under the GPLv3, you can use, study, share, and modify it for &lt;em&gt;free&lt;/em&gt; (as long as you retain these rights for others). unfoldr is written in &lt;a href=&quot;https://www.python.org&quot;&gt;Python&lt;/a&gt; and uses the &lt;a href=&quot;https://pypi.python.org/pypi/setuptools&quot;&gt;setuptools&lt;/a&gt;. From within the source code directory, run:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;python setup.py install
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Make sure your Python&amp;#39;s &lt;code&gt;bin&lt;/code&gt; directory is in your &lt;code&gt;$PATH&lt;/code&gt;. On Mac OS X, if you use Macports and haven&amp;#39;t done so already, add&lt;/p&gt;
@@ -28,17 +75,25 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;to your &lt;code&gt;~/.bash_login&lt;/code&gt; or &lt;code&gt;~/.bash_profile&lt;/code&gt; file. Once done, you can call unfoldr from the command line by invoking &lt;code&gt;unfoldr&lt;/code&gt;. &lt;code&gt;unfoldr -h&lt;/code&gt; will show you the command line arguments.&lt;/p&gt;
 
-&lt;h1&gt;What exactly is unfoldr good for?&lt;/h1&gt;
+&lt;h1&gt;&lt;a name=&quot;theory&quot;&gt;&lt;/a&gt;What exactly is unfoldr good for?&lt;/h1&gt;
 
-&lt;p&gt;To understand the use cases of unfoldr, I first have to review some complex system theory. If you know all that stuff, skip to &lt;a href=&quot;#nearest-neighbor-level-spacing-statistics&quot;&gt;below&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;To understand the use cases of unfoldr, I first have to review some complex system theory. If you know all that stuff, skip &lt;a href=&quot;#nearest-neighbor-level-spacing-statistics&quot;&gt;ahead&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;Suppose you are dealing with a complex system, i.e. a large, complicated, but deterministic system or a system whose complexity comes from some intrinsic randomness. Suppose further that you do not seek a full and exact theory describing all phenomena that could possibly manifest in your complex system. Maybe you tried to derive such a theory, but you realized the impossibility of such a task. In fact, your resentment of the task has made you become ignorant of all the details of the system that were once so precious to you. Believe it or not, that is not at all a bad thing. There is a way out of your dilemma, and it involves to replace the Hamiltonian, the weighted adjacency matrix, Laplacian matrix, or whatever description of your system you have by a &lt;em&gt;random matrix&lt;/em&gt; (or an ensemble of random matrices) that has the same invariances and symmetry properties as your system. As radical as it may sound, in most cases, it works surprisingly well. The theory that makes all this possible is called &lt;em&gt;random matrix theory&lt;/em&gt; (RMT) &lt;a href=&quot;#Wigner:1967nu&quot;&gt;(Wigner 1967; Dyson 1970; Mehta 1991; Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Suppose you are dealing with a complex system, i.e. a large, complicated, but deterministic system or a system whose complexity comes from some intrinsic randomness. Suppose further that you do not seek a full and exact theory describing all phenomena that could possibly manifest in your complex system. Maybe you tried to derive such a theory, but you realized the impossibility of such a task. In fact, your resentment of the task has made you become ignorant of all the details of the system that were once so precious to you. Believe it or not, that is not at all a bad thing. There is a way out of your dilemma, and it involves to replace the Hamiltonian, the weighted adjacency matrix, Laplacian matrix, or whatever description of your system you have by a &lt;em&gt;random matrix&lt;/em&gt; (or an ensemble of random matrices) that has the same invariances and symmetry properties as your system. As radical as it may sound, in most cases, it works surprisingly well. The theory that makes all this possible is called &lt;em&gt;random matrix theory&lt;/em&gt; (RMT) &lt;a href=&quot;#Wigner1967Random-Matrices&quot;&gt;(Wigner 1967; Dyson 1970; Mehta 1991; Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h2&gt;Random matrix theory and Gaussian ensembles&lt;/h2&gt;
 
-&lt;p&gt;RMT is concerned with the statistical properties (particularly, of eigenvalues and eigenvectors) of large $N \times N$ matrices $M$ with random elements $M_{i j}$. Within RMT, all results are derived from the probability density function $f_{M}$ of $M$. RMT is relevant in math &lt;a href=&quot;#Tao:2012kx&quot;&gt;(Tao 2012)&lt;/a&gt;, theoretical physics (think complex nuclei, quantum and microwave billiards, metals with randomly distributed impurities, Rydberg gases, Boson sampling, ...), finance &lt;a href=&quot;#Bouchaud:2009uq&quot;&gt;(Bouchaud and Potters 2009)&lt;/a&gt;, and the study of networks and communities (social networks, computer networks, etc.). In physics, for instance, $M$ can be the matrix representation of a realization of the system&amp;#39;s Hamiltonian.&lt;/p&gt;
+&lt;p&gt;RMT is concerned with the statistical properties (particularly, of eigenvalues and eigenvectors) of large $N \times N$ matrices $M$ with random elements $M_{i j}$. Within RMT, all results are derived from the probability density function $f_{M}$ of $M$. RMT is relevant in math &lt;a href=&quot;#Tao2012Topics-in-Rando&quot;&gt;(Tao 2012)&lt;/a&gt;, theoretical physics (think complex nuclei, quantum and microwave billiards, metals with randomly distributed impurities, Rydberg gases &lt;a href=&quot;#scholak2014spectral&quot;&gt;(Scholak, Wellens, and Buchleitner 2014)&lt;/a&gt;, Boson sampling &lt;a href=&quot;#Walschaers2014A-Statistical-B&quot;&gt;(Walschaers et al. 2014)&lt;/a&gt;, ...), finance &lt;a href=&quot;#Bouchaud2009Financial-Appli&quot;&gt;(Bouchaud and Potters 2009)&lt;/a&gt;, and the study of networks and communities (social networks, computer networks, etc.). In physics, for instance, $M$ can be the matrix representation of a realization of the system&amp;#39;s Hamiltonian.&lt;/p&gt;
 
-&lt;p&gt;Of course, for all interesting complex systems, the density $f_{M}$ is highly nontrivial, impossible to obtain from first principles, and thus simply not known. The first step in an RMT treatment of a complex system is therefore to attempt to simplify or to guesstimate $f_{M}$. As mentioned above, these attempts are guided by the invariance properties of the complex system. There are three seminal random matrix ensembles that result from such considerations: the Gaussian orthogonal ensemble (GOE), the Gaussian unitary ensemble (GUE) and the Gaussian symplectic ensemble (GSE). As the names suggest, the densities $f_{M}$ of these ensembles respect the invariance with respect to orthogonal, unitary, or symplectic similarity transformations. In other words, the integral assumption of these ensembles is that all real (respectively, complex, quaternion) basis sets are equally well suited to describe the system. All matrix elements $M_{i j}$ are independent and identically distributed, and the joint probability densities $f_{M}$ separate into products of their marginals, $f_{M} = f_{M_{1,1}} f_{M_{1,2}} \cdots f_{M_{N,N}}$. The marginals $f_{M_{i j}}$ are normally distributed with zero mean and fixed variance. For the GOE, they read&lt;/p&gt;
+&lt;p&gt;Of course, for all interesting complex systems, the density $f_{M}$ is highly nontrivial, impossible to obtain from first principles, and thus simply not known. The first step in an RMT treatment of a complex system is therefore to attempt to simplify or to guesstimate $f_{M}$. As mentioned already above, these attempts are guided by the invariance properties of the complex system. There are three seminal random matrix ensembles that result from such considerations:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;the Gaussian orthogonal ensemble (GOE),&lt;/li&gt;
+&lt;li&gt;the Gaussian unitary ensemble (GUE) and&lt;/li&gt;
+&lt;li&gt;the Gaussian symplectic ensemble (GSE).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As the names suggest, the densities $f_{M}$ of these ensembles respect the invariance with respect to orthogonal, unitary, or symplectic similarity transformations. In other words, the core assumption for these ensembles is that all real (respectively, complex, quaternion) basis sets are equally well suited to describe the system. Furthermore, all matrix elements $M_{i j}$ are independent, and the joint probability densities $f_{M}$ decompose into products of their marginals, $f_{M} = f_{M_{1,1}} f_{M_{1,2}} \cdots f_{M_{N,N}}$. The marginals $f_{M_{i j}}$ are normally distributed with zero mean and fixed variance. For the GOE, they read&lt;/p&gt;
 
 &lt;p&gt;\[
   \begin{align*}
@@ -49,15 +104,31 @@
 
 &lt;p&gt;where $\sigma^2$ is the variance of the diagonal elements $M_{i i}$. &lt;/p&gt;
 
-&lt;p&gt;The three Gaussian random matrix ensembles have been studied at nauseam. The eigenvalue density is known (it&amp;#39;s the Wigner semi-circle), the eigenstate localization properties are known (they are extended, i.e. every eigenvector extends over a fraction of the system that scales as the system size $N$), the level-spacing distribution is known (it&amp;#39;s Wigner&amp;#39;s surmise, see below), etc. The importance of the Gaussian ensembles stems from the fact that they are &lt;em&gt;universal&lt;/em&gt;. If a closed system&amp;#39;s behavior is chaotic in the classical limit, then, statistically speaking, it&amp;#39;s corresponding wave or quantum behavior coincides with one of the Gaussian ensembles &lt;a href=&quot;#Mehta:1991ph&quot;&gt;(Mehta 1991)&lt;/a&gt;. Integrable (non-chaotic) systems, on the other hand, have a completely different statistical fingerprint. If your complex system turns out to coincide with universal Gaussian statistics, then you are done. There is nothing left to solver or discover, because everything you possibly would like to know about your system (and can be known) has already been discovered. And if your complex system turns out to be different, then there is still a good chance that it&amp;#39;s statistics are described by one of the other important random matrix ensembles: the circular random matrices &lt;a href=&quot;#Guhr:1998fk&quot;&gt;(Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)&lt;/a&gt;, the stable random matrices &lt;a href=&quot;#Cizeau:1994ml&quot;&gt;(Cizeau and Bouchaud 1994)&lt;/a&gt;, the Euclidean random matrices &lt;a href=&quot;#Goetschy:2013df&quot;&gt;(Goetschy and Skipetrov 2013)&lt;/a&gt;, the power-law banded random matrices &lt;a href=&quot;#Mirlin:1996aa&quot;&gt;(Mirlin et al. 1996)&lt;/a&gt;, the Laplacians of Erdős–Rényi (Poissonian) random graphs &lt;a href=&quot;#Bollobas:2001sf&quot;&gt;(Bollobás 2001)&lt;/a&gt;, to name a few.&lt;/p&gt;
+&lt;p&gt;The three Gaussian random matrix ensembles have been studied at nauseam. The eigenvalue density is known (it&amp;#39;s the &lt;a href=&quot;http://en.wikipedia.org/wiki/Wigner_semicircle_distribution&quot;&gt;Wigner semi-circle&lt;/a&gt;), the eigenstate localization properties are known (they are extended &lt;a href=&quot;#Erdos2007Semicircle-law-&quot;&gt;(Erdős, Schlein, and Yau 2007)&lt;/a&gt;), i.e. every eigenvector extends over a fraction of the system that scales as the system size $N$), the level-spacing distribution is known (it&amp;#39;s Wigner&amp;#39;s surmise, see &lt;a href=&quot;#Wigners-surmise&quot;&gt;below&lt;/a&gt;), etc. The importance of the Gaussian ensembles stems from the fact that they are &lt;em&gt;universal&lt;/em&gt;. If a closed system&amp;#39;s behavior is chaotic in the classical limit, then, statistically speaking, it&amp;#39;s corresponding wave or quantum behavior coincides with one of the Gaussian ensembles &lt;a href=&quot;#Mehta1991Random-matrices&quot;&gt;(Mehta 1991)&lt;/a&gt;. Integrable (non-chaotic) systems, on the other hand, have a completely different statistical fingerprint. If your complex system turns out to coincide with universal Gaussian statistics, then you are done. There is nothing left to solve or discover, because everything you possibly would like to know (and can be known) about your system has already been discovered. And if your complex system turns out to be different, then there is still a good chance that it&amp;#39;s statistics are described by one of the other important random matrix ensembles:&lt;/p&gt;
 
-&lt;h2&gt;Eigenvalue correlations&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;the circular random matrices &lt;a href=&quot;#Guhr1998Random-matrix-t&quot;&gt;(Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)&lt;/a&gt;,&lt;/li&gt;
+&lt;li&gt;the stable random matrices &lt;a href=&quot;#Cizeau1994Theory-of-Levy-&quot;&gt;(Cizeau and Bouchaud 1994)&lt;/a&gt;,&lt;/li&gt;
+&lt;li&gt;the Euclidean random matrices &lt;a href=&quot;#Goetschy2013Euclidean-rando&quot;&gt;(Goetschy and Skipetrov 2013)&lt;/a&gt;,&lt;/li&gt;
+&lt;li&gt;the power-law banded random matrices &lt;a href=&quot;#Mirlin1996Transition-from&quot;&gt;(Mirlin et al. 1996)&lt;/a&gt;,&lt;/li&gt;
+&lt;li&gt;the Laplacians of Erdős–Rényi (Poissonian) random graphs &lt;a href=&quot;#Bollobas2001Random-Graphs&quot;&gt;(Bollobás 2001)&lt;/a&gt;,&lt;/li&gt;
+&lt;/ul&gt;
 
-&lt;p&gt;At this point, you may wonder: How can I find out about the statistics of my complex system? How do I get its statistical fingerprint? How can I compare my system with the random matrix ensembles?&lt;/p&gt;
+&lt;p&gt;you name it.&lt;/p&gt;
 
-&lt;p&gt;One of the most useful statistical metrics for random matrix ensembles is the nearest-neighbor level spacing density (NNLS), $f_{S}$, where $f_{S} (s) \, \mathrm{d}s$ is the ensemble averaged probability to sample two adjacent eigenvalues $\Lambda_{\nu}$, $\Lambda_{\nu+1}$ that are separated by an energy $S$ between $s$ and $s + \mathrm{d}s$. I assume here that, for each realization, your eigenvalues $\Lambda_{\nu}$ are sorted in ascending order, $\Lambda_{1} \le \Lambda_{2} \le \ldots \le \Lambda_{N}$.&lt;/p&gt;
+&lt;h2&gt;Eigenvalue correlations and level repulsion&lt;/h2&gt;
 
-&lt;p&gt;&lt;strong&gt;unfoldr computes the level spacings for you. Afterwards, you can use histogramr to get the NNLS density.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;At this point, you may wonder: How can I find out about the statistics of my complex system? How do I get its statistical fingerprint? How can I compare my system with the random matrix ensembles? unfoldr helps you with that. It turns out you can learn a lot from the data:&lt;/p&gt;
+
+&lt;p&gt;One of the most useful statistical metrics for random matrix ensembles is the nearest-neighbor level spacing (NNLS) density, denoted here by $f_{S}$.&lt;/p&gt;
+
+&lt;p&gt;\[
+  f_{S}(s) \, \mathrm{d}s = \overline{\delta(s - S_{\nu})} \, \mathrm{d}s
+\]&lt;/p&gt;
+
+&lt;p&gt;is the ensemble averaged probability to sample two adjacent eigenvalues (also called eigenenergies) $\Lambda_{\nu}$, $\Lambda_{\nu+1}$ that are separated by an energy difference $S_{\nu} = \Lambda_{\nu+1} - \Lambda_{\nu}$ between $s$ and $s + \mathrm{d}s$. I assume here that, for each realization, your eigenvalues $\Lambda_{\nu}$ are sorted in ascending order, $\Lambda_{1} \le \Lambda_{2} \le \ldots \le \Lambda_{N}$.&lt;/p&gt;
+
+&lt;p&gt;If you have the eigenvalues or eigenenergies of your system, unfoldr can compute the level spacings for you. Afterwards, you can use histogramr to get the NNLS density.&lt;/p&gt;
 
 &lt;p&gt;The NNLS density depends on the correlations between &lt;em&gt;all&lt;/em&gt; eigenvalues of the random matrix. These correlations have a deterministic system-dependent part and a random universal part. Only the latter part may be used to compare the NNLS statistics with the universal random matrix ensembles. To extract the universal part, the spectrum of your complex system must be &lt;em&gt;unfolded&lt;/em&gt;. Spectral unfolding is a commonly performed transformation that maps the ensemble averaged level spacing,&lt;/p&gt;
 
@@ -65,36 +136,112 @@
   \overline{S} = \int_{0}^{\infty} s \, f_{S} (s) \, \mathrm{d}s
 \]&lt;/p&gt;
 
-&lt;p&gt;to a constant, i.e. $\overline{S} = 1$. unfoldr will do that for you.&lt;/p&gt;
+&lt;p&gt;to a constant, i.e. $\overline{S} = 1$. unfoldr will do that for you (hence the name). So you don&amp;#39;t have to worry about it.&lt;/p&gt;
 
-&lt;h2&gt;Unfolding theory&lt;/h2&gt;
-
-&lt;p&gt;Below I explain how unfolding works. As an auxiliary tool, I first define the cumulative spectral function which is sometimes also called the &lt;em&gt;staircase function&lt;/em&gt;:&lt;/p&gt;
+&lt;p&gt;If there are no dependencies between the eigenvalues, all distances between them will be uncorrelated, and $f_{S}$ will thus be identical to the Poisson distribution,&lt;/p&gt;
 
 &lt;p&gt;\[
-  \eta(\lambda) = \sum_{\nu = 1}^N \Theta\left(\lambda - \Lambda_{\nu}\right),
+  f^{\mathrm{P}}_{S} = \mathrm{e}^{-s}.
 \]&lt;/p&gt;
 
-&lt;p&gt;where $\Theta(\lambda) = \int_\infty^\lambda \delta(\lambda&amp;#39;) \, \mathrm{d}\lambda&amp;#39;$ is the Heaviside step function. The function $\eta(\lambda)$ counts the number of eigenvalues $\Lambda_{\nu}$ with an energy smaller than or equal to $\lambda$. We separate $\eta(E)$ into a smooth part,&lt;/p&gt;
+&lt;p&gt;&lt;a name=&quot;Wigners-surmise&quot;&gt;&lt;/a&gt;By contrast, the spectra of the universal Gaussian ensembles (GOE, GUE, GSE) are correlated. Their level-spacing statistics is not described by $f^{\mathrm{P}}_{S}$. For instance, the NNLS statistics of the GOE is well described by Wigner&amp;#39;s surmise, i.e. by the Rayleigh distribution&lt;/p&gt;
 
 &lt;p&gt;\[
-  \overline{\eta}(\lambda) = N F_{\Lambda}(\lambda) = N \int_{-\infty}^{\lambda} f_{\Lambda}(\lambda&amp;#39;) \, \mathrm{d}\lambda&amp;#39;,
+  f^{\mathrm{GOE}}_{S}(s) = \frac{\pi}{2} s \, \mathrm{e}^{-\frac{\pi}{4} s^2}.
 \]&lt;/p&gt;
 
-&lt;p&gt;and a fluctuating part, $\eta(\lambda) - \overline{\eta}(\lambda)$, i.e. into the ensemble average given by the cumulative energy level distribution function $F_{\Lambda}$ and the difference between the realization&amp;#39;s value of $\eta(\lambda)$ and the ensemble average, respectively.&lt;/p&gt;
-
-&lt;p&gt;The unfolding procedure is defined as the mapping&lt;/p&gt;
+&lt;p&gt;The densities of the GUE and GSE, on the other hand, follow&lt;/p&gt;
 
 &lt;p&gt;\[
-  \Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu} = \overline{\eta}\left(\Lambda_{\nu}\right)
+  \begin{align*}
+    f^{\mathrm{GUE}}_{S}(s) &amp;amp; = \frac{32}{\pi^2} s^2 \, \mathrm{e}^{-\frac{4}{\pi} s^2}, \\
+    f^{\mathrm{GSE}}_{S}(s) &amp;amp; = \frac{2^{18}}{3^6 \pi^3} s^4 \, \mathrm{e}^{-\frac{64}{9 \pi} s^2},
+  \end{align*}
 \]&lt;/p&gt;
 
-&lt;p&gt;executed for all eigenvalues ${\Lambda_{\nu}}$ of a given realization. Thus, by construction, the ensemble averaged staircase function of the unfolded spectrum ${\tilde{\Lambda}_{\nu}}$ evaluated for the scaled energy $\lambda$ is equal to $\lambda$ itself, and the corresponding unfolded mean level spacing equals one, such that the level spacing density $f_{S}$ of the unfolded eigenvalues is normalized with respect to&lt;/p&gt;
+&lt;p&gt;respectively, to very good approximation (especially when $N$ is large). The correlations between the eigenvalues is manifested in the frequency of occurrence of small energy differences $s$. A negative deviation from the Poissonian statistics $f^{\mathrm{P}}_{S}$ signifies &lt;em&gt;level repulsion&lt;/em&gt; (which coincidentally indicates eigenvector delocalization &lt;a href=&quot;#Izrailev1990Simple-models-o&quot;&gt;(Izrailev 1990)&lt;/a&gt;). When we look at Wigner&amp;#39;s surmise $f^{\mathrm{GOE}}_{S}(s)$, we see that it increases linearly for small spacings $s$. In other words, the probability to sample two neighboring eigenvalues that are separated by a small distance $S$ between $s$ and $s + \mathrm{d}s$ is &lt;em&gt;increasing&lt;/em&gt; with $s$. Not only do eigenvalues not cluster, they avoid each other! The repulsion is even stronger for the other universal ensembles, since $f^{\mathrm{GUE}}_{S}(s) \sim s^2$ and $f^{\mathrm{GSE}}_{S}(s) \sim s^4$ for small $s$.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s assume now you have calculated the NNLS density using unfoldr and histogramr and you are staring at the result. What can you conclude?&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;If it looks like the Poisson distribution $f^{\mathrm{P}}_{S}$, then you know that your eigenvalues are uncorrelated. It is also quite likely that your eigenstates are localized &lt;a href=&quot;#Izrailev1990Simple-models-o&quot;&gt;(Izrailev 1990)&lt;/a&gt;, either strongly or weakly.&lt;/li&gt;
+&lt;li&gt;If it looks like Wigner&amp;#39;s surmise, like $f^{\mathrm{GUE}}_{S}$, or like $f^{\mathrm{GSE}}_{S}$, then you know that your system agrees with universal Gaussian statistics. This is a big deal and can help you with a lot of things. (In physics, everything nice is Gaussian.) You also know now that your eigenvectors are delocalized.&lt;/li&gt;
+&lt;li&gt;If it looks like a mix between Poisson and universal Gaussian statistics, then you may have a blend between two or more statistically independent subspectra that correspnd to either statistics. You can check that by estimating $\lim_{s \to 0} f_{S} \left(s\right)$. If this limit is finite, then this will be consistent with such a blend &lt;a href=&quot;#Berry1984Semiclassical-l&quot;&gt;(Berry and Robnik 1984)&lt;/a&gt;. However, if your $f_{S} \left(s\right) \sim s^\alpha$ for small $s$, then you have most likely interaction between the subspectra &lt;a href=&quot;#Backer2011Fractional-Powe&quot;&gt;(Bäcker et al. 2011)&lt;/a&gt;. In other words, your subspectra are not independent and their blend results in something that is different from either of them. You may have a localization transition in your system.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you think you have a localization transition in your system (or maybe just a transition between Poisson and Wigner-Dyson statistics under variation of the energy), you can get further insight into this by letting unfoldr calculate the NNLSs for individual slices through the spectral data. For instance,&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;unfoldr -d &amp;quot;spectrum&amp;quot; -m &amp;quot;eigval&amp;quot; -l -10,10 -b .5 -o nnls.h5 spectra.h5
+histogramr -d &amp;quot;-9.75&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0,10 -o nnlsd_-9.75.h5 nnls.h5
+histogramr -d &amp;quot;-9.25&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0,10 -o nnlsd_-9.25.h5 nnls.h5
+...
+histogramr -d &amp;quot;9.75&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0,10 -o nnlsd_9.75.h5 nnls.h5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;calculates not one, but twenty NNLS densities that are based exclusively on the spectral data in the intervals $[-10, -9.5)$, $[-9.5,-9)$, $\ldots$, $[9.5,10)$. With this data you can easily follow the change of the NNLS statistics with the energy &lt;a href=&quot;#scholak2014spectral&quot;&gt;(Scholak, Wellens, and Buchleitner 2014)&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2&gt;Unfolding — theory and numerical implementation&lt;/h2&gt;
+
+&lt;p&gt;Below I first explain how unfolding works &lt;a href=&quot;#Guhr1998Random-matrix-t&quot;&gt;(Guhr, Müller–Groeling, and Weidenmüller 1998)&lt;/a&gt; and then how it is &lt;a href=&quot;#implementation&quot;&gt;implemented in unfoldr&lt;/a&gt;. As an auxiliary tool, I first define the spectral staircase function&lt;/p&gt;
 
 &lt;p&gt;\[
-  \int_0^\infty f_{S}(s) \, \mathrm{d}s = 1, \
-  \int_0^\infty s \, f_{\mathrm{s}}(s) \, \mathrm{d}s = \overline{s} = 1.
+  \mathcal{N}(\lambda) = \sum_{\nu = 1}^N \Theta\left(\lambda - \Lambda_{\nu}\right) = \#\left\{\nu \middle| \Lambda_{\nu} &amp;lt; \lambda\right\},
 \]&lt;/p&gt;
+
+&lt;p&gt;where $\Theta(\lambda) = \int_\infty^\lambda \delta(\lambda&amp;#39;) \, \mathrm{d}\lambda&amp;#39;$ is the Heaviside step function. $\mathcal{N}(\lambda)$ is the number of eigenvalues $\Lambda_{\nu}$ with an energy smaller than $\lambda$. We separate $\mathcal{N}(E)$ into a smooth part,&lt;/p&gt;
+
+&lt;p&gt;\[
+  \overline{\mathcal{N}}(\lambda) = N F_{\Lambda}(\lambda) = N \int_{-\infty}^{\lambda} f_{\Lambda}(\lambda&amp;#39;) \, \mathrm{d}\lambda&amp;#39;,
+\]&lt;/p&gt;
+
+&lt;p&gt;and a fluctuating part,&lt;/p&gt;
+
+&lt;p&gt;\[
+  \mathcal{N}_{\mathrm{osc}} = \mathcal{N}(\lambda) - \overline{\mathcal{N}}(\lambda),
+\]&lt;/p&gt;
+
+&lt;p&gt;i.e. into the ensemble average given by the cumulative energy level distribution function $F_{\Lambda}$ and the difference between the realization&amp;#39;s value of $\mathcal{N}(\lambda)$ and the ensemble average, respectively. $f_{\Lambda}$ is the density of states, defined as&lt;/p&gt;
+
+&lt;p&gt;\[
+  f_{\Lambda}(\lambda) = \frac{1}{N} \, \overline{\operatorname{Tr} \delta \left(\lambda - M\right)}.
+\]&lt;/p&gt;
+
+&lt;p&gt;$f_{\Lambda}(\lambda) \, \mathrm{d}\lambda$ is the ensemble averaged probability to find an eigenvalue $\Lambda$ of $M$ in the interval $\left[\lambda, \lambda + \mathrm{d}\lambda\right]$.&lt;/p&gt;
+
+&lt;p&gt;Now, unfolding is defined as the mapping&lt;/p&gt;
+
+&lt;p&gt;\[
+  \Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu} = \overline{\mathcal{N}}\left(\Lambda_{\nu}\right).
+\]&lt;/p&gt;
+
+&lt;p&gt;This is done for all eigenvalues ${\Lambda_{\nu}}$ of a given realization. Thus, by construction, the ensemble averaged spectral staircase function of the unfolded spectrum $\left\{\tilde{\Lambda}_{\nu}\right\}$ evaluated for the scaled energy $\lambda$ is equal to $\lambda$ itself,&lt;/p&gt;
+
+&lt;p&gt;\[
+  \overline{\tilde{\mathcal{N}}}(\lambda) = \overline{\#\left\{\nu \middle| \tilde{\Lambda}_{\nu} &amp;lt; \lambda\right\}} = \lambda,
+\]&lt;/p&gt;
+
+&lt;p&gt;and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{S}} = 1$, such that the level spacing density $f_{\tilde{S}}$ of the unfolded eigenvalues is normalized with respect to&lt;/p&gt;
+
+&lt;p&gt;\[
+  \begin{align*}
+    \int_0^\infty f_{\tilde{S}}(s) \, \mathrm{d}s &amp;amp; = 1, \\
+    \int_0^\infty s \, f_{\tilde{S}}(s) \, \mathrm{d}s &amp;amp; = \overline{\tilde{S}} = 1.
+  \end{align*}
+\]&lt;/p&gt;
+
+&lt;p&gt;&lt;a name=&quot;implementation&quot;&gt;&lt;/a&gt;How is unfolding done in unfoldr? When you load your spectral data with unfoldr, two thirds of them are taken away to populate what I call the unfolding pool. The unfolding pool is a flat, sorted array of eigenvalues. I use it to estimate the ensemble averaged spectral staircase function $\overline{\mathcal{N}}$ and to do the transformation $\Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu}$. The following Python pseudo code shows how this is implemented:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;i = 0
+for j in range(number of eigenvalues):
+  while unfolding_pool[i] &amp;lt; eigenvalue[j]:
+    i += 1
+    if i &amp;gt;= length of the unfolding pool:
+      break
+  if j + 1 &amp;lt; number of eigenvalues:
+    level_spacing[j] -= i / (number of spectra in the unfolding pool)
+  if j &amp;gt; 0:
+    level_spacing[j-1] += i / (number of spectra in the unfolding pool)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This calculation is done for each of the remaining spectra (the third that doesn&amp;#39;t go into the unfolding pool). The above piece of code does not only unfold the spectrum, but does also calculate the level spacings. The code is compiled with Cython, so it should be fast.&lt;/p&gt;
+
+&lt;p&gt;You can control the size of the unfolding pool with the command line argument &lt;code&gt;-p&lt;/code&gt;. The default value is &lt;code&gt;2&lt;/code&gt;. That means that the number of spectra in the unfolding pool is twice as large as the number of spectra that are unfolded. The default value should work in most cases. However, if you see oscillations or weird artifacts in your level spacing densities, then try a larger number.&lt;/p&gt;
 
 &lt;h1&gt;References&lt;/h1&gt;
 
@@ -152,25 +299,61 @@
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Goetschy:2013df&quot;&gt;Goetschy, A., and S. E. Skipetrov, 2013, “Euclidean Random Matrices and Their Applications in Physics.”&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Walschaers2014A-Statistical-B&quot;&gt;Walschaers, M., J. Kuipers, J.-D. Urbina, K. Mayer, M. C. Tichy, K. Richter, and A. Buchleitner, 2014, “A Statistical Benchmark for BosonSampling,” ArXiv e-prints.&lt;/span&gt;
 
-&lt;div id=&quot;Goetschy:2013df-tabs&quot;&gt;
+&lt;div id=&quot;Walschaers2014A-Statistical-B-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Goetschy:2013df-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Walschaers2014A-Statistical-B-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Goetschy:2013df-tabs-3&quot;&gt;
-    &lt;pre&gt;@article{Goetschy:2013df,
+  &lt;div id=&quot;Walschaers2014A-Statistical-B-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Walschaers2014A-Statistical-B,
+  archiveprefix = {arXiv},
+  author = {Walschaers, M. and Kuipers, J. and Urbina, J.-D. and Mayer, K. and Tichy, M. C. and Richter, K. and Buchleitner, A.},
+  date-added = {2015-05-07 14:10:59 +0000},
+  date-modified = {2015-05-07 19:00:17 +0000},
+  eprint = {1410.8547},
+  journal = {ArXiv e-prints},
+  primaryclass = {quant-ph},
+  title = {A Statistical Benchmark for BosonSampling},
+  year = {2014}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Walschaers2014A-Statistical-B-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Goetschy2013Euclidean-rando&quot;&gt;Goetschy, A., and S. E. Skipetrov, 2013, “Euclidean Random Matrices and Their Applications in Physics,” ArXiv e-prints.&lt;/span&gt;
+
+&lt;div id=&quot;Goetschy2013Euclidean-rando-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Goetschy2013Euclidean-rando-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Goetschy2013Euclidean-rando-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Goetschy2013Euclidean-rando,
   archiveprefix = {arXiv},
   author = {Goetschy, A. and Skipetrov, S. E.},
   date-added = {2015-05-06 20:44:37 +0000},
-  date-modified = {2015-05-06 21:27:11 +0000},
+  date-modified = {2015-05-07 19:00:21 +0000},
   eprint = {1303.2880},
+  journal = {ArXiv e-prints},
   primaryclass = {math-ph},
   title = {Euclidean random matrices and their applications in physics},
   year = {2013}
@@ -180,35 +363,34 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Goetschy:2013df-tabs&quot; ).tabs({
+    $( &quot;#Goetschy2013Euclidean-rando-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Tao:2012kx&quot;&gt;Tao, T., 2012, &lt;i&gt;Topics in Random Matrix Theory&lt;/i&gt;. Graduate Studies in Mathematics (American Mathematical Society). Available at: https://books.google.ca/books?id=L51VAwAAQBAJ.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Tao2012Topics-in-Rando&quot;&gt;Tao, T., 2012, &lt;i&gt;Topics in Random Matrix Theory&lt;/i&gt;. Graduate Studies in Mathematics (American Mathematical Society).&lt;/span&gt;
 
-&lt;div id=&quot;Tao:2012kx-tabs&quot;&gt;
+&lt;div id=&quot;Tao2012Topics-in-Rando-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Tao:2012kx-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Tao2012Topics-in-Rando-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Tao:2012kx-tabs-3&quot;&gt;
-    &lt;pre&gt;@book{Tao:2012kx,
+  &lt;div id=&quot;Tao2012Topics-in-Rando-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{Tao2012Topics-in-Rando,
   author = {Tao, T.},
   date-added = {2015-05-06 20:15:35 +0000},
-  date-modified = {2015-05-06 20:15:36 +0000},
+  date-modified = {2015-05-07 18:58:25 +0000},
   isbn = {9780821874301},
   lccn = {2011045194},
   publisher = {American Mathematical Society},
   series = {Graduate studies in mathematics},
   title = {Topics in Random Matrix Theory},
-  url = {https://books.google.ca/books?id=L51VAwAAQBAJ},
   year = {2012}
 }
 &lt;/pre&gt;
@@ -216,38 +398,69 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Tao:2012kx-tabs&quot; ).tabs({
+    $( &quot;#Tao2012Topics-in-Rando-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Bouchaud:2009uq&quot;&gt;Bouchaud, J.~P., and M. Potters, 2009, “Financial Applications of Random Matrix Theory: a Short Review,” ArXiv e-prints.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Backer2011Fractional-Powe&quot;&gt;Bäcker, Arnd, Roland Ketzmerick, Steffen Löck, and Normann Mertig, 2011, “Fractional-Power-Law Level Statistics Due to Dynamical Tunneling,” Phys. Rev. Lett. &lt;b&gt;106&lt;/b&gt;, 024101. doi:10.1103/PhysRevLett.106.024101.&lt;/span&gt;
 
-&lt;div id=&quot;Bouchaud:2009uq-tabs&quot;&gt;
+&lt;div id=&quot;Backer2011Fractional-Powe-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Bouchaud:2009uq-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Backer2011Fractional-Powe-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Bouchaud:2009uq-tabs-3&quot;&gt;
-    &lt;pre&gt;@article{Bouchaud:2009uq,
-  adsnote = {Provided by the SAO/NASA Astrophysics Data System},
-  adsurl = {http://adsabs.harvard.edu/abs/2009arXiv0910.1205B},
+  &lt;div id=&quot;Backer2011Fractional-Powe-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Backer2011Fractional-Powe,
+  author = {B\&quot;acker, Arnd and Ketzmerick, Roland and L\&quot;ock, Steffen and Mertig, Normann},
+  date-added = {2015-05-07 17:56:34 +0000},
+  date-modified = {2015-05-07 19:01:41 +0000},
+  doi = {10.1103/PhysRevLett.106.024101},
+  journal = {Phys. Rev. Lett.},
+  pages = {024101},
+  title = {Fractional-Power-Law Level Statistics Due to Dynamical Tunneling},
+  volume = {106},
+  year = {2011}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Backer2011Fractional-Powe-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Bouchaud2009Financial-Appli&quot;&gt;Bouchaud, J. P., and M. Potters, 2009, “Financial Applications of Random Matrix Theory: a Short Review,” ArXiv e-prints.&lt;/span&gt;
+
+&lt;div id=&quot;Bouchaud2009Financial-Appli-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Bouchaud2009Financial-Appli-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Bouchaud2009Financial-Appli-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Bouchaud2009Financial-Appli,
   archiveprefix = {arXiv},
-  author = {{Bouchaud}, J.~P. and {Potters}, M.},
+  author = {Bouchaud, J. P. and Potters, M.},
   date-added = {2015-05-06 20:14:06 +0000},
-  date-modified = {2015-05-06 20:14:07 +0000},
+  date-modified = {2015-05-07 19:02:16 +0000},
   eprint = {0910.1205},
   journal = {ArXiv e-prints},
-  keywords = {Quantitative Finance - Statistical Finance, Condensed Matter - Disordered Systems and Neural Networks, Quantitative Finance - Risk Management},
-  month = {oct},
   primaryclass = {q-fin.ST},
-  title = {{Financial Applications of Random Matrix Theory: a short review}},
+  title = {Financial Applications of Random Matrix Theory: a short review},
   year = {2009}
 }
 &lt;/pre&gt;
@@ -255,67 +468,103 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Bouchaud:2009uq-tabs&quot; ).tabs({
+    $( &quot;#Bouchaud2009Financial-Appli-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Bollobas:2001sf&quot;&gt;Bollobás, B., 2001, &lt;i&gt;Random Graphs&lt;/i&gt; (Cambridge University Press). Available at: https://books.google.ca/books?id=o9WecWgilzYC.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Erdos2007Semicircle-law-&quot;&gt;Erdős, L., B. Schlein, and H.-T. Yau, 2007, “Semicircle Law on Short Scales and Delocalization of Eigenvectors for Wigner Random Matrices,” ArXiv e-prints.&lt;/span&gt;
 
-&lt;div id=&quot;Bollobas:2001sf-tabs&quot;&gt;
+&lt;div id=&quot;Erdos2007Semicircle-law--tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Bollobas:2001sf-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Erdos2007Semicircle-law--tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Bollobas:2001sf-tabs-3&quot;&gt;
-    &lt;pre&gt;@book{Bollobas:2001sf,
-  author = {Bollob{\&#39;a}s, B.},
-  date-added = {2015-05-06 20:24:48 +0000},
-  date-modified = {2015-05-06 20:24:48 +0000},
-  isbn = {9780521797221},
-  publisher = {Cambridge University Press},
-  title = {Random Graphs},
-  title1 = {Cambridge Studies in Advanced Mathematics},
-  ty = {BOOK},
-  url = {https://books.google.ca/books?id=o9WecWgilzYC},
-  year = {2001},
-  bdsk-url-1 = {https://books.google.ca/books?id=o9WecWgilzYC}
+  &lt;div id=&quot;Erdos2007Semicircle-law--tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Erdos2007Semicircle-law-,
+  adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+  adsurl = {http://adsabs.harvard.edu/abs/2007arXiv0711.1730E},
+  archiveprefix = {arXiv},
+  author = {{Erd{\H o}s}, L. and {Schlein}, B. and {Yau}, H.-T.},
+  date-added = {2015-05-07 15:31:02 +0000},
+  date-modified = {2015-05-07 18:44:22 +0000},
+  eprint = {0711.1730},
+  journal = {ArXiv e-prints},
+  keywords = {Mathematical Physics, 15A52, 82B44 (Primary)},
+  month = {nov},
+  primaryclass = {math-ph},
+  title = {{Semicircle law on short scales and delocalization of eigenvectors for Wigner random matrices}},
+  year = {2007}
 }
 &lt;/pre&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Bollobas:2001sf-tabs&quot; ).tabs({
+    $( &quot;#Erdos2007Semicircle-law--tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Stockmann:1999gd&quot;&gt;Stöckmann, H.-J., 1999, &lt;i&gt;Quantum Chaos: An Introduction&lt;/i&gt; (Cambridge University Press, Cambridge, United Kingdom).&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Bollobas2001Random-Graphs&quot;&gt;Bollobás, B., 2001, &lt;i&gt;Random Graphs&lt;/i&gt; (Cambridge University Press).&lt;/span&gt;
 
-&lt;div id=&quot;Stockmann:1999gd-tabs&quot;&gt;
+&lt;div id=&quot;Bollobas2001Random-Graphs-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Stockmann:1999gd-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Bollobas2001Random-Graphs-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Stockmann:1999gd-tabs-3&quot;&gt;
-    &lt;pre&gt;@book{Stockmann:1999gd,
+  &lt;div id=&quot;Bollobas2001Random-Graphs-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{Bollobas2001Random-Graphs,
+  author = {Bollob{\&#39;a}s, B.},
+  date-added = {2015-05-06 20:24:48 +0000},
+  date-modified = {2015-05-07 18:56:23 +0000},
+  isbn = {9780521797221},
+  publisher = {Cambridge University Press},
+  title = {Random Graphs},
+  title1 = {Cambridge Studies in Advanced Mathematics},
+  year = {2001}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Bollobas2001Random-Graphs-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Stockmann1999Quantum-chaos&quot;&gt;Stöckmann, H.-J., 1999, &lt;i&gt;Quantum Chaos: An Introduction&lt;/i&gt; (Cambridge University Press, Cambridge, United Kingdom).&lt;/span&gt;
+
+&lt;div id=&quot;Stockmann1999Quantum-chaos-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Stockmann1999Quantum-chaos-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Stockmann1999Quantum-chaos-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{Stockmann1999Quantum-chaos,
   address = {Cambridge, United Kingdom},
   author = {St\&quot;{o}ckmann, H.-J.},
   date-added = {2015-05-06 19:30:30 +0000},
-  date-modified = {2015-05-06 19:30:30 +0000},
+  date-modified = {2015-05-07 18:42:13 +0000},
   publisher = {Cambridge University Press},
   title = {Quantum chaos: An introduction},
   year = {1999}
@@ -325,69 +574,64 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Stockmann:1999gd-tabs&quot; ).tabs({
+    $( &quot;#Stockmann1999Quantum-chaos-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Guhr:1998fk&quot;&gt;Guhr, Thomas, Axel Müller–Groeling, and Hans A. Weidenmüller, 1998, “Random-Matrix Theories in Quantum Physics: Common Concepts,” Physics Reports &lt;b&gt;299&lt;/b&gt;, 189–425. doi:http://dx.doi.org/10.1016/S0370-1573(97)00088-4.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Guhr1998Random-matrix-t&quot;&gt;Guhr, Thomas, Axel Müller–Groeling, and Hans A. Weidenmüller, 1998, “Random-Matrix Theories in Quantum Physics: Common Concepts,” Phys. Rep. &lt;b&gt;299&lt;/b&gt;, 189.&lt;/span&gt;
 
-&lt;div id=&quot;Guhr:1998fk-tabs&quot;&gt;
+&lt;div id=&quot;Guhr1998Random-matrix-t-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Guhr:1998fk-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Guhr1998Random-matrix-t-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Guhr:1998fk-tabs-3&quot;&gt;
-    &lt;pre&gt;@article{Guhr:1998fk,
+  &lt;div id=&quot;Guhr1998Random-matrix-t-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Guhr1998Random-matrix-t,
   author = {Guhr, Thomas and M{\&quot;u}ller--Groeling, Axel and Weidenm{\&quot;u}ller, Hans A.},
-  date-modified = {2015-05-06 19:15:26 +0000},
-  doi = {http://dx.doi.org/10.1016/S0370-1573(97)00088-4},
+  date-modified = {2015-05-07 18:48:01 +0000},
   issn = {0370-1573},
-  journal = {Physics Reports},
-  keywords = {Disordered solids},
+  journal = {Phys. Rep.},
   number = {4--6},
-  pages = {189 - 425},
+  pages = {189},
   title = {Random-matrix theories in quantum physics: common concepts},
-  url = {http://www.sciencedirect.com/science/article/pii/S0370157397000884},
   volume = {299},
-  year = {1998},
-  bdsk-url-1 = {http://www.sciencedirect.com/science/article/pii/S0370157397000884},
-  bdsk-url-2 = {http://dx.doi.org/10.1016/S0370-1573(97)00088-4}
+  year = {1998}
 }
 &lt;/pre&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Guhr:1998fk-tabs&quot; ).tabs({
+    $( &quot;#Guhr1998Random-matrix-t-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Mirlin:1996aa&quot;&gt;Mirlin, Alexander D., Yan V. Fyodorov, Frank-Michael Dittes, Javier Quezada, and Thomas H. Seligman, 1996, “Transition from Localized to Extended Eigenstates in the Ensemble of Power-Law Random Banded Matrices,” Phys. Rev. E &lt;b&gt;54&lt;/b&gt;, 3221.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Mirlin1996Transition-from&quot;&gt;Mirlin, Alexander D., Yan V. Fyodorov, Frank-Michael Dittes, Javier Quezada, and Thomas H. Seligman, 1996, “Transition from Localized to Extended Eigenstates in the Ensemble of Power-Law Random Banded Matrices,” Phys. Rev. E &lt;b&gt;54&lt;/b&gt;, 3221.&lt;/span&gt;
 
-&lt;div id=&quot;Mirlin:1996aa-tabs&quot;&gt;
+&lt;div id=&quot;Mirlin1996Transition-from-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Mirlin:1996aa-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Mirlin1996Transition-from-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Mirlin:1996aa-tabs-3&quot;&gt;
-    &lt;pre&gt;@article{Mirlin:1996aa,
+  &lt;div id=&quot;Mirlin1996Transition-from-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Mirlin1996Transition-from,
   author = {Mirlin, Alexander D. and Fyodorov, Yan V. and Dittes, Frank-Michael and Quezada, Javier and Seligman, Thomas H.},
   date-added = {2015-05-06 20:37:05 +0000},
-  date-modified = {2015-05-06 20:37:05 +0000},
+  date-modified = {2015-05-07 18:45:52 +0000},
   journal = {Phys. Rev. E},
   pages = {3221},
   title = {Transition from localized to extended eigenstates in the ensemble of power-law random banded matrices},
@@ -399,29 +643,29 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Mirlin:1996aa-tabs&quot; ).tabs({
+    $( &quot;#Mirlin1996Transition-from-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Cizeau:1994ml&quot;&gt;Cizeau, P., and J. P. Bouchaud, 1994, “Theory of Lévy Matrices,” Phys. Rev. E &lt;b&gt;50&lt;/b&gt;, 1810.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Cizeau1994Theory-of-Levy-&quot;&gt;Cizeau, P., and J. P. Bouchaud, 1994, “Theory of Lévy Matrices,” Phys. Rev. E &lt;b&gt;50&lt;/b&gt;, 1810.&lt;/span&gt;
 
-&lt;div id=&quot;Cizeau:1994ml-tabs&quot;&gt;
+&lt;div id=&quot;Cizeau1994Theory-of-Levy--tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Cizeau:1994ml-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Cizeau1994Theory-of-Levy--tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Cizeau:1994ml-tabs-3&quot;&gt;
-    &lt;pre&gt;@article{Cizeau:1994ml,
+  &lt;div id=&quot;Cizeau1994Theory-of-Levy--tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Cizeau1994Theory-of-Levy-,
   author = {Cizeau, P. and Bouchaud, J. P.},
   date-added = {2015-05-06 20:22:03 +0000},
-  date-modified = {2015-05-06 20:22:03 +0000},
+  date-modified = {2015-05-07 18:45:26 +0000},
   journal = {Phys. Rev. E},
   pages = {1810},
   title = {Theory of L{\&#39;e}vy matrices},
@@ -433,30 +677,30 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Cizeau:1994ml-tabs&quot; ).tabs({
+    $( &quot;#Cizeau1994Theory-of-Levy--tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Mehta:1991ph&quot;&gt;Mehta, M. L., 1991, &lt;i&gt;Random Matrices&lt;/i&gt;. 2nd ed (Academic Press, San Diego, California).&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Mehta1991Random-matrices&quot;&gt;Mehta, M. L., 1991, &lt;i&gt;Random Matrices&lt;/i&gt;. 2nd ed (Academic Press, San Diego, California).&lt;/span&gt;
 
-&lt;div id=&quot;Mehta:1991ph-tabs&quot;&gt;
+&lt;div id=&quot;Mehta1991Random-matrices-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Mehta:1991ph-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Mehta1991Random-matrices-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Mehta:1991ph-tabs-3&quot;&gt;
-    &lt;pre&gt;@book{Mehta:1991ph,
+  &lt;div id=&quot;Mehta1991Random-matrices-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{Mehta1991Random-matrices,
   address = {San Diego, California},
   author = {Mehta, M. L.},
   date-added = {2015-05-06 19:31:11 +0000},
-  date-modified = {2015-05-06 19:31:11 +0000},
+  date-modified = {2015-05-07 18:41:46 +0000},
   edition = {2nd},
   publisher = {Academic Press},
   title = {Random matrices},
@@ -467,29 +711,105 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Mehta:1991ph-tabs&quot; ).tabs({
+    $( &quot;#Mehta1991Random-matrices-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Dyson:1970mf&quot;&gt;Dyson, Freeman J., 1970, “Correlations between Eigenvalues of a Random Matrix,” Comm. Math. Phys. &lt;b&gt;19&lt;/b&gt;, 235.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Izrailev1990Simple-models-o&quot;&gt;Izrailev, Felix M., 1990, “Simple Models of Quantum Chaos: Spectrum and Eigenfunctions,” Phys. Rep. &lt;b&gt;196&lt;/b&gt;, 299.&lt;/span&gt;
 
-&lt;div id=&quot;Dyson:1970mf-tabs&quot;&gt;
+&lt;div id=&quot;Izrailev1990Simple-models-o-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
     
-    &lt;li&gt;&lt;a href=&quot;#Dyson:1970mf-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Izrailev1990Simple-models-o-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
   
-  &lt;div id=&quot;Dyson:1970mf-tabs-3&quot;&gt;
-    &lt;pre&gt;@article{Dyson:1970mf,
+  &lt;div id=&quot;Izrailev1990Simple-models-o-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Izrailev1990Simple-models-o,
+  author = {Izrailev, Felix M.},
+  date-added = {2015-05-07 17:02:27 +0000},
+  date-modified = {2015-05-07 18:57:00 +0000},
+  journal = {Phys. Rep.},
+  number = {5--6},
+  pages = {299},
+  title = {Simple models of quantum chaos: Spectrum and eigenfunctions},
+  volume = {196},
+  year = {1990}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Izrailev1990Simple-models-o-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Berry1984Semiclassical-l&quot;&gt;Berry, M V, and M Robnik, 1984, “Semiclassical Level Spacings When Regular and Chaotic Orbits Coexist,” J. Phys. A: Math. Gen. &lt;b&gt;17&lt;/b&gt;, 2413.&lt;/span&gt;
+
+&lt;div id=&quot;Berry1984Semiclassical-l-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Berry1984Semiclassical-l-tabs-2&quot;&gt;abstract&lt;/a&gt;,&lt;/li&gt;
+    
+    &lt;li&gt;&lt;a href=&quot;#Berry1984Semiclassical-l-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Berry1984Semiclassical-l-tabs-2&quot;&gt;
+    &lt;p&gt;The authors calculate semiclassical limiting level spacing distributions P(S) for systems whose classical energy surface is divided into a number of separate region in which motion is regular or chaotic. In the calculation it is assumed that the spectrum is the superposition of statistically independent sequences of levels from each of the classical phase-space regions, sequences from regular regions, having Poisson distributions and those from irregular regions having Wigner distributions. The formulae for P(S) depend on the sum of the Liouville measures of all the classical regular regions, and on the separate Liouville measures of the significant chaotic regions.&lt;/p&gt;
+  &lt;/div&gt;
+  
+  &lt;div id=&quot;Berry1984Semiclassical-l-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Berry1984Semiclassical-l,
+  author = {Berry, M V and Robnik, M},
+  date-added = {2015-05-07 17:56:26 +0000},
+  date-modified = {2015-05-07 18:46:27 +0000},
+  journal = {J. Phys. A: Math. Gen.},
+  number = {12},
+  pages = {2413},
+  title = {Semiclassical level spacings when regular and chaotic orbits coexist},
+  volume = {17},
+  year = {1984}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Berry1984Semiclassical-l-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Dyson1970Correlations-be&quot;&gt;Dyson, Freeman J., 1970, “Correlations between Eigenvalues of a Random Matrix,” Comm. Math. Phys. &lt;b&gt;19&lt;/b&gt;, 235.&lt;/span&gt;
+
+&lt;div id=&quot;Dyson1970Correlations-be-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Dyson1970Correlations-be-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Dyson1970Correlations-be-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Dyson1970Correlations-be,
   author = {Dyson, Freeman J.},
   date-added = {2015-05-06 20:33:42 +0000},
-  date-modified = {2015-05-06 20:33:42 +0000},
+  date-modified = {2015-05-07 18:42:56 +0000},
   journal = {Comm. Math. Phys.},
   number = {3},
   pages = {235},
@@ -502,36 +822,29 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Dyson:1970mf-tabs&quot; ).tabs({
+    $( &quot;#Dyson1970Correlations-be-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Wigner:1967nu&quot;&gt;Wigner, E., 1967, “Random Matrices in Physics,” SIAM Rev. &lt;b&gt;9&lt;/b&gt;, 1.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Wigner1967Random-Matrices&quot;&gt;Wigner, E., 1967, “Random Matrices in Physics,” SIAM Rev. &lt;b&gt;9&lt;/b&gt;, 1.&lt;/span&gt;
 
-&lt;div id=&quot;Wigner:1967nu-tabs&quot;&gt;
+&lt;div id=&quot;Wigner1967Random-Matrices-tabs&quot;&gt;
   View
   &lt;ul&gt;
     
-    &lt;li&gt;&lt;a href=&quot;#Wigner:1967nu-tabs-1&quot;&gt;short outline&lt;/a&gt;,&lt;/li&gt;
     
-    
-    &lt;li&gt;&lt;a href=&quot;#Wigner:1967nu-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&quot;#Wigner1967Random-Matrices-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
   &lt;/ul&gt;
   
   
-  &lt;div id=&quot;Wigner:1967nu-tabs-1&quot;&gt;
-    &lt;p&gt;doi: 10.1137/1009001&lt;/p&gt;
-  &lt;/div&gt;
   
-  
-  &lt;div id=&quot;Wigner:1967nu-tabs-3&quot;&gt;
-    &lt;pre&gt;@article{Wigner:1967nu,
-  annote = {doi: 10.1137/1009001},
+  &lt;div id=&quot;Wigner1967Random-Matrices-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Wigner1967Random-Matrices,
   author = {Wigner, E.},
   date-added = {2015-05-06 20:33:33 +0000},
-  date-modified = {2015-05-06 20:33:33 +0000},
+  date-modified = {2015-05-07 18:57:26 +0000},
   journal = {SIAM Rev.},
   number = {1},
   pages = {1},
@@ -544,7 +857,7 @@
 &lt;/div&gt;
 &lt;script&gt;
   $(function() {
-    $( &quot;#Wigner:1967nu-tabs&quot; ).tabs({
+    $( &quot;#Wigner1967Random-Matrices-tabs&quot; ).tabs({
       collapsible: true,
       active: false
     });
