@@ -5,8 +5,8 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 07 May 2015 17:02:04 -0400</pubDate>
-    <lastBuildDate>Thu, 07 May 2015 17:02:04 -0400</lastBuildDate>
+    <pubDate>Thu, 07 May 2015 17:20:01 -0400</pubDate>
+    <lastBuildDate>Thu, 07 May 2015 17:20:01 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
@@ -166,7 +166,7 @@ py.iplot(fig, filename=&amp;quot;unfoldr-demonstration&amp;quot;)
 &lt;ul&gt;
 &lt;li&gt;If it looks like the Poisson distribution $f^{\mathrm{P}}_{S}$, then you know that your eigenvalues are uncorrelated. It is also quite likely that your eigenstates are localized &lt;a href=&quot;#Izrailev1990Simple-models-o&quot;&gt;(Izrailev 1990)&lt;/a&gt;, either strongly or weakly.&lt;/li&gt;
 &lt;li&gt;If it looks like Wigner&amp;#39;s surmise, like $f^{\mathrm{GUE}}_{S}$, or like $f^{\mathrm{GSE}}_{S}$, then you know that your system agrees with universal Gaussian statistics. This is a big deal and can help you with a lot of things. (In physics, everything nice is Gaussian.) You also know now that your eigenvectors are delocalized.&lt;/li&gt;
-&lt;li&gt;If it looks like a mix between Poisson and universal Gaussian statistics, then you may have a blend between two or more statistically independent subspectra that correspnd to either statistics. You can check that by estimating $\lim_{s \to 0} f_{S} \left(s\right)$. If this limit is finite, then this will be consistent with such a blend &lt;a href=&quot;#Berry1984Semiclassical-l&quot;&gt;(Berry and Robnik 1984)&lt;/a&gt;. However, if your $f_{S} \left(s\right) \sim s^\alpha$ for small $s$, then you have most likely interaction between the subspectra &lt;a href=&quot;#Backer2011Fractional-Powe&quot;&gt;(Bäcker et al. 2011)&lt;/a&gt;. In other words, your subspectra are not independent and their blend results in something that is different from either of them. You may have a localization transition in your system.&lt;/li&gt;
+&lt;li&gt;If it looks like a mix between Poisson and universal Gaussian statistics, then you may have a blend between two or more statistically independent subspectra that correspnd to either statistics. You can check that by estimating $\lim_{s \to 0} f_{S}(s)$. If this limit is finite, then this will be consistent with such a blend &lt;a href=&quot;#Berry1984Semiclassical-l&quot;&gt;(Berry and Robnik 1984)&lt;/a&gt;. However, if your $f_{S}(s) \sim s^\alpha$ for small $s$, then you have most likely interaction between the subspectra &lt;a href=&quot;#Backer2011Fractional-Powe&quot;&gt;(Bäcker et al. 2011)&lt;/a&gt;. In other words, your subspectra are not independent and their blend results in something that is different from either of them. You may have a localization transition in your system.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;If you think you have a localization transition in your system (or maybe just a transition between Poisson and Wigner-Dyson statistics under variation of the energy), you can get further insight into this by letting unfoldr calculate the NNLSs for individual slices through the spectral data. For instance,&lt;/p&gt;
@@ -241,7 +241,7 @@ for j in range(number of eigenvalues):
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;This calculation is done for each of the remaining spectra (the third that doesn&amp;#39;t go into the unfolding pool). The above piece of code does not only unfold the spectrum, but does also calculate the level spacings. The code is compiled with Cython, so it should be fast.&lt;/p&gt;
 
-&lt;p&gt;You can control the size of the unfolding pool with the command line argument &lt;code&gt;-p&lt;/code&gt;. The default value is &lt;code&gt;2&lt;/code&gt;. That means that the number of spectra in the unfolding pool is twice as large as the number of spectra that are unfolded. The default value should work in most cases. However, if you see oscillations or weird artifacts in your level spacing densities, then try a larger number.&lt;/p&gt;
+&lt;p&gt;You can control the size of the unfolding pool with the command line argument &lt;code&gt;-p&lt;/code&gt;. The default value is 2. That means that the number of spectra in the unfolding pool is twice as large as the number of spectra that are unfolded. The default value should work in most cases. However, if you see oscillations or weird artifacts in your level spacing densities, then try a larger number.&lt;/p&gt;
 
 &lt;h1&gt;References&lt;/h1&gt;
 
