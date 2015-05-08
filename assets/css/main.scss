@@ -198,6 +198,17 @@ html {
 .page-description a:hover {
   color: rgba(255,255,255,0.8);
 }
+.page-follow {
+  position: relative;
+  top: 1rem;
+  font-family: "charterregular", serif;
+}
+.page-follow a {
+  color: rgba(255,255,255,0.6);
+}
+.page-follow a:hover {
+  color: rgba(255,255,255,0.8);
+}
 
 .pagination {
   font-family: "Fira Sans", sans-serif;
