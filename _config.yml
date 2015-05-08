@@ -25,6 +25,7 @@ markdown: redcarpet
 highlighter: pygments
 logo: false
 paginate: 15
+excerpt_separator: <span class="more"></span>
 
 include:
   - .nojekyll

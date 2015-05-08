@@ -5,7 +5,7 @@ date:   2015-03-07 00:00:00
 categories: [update, guide, jekyll]
 ---
 
-By the time you read this, I will have tossed my old obsolete [Wordpress website](wordpress) in favor of this one, a modern [Jekyll](jekyll) powered [GitHub](github) page. I have started from scratch. The old site didn't have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. I'm sure. This article is just the beginning. It's like ... me and blogging forever ... and ever. A hundred years me and blogging ... about some things. Something all day long. [Forever a hundred times ...](http://www.adultswim.com/videos/rick-and-morty/) 
+By the time you read this, I will have tossed my old obsolete [Wordpress website](wordpress) in favor of this one, a modern [Jekyll](jekyll) powered [GitHub](github) page. I have started from scratch. The old site didn't have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. <span class="more"></span> I'm sure. This article is just the beginning. It's like ... me and blogging forever ... and ever. A hundred years me and blogging ... about some things. Something all day long. [Forever a hundred times ...](http://www.adultswim.com/videos/rick-and-morty/) 
 
 Err, ok. So, what are Jekyll and GitHub, and why should *you* care?
 
