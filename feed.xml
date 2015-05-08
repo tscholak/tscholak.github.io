@@ -5,8 +5,8 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 07 May 2015 23:19:44 -0400</pubDate>
-    <lastBuildDate>Thu, 07 May 2015 23:19:44 -0400</lastBuildDate>
+    <pubDate>Fri, 08 May 2015 10:05:11 -0400</pubDate>
+    <lastBuildDate>Fri, 08 May 2015 10:05:11 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
@@ -79,7 +79,7 @@ py.iplot(fig, filename=&amp;quot;unfoldr-demonstration&amp;quot;)
 
 &lt;p&gt;To understand the use cases of unfoldr, I first have to review some complex system theory. If you know all that stuff, skip &lt;a href=&quot;#nearest-neighbor-level-spacing-statistics&quot;&gt;ahead&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;Suppose you are dealing with a complex system, i.e. a large, complicated, but deterministic system or a system whose complexity comes from some intrinsic randomness. Suppose further that you do not seek a full and exact theory describing all phenomena that could possibly manifest in your complex system. Maybe you tried to derive such a theory, but you realized the impossibility of such a task. In fact, your resentment of the task has made you become ignorant of all the details of the system that were once so precious to you. Believe it or not, this is not such a bad thing. There is a way out of your dilemma, and it involves replacing the your model — the Hamiltonian, the weighted adjacency matrix, Laplacian matrix, or whatever description of your system you have — by a &lt;em&gt;random matrix&lt;/em&gt; (or an ensemble of random matrices) that has the same invariances and symmetry properties as your system. As radical as it may sound, in most cases, it works surprisingly well. The theory that makes all this possible is called &lt;em&gt;random matrix theory&lt;/em&gt; (RMT) &lt;a href=&quot;#Wigner1967Random-Matrices&quot;&gt;(Wigner 1967; Dyson 1970; Mehta 1991; Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Suppose you are dealing with a complex system, i.e. a large, complicated, but deterministic system or a system whose complexity comes from some intrinsic randomness. Suppose further that you do not seek a full and exact theory describing all phenomena that could possibly manifest in your complex system. Maybe you tried to derive such a theory, but you realized the impossibility of such a task. In fact, your resentment of the task has made you become ignorant of all the details of the system that were once so precious to you. Believe it or not, this is not such a bad thing. There is a way out of your dilemma, and it involves replacing your model — the Hamiltonian, the weighted adjacency matrix, Laplacian matrix, or whatever description of your system you have — by a &lt;em&gt;random matrix&lt;/em&gt; (or an ensemble of random matrices) that has the same invariances and symmetry properties as your system. As radical as it may sound, in most cases, it works surprisingly well. The theory that makes all this possible is called &lt;em&gt;random matrix theory&lt;/em&gt; (RMT) &lt;a href=&quot;#Wigner1967Random-Matrices&quot;&gt;(Wigner 1967; Dyson 1970; Mehta 1991; Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h2&gt;Random matrix theory and Gaussian ensembles&lt;/h2&gt;
 
