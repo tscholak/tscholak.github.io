@@ -5,8 +5,8 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 08 May 2015 12:56:19 -0400</pubDate>
-    <lastBuildDate>Fri, 08 May 2015 12:56:19 -0400</lastBuildDate>
+    <pubDate>Fri, 08 May 2015 14:02:29 -0400</pubDate>
+    <lastBuildDate>Fri, 08 May 2015 14:02:29 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
@@ -1759,7 +1759,7 @@ lipbite:tscholak.github.io tscholak$ grunt -v deploy
         <title>Finding the right fonts</title>
         <description>&lt;p&gt;Kasper, the theme that I am using for this web site, comes with three fonts: &lt;a href=&quot;http://www.google.com/fonts/specimen/Open+Sans&quot;&gt;Open Sans&lt;/a&gt;, &lt;a href=&quot;http://www.google.com/fonts/specimen/Merriweather&quot;&gt;Merriweather&lt;/a&gt;, and &lt;a href=&quot;https://www.google.com/fonts/specimen/Inconsolata&quot;&gt;Inconsolata&lt;/a&gt;. I did not like these very much, so I set out to find suitable replacements. &lt;span class=&quot;more&quot;&gt;&lt;/span&gt;&lt;/p&gt;
 
-&lt;p&gt;For the moment I settled on &lt;a href=&quot;http://typographica.org/typeface-reviews/fira-sans/&quot;&gt;Fira Sans&lt;/a&gt; for headlines, &lt;a href=&quot;http://practicaltypography.com/charter.html&quot;&gt;Charter&lt;/a&gt; for body text, and &lt;a href=&quot;https://github.com/adobe/source-code-pro&quot;&gt;Source Code Pro&lt;/a&gt; for code listings. These are the only free fonts recommended by &lt;a href=&quot;http://practicaltypography.com/bad-fonts.html&quot;&gt;Butterick&amp;#39;s Practical Typography&lt;/a&gt;. Charter is a serif typeface and was originally designed for late 1980s printers. It performs quite well on modern displays, retina and non-retina alike. I am indebted to Matthew Butterick for packaging Charter as a web font. Fira Sans was designed in 2013 by Erik Spiekermann et al. for Firefox OS. Source Code Pro is a community project initiated by Adobe. Fira Sans and Source Code Pro can be used through Google&amp;#39;s web font service free of charge (barring some &lt;a href=&quot;http://fontfeed.com/archives/google-webfonts-the-spy-inside/&quot;&gt;privacy concerns&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;For the moment I settled on &lt;a href=&quot;http://typographica.org/typeface-reviews/fira-sans/&quot;&gt;Fira Sans&lt;/a&gt; for headlines, &lt;a href=&quot;http://practicaltypography.com/charter.html&quot;&gt;Charter&lt;/a&gt; for body text, and &lt;a href=&quot;https://github.com/adobe/source-code-pro&quot;&gt;Source Code Pro&lt;/a&gt; for code listings. These are the only free fonts recommended by &lt;a href=&quot;http://practicaltypography.com/bad-fonts.html&quot;&gt;Butterick&amp;#39;s Practical Typography&lt;/a&gt;. Charter is a serif typeface and was originally designed for late 1980s printers. It performs quite well on modern displays, retina and non-retina alike. I am indebted to Matthew Butterick for packaging Charter as a web font. Fira Sans was designed in 2013 by &lt;a href=&quot;https://www.youtube.com/watch?v=F691weEVpwc&quot;&gt;Erik Spiekermann&lt;/a&gt; et al. for Firefox OS. Source Code Pro is a community project initiated by Adobe. Fira Sans and Source Code Pro can be used through Google&amp;#39;s web font service free of charge (barring some &lt;a href=&quot;http://fontfeed.com/archives/google-webfonts-the-spy-inside/&quot;&gt;privacy concerns&lt;/a&gt;).&lt;/p&gt;
 
 &lt;p&gt;Incidentally, all three fonts can be used in a LaTeX document:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;\usepackage[T1]{fontenc}
