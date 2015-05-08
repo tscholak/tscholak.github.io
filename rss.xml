@@ -12,7 +12,7 @@
     <item>
       <title>Unfold with unfoldr</title>
       <link>http://tscholak.github.io/code/physics/2015/05/05/unfoldr.html</link>
-      <description>&lt;p&gt;unfoldr is the second program of my complex systems software suite that I open-source. (&lt;a href=&quot;%7B%%20post_url%202015-03-08-histogramr%20%%7D&quot;&gt;histogramr&lt;/a&gt; was the first one.) For those of you who study the spectral features of complex systems such as random networks I think unfoldr will prove quite useful. Given the eigenvalues of an ensemble of random matrices, unfoldr calculates the nearest-neighbor level spacings of the unfolded spectrum, either as a whole or for &lt;em&gt;slices&lt;/em&gt; of it. You can specify how you want to cut the spectrum into slices — linearly, logarithmically —, and unfoldr will calculate the level spacings for each slice individually. With this you can study how the level spacing statistics change with energy and whether or not there is a phase transition in the spectrum. I have used this technique to pinpoint the localization transition in the energy spectrum of an ultra-cold Rydberg gas, <a href="#scholak2014spectral">(Scholak, Wellens, and Buchleitner 2014)</a>. I comment on the purpose and the scientific value of the nearest-neighbor level spacings statistics &lt;a href=&quot;#theory&quot;&gt;below&lt;/a&gt;.&lt;/p&gt;
+      <description>&lt;p&gt;unfoldr is the second program of my complex systems software suite that I open-source. (&lt;a href=&quot;%7B%%20post_url%202015-03-08-histogramr%20%%7D&quot;&gt;histogramr&lt;/a&gt; was the first one.) For those of you who study the spectral features of complex systems such as random networks I think unfoldr will prove quite useful. Given the eigenvalues of an ensemble of random matrices, unfoldr calculates the nearest-neighbor level spacings of the unfolded spectrum, either as a whole or for &lt;em&gt;slices&lt;/em&gt; of it. You can specify how you want to cut the spectrum into slices — linearly, logarithmically —, and unfoldr will calculate the level spacings for each slice individually. With this you can study how the level spacing statistics change with energy and whether or not there is a phase transition in the spectrum. &lt;/p&gt;
 </description>
       <pubDate>Tue, 05 May 2015 20:00:00 -0400</pubDate>
       <dc:date>2015-05-05T20:00:00-04:00</dc:date>
@@ -20,7 +20,7 @@
     <item>
       <title>Meet histogramr</title>
       <link>http://tscholak.github.io/code/big%20data/2015/03/07/histogramr.html</link>
-      <description>&lt;p&gt;histogramr is a piece of software that produces multivariate histograms from numerical data. I started working on histogramr during my PhD and have been using and improving it ever since. It has been instrumental in many of my scientific achievements <a href="#scholak2010transport">(Scholak et al. 2010; Scholak et al. 2011; Scholak, Wellens, and Buchleitner 2011; Scholak, Wellens, and Buchleitner 2011; Scholak et al. 2011; Zech et al. 2013; Scholak, Wellens, and Buchleitner 2014)</a>, because it has allowed for the statistical analysis of extremely large scientific data sets.&lt;/p&gt;
+      <description>&lt;p&gt;histogramr is a piece of software that produces multivariate histograms from numerical data. I started working on histogramr during my PhD and have been using and improving it ever since. It has been instrumental in many of my scientific achievements <a href="#scholak2010transport">(Scholak et al. 2010; Scholak et al. 2011; Scholak, Wellens, and Buchleitner 2011; Scholak, Wellens, and Buchleitner 2011; Scholak et al. 2011; Zech et al. 2013; Scholak, Wellens, and Buchleitner 2014)</a>, because it has allowed for the statistical analysis of extremely large scientific data sets. &lt;/p&gt;
 </description>
       <pubDate>Sat, 07 Mar 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-03-07T19:00:00-05:00</dc:date>
@@ -28,7 +28,7 @@
     <item>
       <title>Jekyll and GitHub Pages</title>
       <link>http://tscholak.github.io/update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html</link>
-      <description>&lt;p&gt;By the time you read this, I will have tossed my old obsolete &lt;a href=&quot;wordpress&quot;&gt;Wordpress website&lt;/a&gt; in favor of this one, a modern &lt;a href=&quot;jekyll&quot;&gt;Jekyll&lt;/a&gt; powered &lt;a href=&quot;github&quot;&gt;GitHub&lt;/a&gt; page. I have started from scratch. The old site didn&amp;#39;t have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. I&amp;#39;m sure. This article is just the beginning. It&amp;#39;s like ... me and blogging forever ... and ever. A hundred years me and blogging ... about some things. Something all day long. &lt;a href=&quot;http://www.adultswim.com/videos/rick-and-morty/&quot;&gt;Forever a hundred times ...&lt;/a&gt; &lt;/p&gt;
+      <description>&lt;p&gt;By the time you read this, I will have tossed my old obsolete &lt;a href=&quot;wordpress&quot;&gt;Wordpress website&lt;/a&gt; in favor of this one, a modern &lt;a href=&quot;jekyll&quot;&gt;Jekyll&lt;/a&gt; powered &lt;a href=&quot;github&quot;&gt;GitHub&lt;/a&gt; page. I have started from scratch. The old site didn&amp;#39;t have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. &lt;/p&gt;
 </description>
       <pubDate>Fri, 06 Mar 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-03-06T19:00:00-05:00</dc:date>
@@ -36,7 +36,7 @@
     <item>
       <title>Finding the right fonts</title>
       <link>http://tscholak.github.io/update/2015/03/01/finding-the-right-fonts.html</link>
-      <description>&lt;p&gt;Kasper, the theme that I am using for this web site, comes with three fonts: &lt;a href=&quot;http://www.google.com/fonts/specimen/Open+Sans&quot;&gt;Open Sans&lt;/a&gt;, &lt;a href=&quot;http://www.google.com/fonts/specimen/Merriweather&quot;&gt;Merriweather&lt;/a&gt;, and &lt;a href=&quot;https://www.google.com/fonts/specimen/Inconsolata&quot;&gt;Inconsolata&lt;/a&gt;. I did not like these very much, so I set out to find suitable replacements.&lt;/p&gt;
+      <description>&lt;p&gt;Kasper, the theme that I am using for this web site, comes with three fonts: &lt;a href=&quot;http://www.google.com/fonts/specimen/Open+Sans&quot;&gt;Open Sans&lt;/a&gt;, &lt;a href=&quot;http://www.google.com/fonts/specimen/Merriweather&quot;&gt;Merriweather&lt;/a&gt;, and &lt;a href=&quot;https://www.google.com/fonts/specimen/Inconsolata&quot;&gt;Inconsolata&lt;/a&gt;. I did not like these very much, so I set out to find suitable replacements. &lt;/p&gt;
 </description>
       <pubDate>Sun, 01 Mar 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-03-01T19:00:00-05:00</dc:date>

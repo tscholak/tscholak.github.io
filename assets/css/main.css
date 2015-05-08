@@ -407,3 +407,6 @@ textarea {
 
 .ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-active .ui-tabs-anchor {
   cursor: pointer; }
+
+.more {
+  display: none; }
