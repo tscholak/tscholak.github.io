@@ -153,7 +153,7 @@ py.iplot(fig, filename=&quot;unfoldr-demonstration&quot;)
 
 <p>To understand the use cases of unfoldr, I first have to review some complex system theory. If you know all that stuff, skip <a href="#nearest-neighbor-level-spacing-statistics">ahead</a>.</p>
 
-<p>Suppose you are dealing with a complex system, i.e. a large, complicated, but deterministic system or a system whose complexity comes from some intrinsic randomness. Suppose further that you do not seek a full and exact theory describing all phenomena that could possibly manifest in your complex system. Maybe you tried to derive such a theory, but you realized the impossibility of such a task. In fact, your resentment of the task has made you become ignorant of all the details of the system that were once so precious to you. Believe it or not, that is not at all a bad thing. There is a way out of your dilemma, and it involves to replace the Hamiltonian, the weighted adjacency matrix, Laplacian matrix, or whatever description of your system you have by a <em>random matrix</em> (or an ensemble of random matrices) that has the same invariances and symmetry properties as your system. As radical as it may sound, in most cases, it works surprisingly well. The theory that makes all this possible is called <em>random matrix theory</em> (RMT) <a href="#Wigner1967Random-Matrices">(Wigner 1967; Dyson 1970; Mehta 1991; Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)</a>.</p>
+<p>Suppose you are dealing with a complex system, i.e. a large, complicated, but deterministic system or a system whose complexity comes from some intrinsic randomness. Suppose further that you do not seek a full and exact theory describing all phenomena that could possibly manifest in your complex system. Maybe you tried to derive such a theory, but you realized the impossibility of such a task. In fact, your resentment of the task has made you become ignorant of all the details of the system that were once so precious to you. Believe it or not, this is not such a bad thing. There is a way out of your dilemma, and it involves replacing the your model — the Hamiltonian, the weighted adjacency matrix, Laplacian matrix, or whatever description of your system you have — by a <em>random matrix</em> (or an ensemble of random matrices) that has the same invariances and symmetry properties as your system. As radical as it may sound, in most cases, it works surprisingly well. The theory that makes all this possible is called <em>random matrix theory</em> (RMT) <a href="#Wigner1967Random-Matrices">(Wigner 1967; Dyson 1970; Mehta 1991; Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)</a>.</p>
 
 <h2>Random matrix theory and Gaussian ensembles</h2>
 
@@ -167,7 +167,7 @@ py.iplot(fig, filename=&quot;unfoldr-demonstration&quot;)
 <li>the Gaussian symplectic ensemble (GSE).</li>
 </ul>
 
-<p>As the names suggest, the densities $f_{M}$ of these ensembles respect the invariance with respect to orthogonal, unitary, or symplectic similarity transformations. In other words, the core assumption for these ensembles is that all real (respectively, complex, quaternion) basis sets are equally well suited to describe the system. Furthermore, all matrix elements $M_{i j}$ are independent, and the joint probability densities $f_{M}$ decompose into products of their marginals, $f_{M} = f_{M_{1,1}} f_{M_{1,2}} \cdots f_{M_{N,N}}$. The marginals $f_{M_{i j}}$ are normally distributed with zero mean and fixed variance. For the GOE, they read</p>
+<p>As the names suggest, the densities $f_{M}$ of these ensembles respect the invariance with respect to orthogonal, unitary, or symplectic similarity transformations, respectively... ;) In other words, the core assumption for these ensembles is that all real (complex, quaternion) basis sets are equally well suited to describe the system. Furthermore, all matrix elements $M_{i j}$ are independent, and the joint probability densities $f_{M}$ decompose into products of their marginals, $f_{M} = f_{M_{1,1}} f_{M_{1,2}} \cdots f_{M_{N,N}}$. The marginals $f_{M_{i j}}$ are normally distributed with zero mean and fixed variance. For the GOE, they read</p>
 
 <p>\[
   \begin{align*}
@@ -178,7 +178,7 @@ py.iplot(fig, filename=&quot;unfoldr-demonstration&quot;)
 
 <p>where $\sigma^2$ is the variance of the diagonal elements $M_{i i}$. </p>
 
-<p>The three Gaussian random matrix ensembles have been studied at nauseam. The eigenvalue density is known (it&#39;s the <a href="http://en.wikipedia.org/wiki/Wigner_semicircle_distribution">Wigner semi-circle</a>), the eigenstate localization properties are known (they are extended <a href="#Erdos2007Semicircle-law-">(Erdős, Schlein, and Yau 2007)</a>), i.e. every eigenvector extends over a fraction of the system that scales as the system size $N$), the level-spacing distribution is known (it&#39;s Wigner&#39;s surmise, see <a href="#Wigners-surmise">below</a>), etc. The importance of the Gaussian ensembles stems from the fact that they are <em>universal</em>. If a closed system&#39;s behavior is chaotic in the classical limit, then, statistically speaking, it&#39;s corresponding wave or quantum behavior coincides with one of the Gaussian ensembles <a href="#Mehta1991Random-matrices">(Mehta 1991)</a>. Integrable (non-chaotic) systems, on the other hand, have a completely different statistical fingerprint. If your complex system turns out to coincide with universal Gaussian statistics, then you are done. There is nothing left to solve or discover, because everything you possibly would like to know (and can be known) about your system has already been discovered. And if your complex system turns out to be different, then there is still a good chance that it&#39;s statistics are described by one of the other important random matrix ensembles:</p>
+<p>The three Gaussian random matrix ensembles have been studied ad nauseam. The eigenvalue density is known (it&#39;s the <a href="http://en.wikipedia.org/wiki/Wigner_semicircle_distribution">Wigner semi-circle</a>), the eigenstate localization properties are known (they are extended <a href="#Erdos2007Semicircle-law-">(Erdős, Schlein, and Yau 2007)</a>, i.e. every eigenvector extends over a fraction of the system that scales as the system size $N$), the level-spacing distribution is known (it&#39;s Wigner&#39;s surmise, see <a href="#Wigners-surmise">below</a>), etc. The importance of the Gaussian ensembles stems from the fact that they are <em>universal</em>. If a closed system&#39;s behavior is chaotic in the classical limit, then, statistically speaking, its corresponding wave or quantum behavior coincides with one of the Gaussian ensembles <a href="#Mehta1991Random-matrices">(Mehta 1991)</a>. Integrable (non-chaotic) systems, on the other hand, have a completely different statistical fingerprint. If your complex system turns out to coincide with universal Gaussian statistics, then you are done. There is nothing left to solve or discover, because everything you possibly would like to know (and can be known) about your system has already been discovered. And if your complex system turns out to be different, then there is still a good chance that its statistics are described by one of the other important random matrix ensembles:</p>
 
 <ul>
 <li>the circular random matrices <a href="#Guhr1998Random-matrix-t">(Guhr, Müller–Groeling, and Weidenmüller 1998; Stöckmann 1999)</a>,</li>
@@ -190,24 +190,24 @@ py.iplot(fig, filename=&quot;unfoldr-demonstration&quot;)
 
 <p>you name it.</p>
 
-<h2>Eigenvalue correlations and level repulsion</h2>
+<h2><a name="nearest-neighbor-level-spacing-statistics"></a>Eigenvalue correlations and level repulsion</h2>
 
 <p>At this point, you may wonder: How can I find out about the statistics of my complex system? How do I get its statistical fingerprint? How can I compare my system with the random matrix ensembles? unfoldr helps you with that. It turns out you can learn a lot from the data:</p>
 
-<p>One of the most useful statistical metrics for random matrix ensembles is the nearest-neighbor level spacing (NNLS) density, denoted here by $f_{S}$.</p>
+<p>One of the most useful statistical metrics for random matrix ensembles is the nearest-neighbor level spacing (NNLS) density, denoted here and in the following by $f_{S}$. What does $f_{S}$ tell you? Formally,</p>
 
 <p>\[
   f_{S}(s) \, \mathrm{d}s = \overline{\delta(s - S_{\nu})} \, \mathrm{d}s
 \]</p>
 
-<p>is the ensemble averaged probability to sample two adjacent eigenvalues (also called eigenenergies) $\Lambda_{\nu}$, $\Lambda_{\nu+1}$ that are separated by an energy difference $S_{\nu} = \Lambda_{\nu+1} - \Lambda_{\nu}$ between $s$ and $s + \mathrm{d}s$. I assume here that, for each realization, your eigenvalues $\Lambda_{\nu}$ are sorted in ascending order, $\Lambda_{1} \le \Lambda_{2} \le \ldots \le \Lambda_{N}$.</p>
+<p>states the ensemble averaged probability to sample two adjacent eigenvalues (also called eigenenergies) $\Lambda_{\nu}$, $\Lambda_{\nu+1}$ that are separated by an energy difference $S_{\nu} = \Lambda_{\nu+1} - \Lambda_{\nu}$ between $s$ and $s + \mathrm{d}s$. Defining this makes sense as long as you sort your eigenvalues $\Lambda_{\nu}$ in ascending order for each realization of $M$, that is $\Lambda_{1} \le \Lambda_{2} \le \ldots \le \Lambda_{N}$.</p>
 
-<p>If you have the eigenvalues or eigenenergies of your system, unfoldr can compute the level spacings for you. Afterwards, you can use histogramr to get the NNLS density.</p>
+<p>The NNLS density is important, because its shape depends on the correlations and interactions between <em>all</em> eigenvalues of the random matrix. It is a fingerprint of the eigenvalue correlations. If you have the eigenvalues (or eigenenergies) of your system, unfoldr can compute the level spacings for you. Afterwards, you can use histogramr to get the NNLS density and thus the correlation fingerprint of <em>your</em> system. That fingerprint can then be compared to the fingerprints of, e.g., the universal Gaussian matrices.</p>
 
-<p>The NNLS density depends on the correlations between <em>all</em> eigenvalues of the random matrix. These correlations have a deterministic system-dependent part and a random universal part. Only the latter part may be used to compare the NNLS statistics with the universal random matrix ensembles. To extract the universal part, the spectrum of your complex system must be <em>unfolded</em>. Spectral unfolding is a commonly performed transformation that maps the ensemble averaged level spacing,</p>
+<p>The eigenvalue correlations have a deterministic system-dependent part and a random universal part. It is important to note that only the latter part may be used for comparisons between different systems or matrix ensembles. To extract the universal part, the spectrum of your complex system must be <em>unfolded</em>. Spectral unfolding is a transformation that maps the ensemble averaged level spacing,</p>
 
 <p>\[
-  \overline{S} = \int_{0}^{\infty} s \, f_{S} (s) \, \mathrm{d}s
+  \overline{S} = \int_{0}^{\infty} s \, f_{S} (s) \, \mathrm{d}s,
 \]</p>
 
 <p>to a constant, i.e. $\overline{S} = 1$. unfoldr will do that for you (hence the name). So you don&#39;t have to worry about it.</p>
@@ -218,29 +218,29 @@ py.iplot(fig, filename=&quot;unfoldr-demonstration&quot;)
   f^{\mathrm{P}}_{S} = \mathrm{e}^{-s}.
 \]</p>
 
-<p><a name="Wigners-surmise"></a>By contrast, the spectra of the universal Gaussian ensembles (GOE, GUE, GSE) are correlated. Their level-spacing statistics is not described by $f^{\mathrm{P}}_{S}$. For instance, the NNLS statistics of the GOE is well described by Wigner&#39;s surmise, i.e. by the Rayleigh distribution</p>
+<p><a name="Wigners-surmise"></a>By contrast, the spectra of the universal Gaussian ensembles (GOE, GUE, GSE) are correlated. Their level-spacing statistics are not described by $f^{\mathrm{P}}_{S}$. For instance, the NNLS statistics of the GOE are well described by Wigner&#39;s surmise, i.e. by the Rayleigh distribution</p>
 
 <p>\[
-  f^{\mathrm{GOE}}_{S}(s) = \frac{\pi}{2} s \, \mathrm{e}^{-\frac{\pi}{4} s^2}.
+  f^{\mathrm{GOE}}_{S}(s) = \frac{\pi}{2} \, s \, \mathrm{e}^{-\frac{\pi}{4} s^2}.
 \]</p>
 
 <p>The densities of the GUE and GSE, on the other hand, follow</p>
 
 <p>\[
   \begin{align*}
-    f^{\mathrm{GUE}}_{S}(s) &amp; = \frac{32}{\pi^2} s^2 \, \mathrm{e}^{-\frac{4}{\pi} s^2}, \\
-    f^{\mathrm{GSE}}_{S}(s) &amp; = \frac{2^{18}}{3^6 \pi^3} s^4 \, \mathrm{e}^{-\frac{64}{9 \pi} s^2},
+    f^{\mathrm{GUE}}_{S}(s) &amp; = \frac{32}{\pi^2} \, s^2 \, \mathrm{e}^{-\frac{4}{\pi} s^2}, \\
+    f^{\mathrm{GSE}}_{S}(s) &amp; = \frac{2^{18}}{3^6 \pi^3} \, s^4 \, \mathrm{e}^{-\frac{64}{9 \pi} s^2},
   \end{align*}
 \]</p>
 
-<p>respectively, to very good approximation (especially when $N$ is large). The correlations between the eigenvalues is manifested in the frequency of occurrence of small energy differences $s$. A negative deviation from the Poissonian statistics $f^{\mathrm{P}}_{S}$ signifies <em>level repulsion</em> (which coincidentally indicates eigenvector delocalization <a href="#Izrailev1990Simple-models-o">(Izrailev 1990)</a>). When we look at Wigner&#39;s surmise $f^{\mathrm{GOE}}_{S}(s)$, we see that it increases linearly for small spacings $s$. In other words, the probability to sample two neighboring eigenvalues that are separated by a small distance $S$ between $s$ and $s + \mathrm{d}s$ is <em>increasing</em> with $s$. Not only do eigenvalues not cluster, they avoid each other! The repulsion is even stronger for the other universal ensembles, since $f^{\mathrm{GUE}}_{S}(s) \sim s^2$ and $f^{\mathrm{GSE}}_{S}(s) \sim s^4$ for small $s$.</p>
+<p>respectively, to very good approximation (especially when $N$ is large). The correlations between the eigenvalues is manifested in the frequency of occurrence of small energy differences $s$. A negative deviation from the Poissonian statistics $f^{\mathrm{P}}_{S}$ signifies <em>level repulsion</em> (which coincidentally indicates eigenvector delocalization <a href="#Izrailev1990Simple-models-o">(Izrailev 1990)</a>). When we look at Wigner&#39;s surmise $f^{\mathrm{GOE}}_{S}(s)$, we see that it increases linearly for small spacings $s$. In other words, the probability of sampling two neighboring eigenvalues that are separated by a small distance $S$ between $s$ and $s + \mathrm{d}s$ is <em>increasing</em> with $s$. Not only do eigenvalues not cluster, they avoid each other! The repulsion is even stronger for the other universal ensembles, since $f^{\mathrm{GUE}}_{S}(s) \sim s^2$ and $f^{\mathrm{GSE}}_{S}(s) \sim s^4$ for small $s$.</p>
 
 <p>Let&#39;s assume now you have calculated the NNLS density using unfoldr and histogramr and you are staring at the result. What can you conclude?</p>
 
 <ul>
-<li>If it looks like the Poisson distribution $f^{\mathrm{P}}_{S}$, then you know that your eigenvalues are uncorrelated. It is also quite likely that your eigenstates are localized <a href="#Izrailev1990Simple-models-o">(Izrailev 1990)</a>, either strongly or weakly.</li>
+<li>If it looks like the Poisson distribution $f^{\mathrm{P}}_{S}$, then you know that your eigenvalues are uncorrelated. It is also quite likely that your eigenstates are localized, either strongly or weakly <a href="#Izrailev1990Simple-models-o">(Izrailev 1990)</a>.</li>
 <li>If it looks like Wigner&#39;s surmise, like $f^{\mathrm{GUE}}_{S}$, or like $f^{\mathrm{GSE}}_{S}$, then you know that your system agrees with universal Gaussian statistics. This is a big deal and can help you with a lot of things. (In physics, everything nice is Gaussian.) You also know now that your eigenvectors are delocalized.</li>
-<li>If it looks like a mix between Poisson and universal Gaussian statistics, then you may have a blend between two or more statistically independent subspectra that correspnd to either statistics. You can check that by estimating $\lim_{s \to 0} f_{S}(s)$. If this limit is finite, then this will be consistent with such a blend <a href="#Berry1984Semiclassical-l">(Berry and Robnik 1984)</a>. However, if your $f_{S}(s) \sim s^\alpha$ for small $s$, then you have most likely interaction between the subspectra <a href="#Backer2011Fractional-Powe">(Bäcker et al. 2011)</a>. In other words, your subspectra are not independent and their blend results in something that is different from either of them. You may have a localization transition in your system.</li>
+<li>If it looks like a mix between Poisson and universal Gaussian statistics, then you may have a blend between two or more statistically independent subspectra that correspond to either statistics. You can check that by estimating $\lim_{s \to 0} f_{S}(s)$. If this limit is finite, then this will be consistent with such a blend <a href="#Berry1984Semiclassical-l">(Berry and Robnik 1984)</a>. However, if your $f_{S}(s) \sim s^\alpha$ for small $s$, then you have most likely interaction between the subspectra <a href="#Backer2011Fractional-Powe">(Bäcker et al. 2011)</a>. In other words, your subspectra are not independent and their blend results in something that is different from either of them. You may have a localization transition in your system.</li>
 </ul>
 
 <p>If you think you have a localization transition in your system (or maybe just a transition between Poisson and Wigner-Dyson statistics under variation of the energy), you can get further insight into this by letting unfoldr calculate the NNLSs for individual slices through the spectral data. For instance,</p>
@@ -260,7 +260,7 @@ histogramr -d &quot;9.75&quot; -m &quot;spacing&quot; -b .1 -l 0,10 -o nnlsd_9.7
   \mathcal{N}(\lambda) = \sum_{\nu = 1}^N \Theta\left(\lambda - \Lambda_{\nu}\right) = \#\left\{\nu \middle| \Lambda_{\nu} &lt; \lambda\right\},
 \]</p>
 
-<p>where $\Theta(\lambda) = \int_\infty^\lambda \delta(\lambda&#39;) \, \mathrm{d}\lambda&#39;$ is the Heaviside step function. $\mathcal{N}(\lambda)$ is the number of eigenvalues $\Lambda_{\nu}$ with an energy smaller than $\lambda$. We separate $\mathcal{N}(E)$ into a smooth part,</p>
+<p>where $\Theta(\lambda) = \int_\infty^\lambda \delta(\lambda&#39;) \, \mathrm{d}\lambda&#39;$ is the Heaviside step function. $\mathcal{N}(\lambda)$ is the number of eigenvalues $\Lambda_{\nu}$ that are smaller than $\lambda$. We separate $\mathcal{N}(E)$ into a smooth part,</p>
 
 <p>\[
   \overline{\mathcal{N}}(\lambda) = N F_{\Lambda}(\lambda) = N \int_{-\infty}^{\lambda} f_{\Lambda}(\lambda&#39;) \, \mathrm{d}\lambda&#39;,
@@ -301,7 +301,7 @@ histogramr -d &quot;9.75&quot; -m &quot;spacing&quot; -b .1 -l 0,10 -o nnlsd_9.7
   \end{align*}
 \]</p>
 
-<p><a name="implementation"></a>How is unfolding done in unfoldr? When you load your spectral data with unfoldr, two thirds of them are taken away to populate what I call the unfolding pool. The unfolding pool is a flat, sorted array of eigenvalues. I use it to estimate the ensemble averaged spectral staircase function $\overline{\mathcal{N}}$ and to do the transformation $\Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu}$. The following Python pseudo code shows how this is implemented:</p>
+<p><a name="implementation"></a>How is unfolding done in unfoldr? When you load your spectral data with unfoldr, two-thirds of them are taken away to populate what I call the unfolding pool. The unfolding pool is a flat, sorted array of eigenvalues. I use it to estimate the ensemble averaged spectral staircase function $\overline{\mathcal{N}}$ and to do the transformation $\Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu}$. The following Python pseudo code shows how this is implemented:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">i = 0
 for j in range(number of eigenvalues):
   while unfolding_pool[i] &lt; eigenvalue[j]:
@@ -313,7 +313,7 @@ for j in range(number of eigenvalues):
   if j &gt; 0:
     level_spacing[j-1] += i / (number of spectra in the unfolding pool)
 </code></pre></div>
-<p>This calculation is done for each of the remaining spectra (the third that doesn&#39;t go into the unfolding pool). The above piece of code does not only unfold the spectrum, but does also calculate the level spacings. The code is compiled with Cython, so it should be fast.</p>
+<p>This calculation is done for each of the remaining spectra (the third that doesn&#39;t go into the unfolding pool). The above piece of code does not only unfold the spectrum, but also calculates the level spacings. The code is compiled with Cython, so it should be fast.</p>
 
 <p>You can control the size of the unfolding pool with the command line argument <code>-p</code>. The default value is 2. That means that the number of spectra in the unfolding pool is twice as large as the number of spectra that are unfolded. The default value should work in most cases. However, if you see oscillations or weird artifacts in your level spacing densities, then try a larger number.</p>
 
