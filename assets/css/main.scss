@@ -201,13 +201,44 @@ html {
 .page-follow {
   position: relative;
   top: 1rem;
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.5em;
+  font-weight: 400;
   font-family: "charterregular", serif;
+  letter-spacing: 0.01rem;
+  color: rgba(255,255,255,0.8);
+}
+.no-cover .page-follow {
+  color: rgba(0,0,0,0.5);
+}
+.home-template .page-follow {
+  -webkit-animation: fade-in-down 0.9s;
+  animation: fade-in-down 0.9s;
+  -webkit-animation-delay: 0.1s;
+  animation-delay: 0.1s;
 }
 .page-follow a {
   color: rgba(255,255,255,0.6);
 }
 .page-follow a:hover {
   color: rgba(255,255,255,0.8);
+}
+@media only screen and (max-width: 900px) {
+  .page-follow {
+    top: .9rem;
+    font-size: 1.8rem;
+    line-height: 1.5em;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .page-follow {
+    top: .8rem;
+    font-size: 1.6rem;
+  }
+  .archive-template .main-header .page-follow {
+    display: none;
+  }
 }
 
 .pagination {
