@@ -5,9 +5,1461 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 15 May 2015 14:48:04 -0400</pubDate>
-    <lastBuildDate>Fri, 15 May 2015 14:48:04 -0400</lastBuildDate>
+    <pubDate>Wed, 08 Jul 2015 17:14:18 -0400</pubDate>
+    <lastBuildDate>Wed, 08 Jul 2015 17:14:18 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
+    
+      <item>
+        <title>Communities and Markets</title>
+        <description>&lt;p&gt;I have been fairly quiet as of late. This is not because nothing has happened, but rather because I have been (and still am) busy working on a data science project in which I try something new and exciting. Recently, I was out of town for a couple of days traveling the Maritimes, and I found some time to reflect and to start writing on a series of articles about this particular project. This is now the first.&lt;/p&gt;
+
+&lt;p&gt;In my new project, I am studying the segmentation of large markets by identifying communities of consumers with similar shopping habits. This is an effort to improve recommendation systems and to allow for better business opportunities. &lt;span class=&quot;more&quot;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;I started this project because I wanted to apply my knowledge of the physics of complex systems to models of real-world data, for instance, data coming from politics, linguistics, humanities, biology, or economics. Previously, I have studied the localization properties of large and complex quantum networks that model ultra-cold Rydberg gases, Lévy spin glasses, and photosynthetic light-harvesting complexes. Now, in this project, I am detecting clusters and communities in large graphs with many vertices and edges. In general, these graphs can represent the connections between senators and bills in a parliament, documents and terms in a corpus, authors and papers in academia, viewers and movies on Netflix, or consumers and items in a market. At the moment, it is the latter I am most interested in. On the surface, I merely exchanged the complex networks with the synonymous complex graphs and the question of localization with the closely related issues of &lt;em&gt;graph clustering&lt;/em&gt; and &lt;em&gt;community detection&lt;/em&gt;. (Note that clusters and communities describe the same phenomenon. I use the word &amp;quot;cluster&amp;quot; for things and &amp;quot;community&amp;quot; for people.) Should be easy enough to make quick progress, right? Little did I know ...&lt;/p&gt;
+
+&lt;p&gt;When I began, I thought that I had already most of what I would be needing, in terms of both knowledge and experience. Surely, I thought, finding clusters in a graph is just the same as finding the localized eigenstates of the graph&amp;#39;s adjacency matrix. Now, having worked with real data and having consumed large amounts of literature on graph clustering and community detection &lt;a href=&quot;#Newman2004Finding-and-eva&quot;&gt;(Newman and Girvan 2004; Newman 2006; Schaeffer 2007; Reichardt 2008; Blondel et al. 2008; Lancichinetti and Fortunato 2009; Fortunato 2010; Peixoto 2013; Jeub et al. 2015; De Domenico et al. 2015)&lt;/a&gt; as well as general machine learning &lt;a href=&quot;#Abu-Mostafa2012Learning-from-D&quot;&gt;(Abu-Mostafa, Magdon-Ismail, and Lin 2012; James et al. 2013)&lt;/a&gt;, I must admit that I was a little too optimistic. It is not quite the same, and the techniques out there are different from what I am used to do. Yet, I still think that what I want to do is doable, and I continue to work steadily towards it, but at a speed slower than anticipated.&lt;/p&gt;
+
+&lt;p&gt;The trouble is that the relevant methodology is not only state of the art, &lt;em&gt;it is an area of active research&lt;/em&gt;, and I have been caught right in the middle of it.&lt;/p&gt;
+
+&lt;p&gt;In this article, I tell you about:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;an interesting data source to study market segmentation,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;the bipartite or two-mode graph representation,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;the one-mode projection, and&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;community analysis.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;My original motivation lies with clusters and communities, and so I decided to start at the very end:&lt;/p&gt;
+
+&lt;h1&gt;Community Analysis&lt;/h1&gt;
+
+&lt;p&gt;Since I will be referring to communities many times throughout this article, let me tell you what a community is in the context of graphs and networks (you will find me using these terms interchangeably, same for &amp;quot;vertex&amp;quot; and &amp;quot;node&amp;quot; as well as &amp;quot;edge&amp;quot; and &amp;quot;link&amp;quot;).&lt;/p&gt;
+
+&lt;p&gt;While there is no generally accepted formal definition of a community, an informal definition could be that of a densely connected group of network nodes: typically, a community is supposed to have a higher density of internal connections and a lower density of external connections compared to a reference. The sparser the connections between the communities, the better.&lt;/p&gt;
+
+&lt;p&gt;I tried to illustrate that with the &lt;a href=&quot;#&quot;&gt;cover picture above&lt;/a&gt;. It shows a group of wild herring gulls on Ciboux Island in Cape Breton, Nova Scotia. Each bird represents a node in a network (blue circles). The links drawn between the birds are of course a product of my imagination. They do not correspond to any real data. Notwithstanding, herring gulls are highly intelligent birds, and these links may represent a possible structure of their society. In the example I produced, the network of gulls has community structure. As indicated by the dashed shapes, there are three communities where birds are more densely connected to fellow birds than to the birds in the rest of the network. The goal of community detection is to infer that community structure from the links alone. To be unbiased, the analysis needs to be done without using any prior knowledge on the social circles in the bird population, if such knowledge were to exist.&lt;/p&gt;
+
+&lt;h2&gt;How do we detect communities?&lt;/h2&gt;
+
+&lt;p&gt;The problem of community detection belongs to the field of &lt;em&gt;unsupervised learning&lt;/em&gt;. There are vastly different opinions about how to address it, but most approaches fall in either of two categories:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;the approach starts with a theoretical framework that defines precisely what a community is supposed to be, or&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;the approach is heuristic and begins with the development of a detection algorithm.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In the first case, a measure of the quality of the community structure is devised, and the challenge is to assemble groups of nodes that maximize it. In the second case, the algorithm is deployed and the communities are defined simply as its output, whatever that may be. Surprisingly, the results of both approaches tend to be consistent with each other, in the sense that they produce communities adhering to the idea of densely connected groups as introduced above. However, there is still no &amp;quot;gold standard&amp;quot; of community detection. That means it is unclear which method is universally superior.&lt;/p&gt;
+
+&lt;p&gt;So, how do we choose one? Looking at the available measures and algorithms &lt;a href=&quot;#Fortunato2010Community-detec&quot;&gt;(Fortunato 2010)&lt;/a&gt;, we find that all have their pros and cons. Some deliver mixed results and have proven weaknesses, but are still in use because they scale well with graph size and are easy to deploy. Others are much more accurate and rest on solid theoretical foundations, but are forbiddingly expensive to use on large graphs. It takes some time to get an overview of the large number of options. But this also has its positive side. For each use case, there is usually a good compromise between quality and deployment cost. 15+ years of intense and ongoing research from many specialists around the world has made sure of it. I discuss some aspects of community detection methods below and focus on particular algorithms (including those I use personally) in future articles.&lt;/p&gt;
+
+&lt;h2&gt;Why so much interest in community analysis?&lt;/h2&gt;
+
+&lt;p&gt;Much of the interest is spurred by the empirically proven fact that the nodes in a community are similar by function or by role. Hence, finding the communities and how they are organized allows one to understand the network&amp;#39;s large-scale functional structure. This knowledge is absolutely essential in most real-world cases. Networks representing real systems and their relationships are usually large and complex. They are not regular lattices, but combine aspects of order and disorder in a non-trivial way. Due to that complexity, exploring such networks can easily become an insurmountable task. It&amp;#39;s easy to get lost in the details and also to mistake random structure for regular patterns. However, a graph&amp;#39;s structure can become humanly understandable if the nodes are grouped into a set of interacting and unique communities. This gives a coarse-grained representation of the network, a bird&amp;#39;s-eye view that focuses on functions and roles only.&lt;/p&gt;
+
+&lt;h2&gt;Some use cases&lt;/h2&gt;
+
+&lt;p&gt;Let me give you a couple of examples for when community analysis is useful:&lt;/p&gt;
+
+&lt;h6&gt;The clustering of the World Wide Web.&lt;/h6&gt;
+
+&lt;p&gt;Each page in the WWW can be thought of as a vertex in a giant graph with hyper-links between pages for edges. A community of web pages corresponds to a selection of pages with similar themes, topics, or content, since pages tend to link to related pages more often than to unrelated ones. A community detection algorithm can be given the task to detect the themes and affiliated web pages using only the information about the links between them. Apart from studying the structure of the web, this kind of analysis can be used to organize the Internet to make it easier to find content, to deliver personal recommendations, and to fight informational overload.&lt;/p&gt;
+
+&lt;h6&gt;The analysis of the social or friendship structure of on-line social networks like Facebook, Twitter, LinkedIn, or Google+.&lt;/h6&gt;
+
+&lt;p&gt;On these platforms, users reveal their relationship with each other voluntarily. On Facebook, for instance, two users are connected by a mutual declaration of friendship that can be represented as an undirected edge in a graph of users. On Twitter, on the other hand, users do not befriend each other, but subscribe to each others&amp;#39; feeds. Users are connected by directed edges pointing from a follower to the one being followed. For these and similar platforms, community detection can quite literally solve the problem of identifying the (large-scale) communities that users belong to. These communities will tend to consist of like-minded users with common interests. Moreover, a user sitting at the center of a community shares many edges with other members and may be a so-called &lt;em&gt;influencer&lt;/em&gt; who acts as a central hub for inspiration and opinion. Influencers have a function of control and stability within the community. In contrast, a well-connected user sitting at the boundary between two communities may foster the exchange between them. Undoubtedly, this kind of data is interesting for purposes of targeted advertising and marketing.&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;a href=&quot;https://www.facebook.com/notes/facebook-engineering/visualizing-friendships/469716398919&quot;&gt;&lt;img src=&quot;/assets/images/163413_479288597199_8388607_n.jpg&quot; title=&quot;friendship visualization&quot;&gt;&lt;/a&gt;
+    &lt;figcaption&gt;Visualization by &lt;a href=&quot;https://www.facebook.com/paulgb&quot;&gt;Paul Butler&lt;/a&gt; showing which cities have a lot of Facebook friendships between them.&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/p&gt;
+
+&lt;h6&gt;The study of biological networks, gene co-expression networks in particular.&lt;/h6&gt;
+
+&lt;p&gt;In such a network, each node is a gene of an organism. The connections between the genes are undirected and indicate that two genes lead to the same properties of the organism&amp;#39;s phenotype, i.e. its observable characteristics or traits. For this kind of data, community detection is important, because with it one can identify gene functions in an unbiased way. This is an application of the fact that communities are often similar in role or function.&lt;/p&gt;
+
+&lt;p&gt;These are just the first three examples I can think of. There are many more, but I&amp;#39;ll stop here, since I am sure these examples prove my point that community analysis is important and solves real problems.&lt;/p&gt;
+
+&lt;h1&gt;Communities from Bipartite Graphs&lt;/h1&gt;
+
+&lt;p&gt;The above examples have something in common. In each one of them, the link structure is either fully known or easily obtainable. In many cases, however, this is not the case. In fact, it can be very challenging or even impossible to collect information about the links between the network nodes directly. This section is about the methods that have been developed to cope with this situation.&lt;/p&gt;
+
+&lt;p&gt;Consider the task of collecting data about the political alliances between members of a parliament &lt;a href=&quot;#Neal2014The-backbone-of&quot;&gt;(Neal 2014)&lt;/a&gt;. Here, asking every pair of politicians about their mutual alignment is not really an option. That would give only a very biased picture of reality, either because the politicians would decline to comment or because their answer would just reflect their respective party memberships. A solution to this problem is to get the data not from the politicians directly, but indirectly from their actions, for instance, from whether records show that they tend to agree or disagree in matters of legislation. For example, in an effort to detect political alliances, Neal &lt;a href=&quot;#Neal2014The-backbone-of&quot;&gt;(“The Backbone of Bipartite Projections: Inferring Relationships from Co-Authorship, Co-Sponsorship, Co-Attendance and Other Co-Behaviors” 2014)&lt;/a&gt; analyzed data about the sponsorship of bills by senators in the US congress.&lt;/p&gt;
+
+&lt;p&gt;One of the earliest attempts of inferring unobserved relationships is the work of Davis et al. &lt;a href=&quot;#Davis1969Deep-south&quot;&gt;(&lt;i&gt;Deep South&lt;/i&gt; 1969)&lt;/a&gt;, who studied what is now known as the classic Southern Women network (see picture below). This ethnographic dataset is a record of the attendance of 18 women at 14 informal social events that took place in the 1930s in southern Alabama. The goal was to unravel the connection between an individual&amp;#39;s social class and her pattern of informal interaction in 1930s America. In the absence of any modern community detection methods, Davis et al. relied fully on their ethnographic knowledge and intuition. They discovered that the women were split into two loosely overlapping groups, evidencing two latent social classes.&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;a href=&quot;http://networkdata.ics.uci.edu/netdata/html/davis.html&quot;&gt;&lt;img src=&quot;/assets/images/davis.png&quot; title=&quot;participation of the Southern Women in informal events&quot;&gt;&lt;/a&gt;
+    &lt;figcaption&gt;Participation of 18 Southern Women in 14 informal events as it appears in the original publication &lt;a href=&quot;#Davis1969Deep-south&quot;&gt;(Davis, Gardner, and Gardner 1969)&lt;/a&gt;.&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Over time, the Southern Women dataset has become a benchmark of analytic methods in social network analysis and continues to be relevant today [see Freeman &lt;a href=&quot;#Freeman2003Finding-social-&quot;&gt;(“Finding Social Groups: A Meta-Analysis of the Southern Women Data” 2003)&lt;/a&gt; for a lucid review of this and 20 more recent analyses of the same data]. A modern way of dealing with this data would be to represent it as a &lt;em&gt;bipartite graph&lt;/em&gt;. In such a graph, the women and the events would form two disjoint classes of vertices. These classes are also called the &lt;em&gt;modes&lt;/em&gt; of the graph. Every edge in the graph connects nodes of a different mode. In this way, an edge between a woman and an event marks an attendance. Similarly, in a bipartite graph representation of the senator-bill co-sponsorship data, an edge between a senator and a bill indicates a sponsorship.&lt;/p&gt;
+
+&lt;p&gt;Bipartite graphs are of use where relationships between different kinds of entities need to be described and where these entities do not interact with each other &lt;a href=&quot;#Fortunato2010Community-detec&quot;&gt;(Fortunato 2010; Latapy, Magnien, and Vecchio 2008)&lt;/a&gt;. This includes, but is not restricted to:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;scientific collaboration networks, in which authors co-author papers &lt;a href=&quot;#Newman2001aScientific-col&quot;&gt;(Newman 2001; Newman 2001)&lt;/a&gt;,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;the IMDB affiliation network where actors co-star in different movies &lt;a href=&quot;#Zweig2011A-systematic-ap&quot;&gt;(Zweig and Kaufmann 2011; Horvát and Zweig 2013)&lt;/a&gt;,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;document-word co-occurrence relationship networks &lt;a href=&quot;#Manning2008Introduction-to&quot;&gt;(Manning et al. 2008; Srivastava, Soto, and Milios 2013)&lt;/a&gt;,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;the Ebay &amp;quot;co-opetition&amp;quot; network, in which consumers bid against each other for items &lt;a href=&quot;#Reichardt2008Understanding-C&quot;&gt;(Reichardt and Bornholdt 2008; Reichardt 2008)&lt;/a&gt;,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;and, again, the Twitter network -- if we ignore the information about who follows whom and focus instead on hashtags and who tweets them &lt;a href=&quot;#De-Choudhury2010How-does-the-da&quot;&gt;(De Choudhury et al. 2010)&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;A naïve way of inferring unobserved relationships from bipartite graphs&lt;/h2&gt;
+
+&lt;p&gt;An example of a simple bipartite graph is depicted below. To stay with the senator-bill co-sponsorship graph mentioned above, you can think of the seals as the senators and the gulls as the bills (or vice versa).&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;img src=&quot;/assets/images/bipartitegraph.jpg&quot; title=&quot;bipartite example graph&quot;&gt;
+    &lt;figcaption&gt;Example of a bipartite graph of seals (orange nodes) and herring gulls (blue nodes).&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/p&gt;
+
+&lt;p&gt;In the above example graph, there are neither connections among any two seals nor any two gulls. So, how is it possible to learn something about their respective relationships or similarities? In a very convoluted way, this information is already present in the graph. It can be extracted by reducing the bipartite graph to its &lt;em&gt;one-mode projections&lt;/em&gt;. For instance, from the bipartite graph of senators and bills, a graph of senators can be created in which edges represent co-sponsorships of bills. The orthogonal projection produces a graph of bills only. For illustration, the following picture shows two possible one-mode projections of the example graph:&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;img src=&quot;/assets/images/onemodeprojections.jpg&quot; title=&quot;one-mode projections&quot;&gt;
+    &lt;figcaption&gt;One-mode projections of the above bipartite example graph according to the rules 1-4 introduced below.&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/p&gt;
+
+&lt;p&gt;On the left, we have a graph of seals and, on the right, one with gulls only. The creation of these graphs followed very simple rules:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;From the original bipartite graph, I took only the vertices of the desired mode, that is, either the seals (orange) or the gulls (blue).&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Then I considered all pairs of vertices. I would draw an edge between a pair if, in the original graph, the vertices were connected via at least one intermediary vertex of different mode. Alternatively, I could have demanded that the vertices were reachable from one another by a walk on the graph of length two.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Sometimes, there was more than one such walk. In these cases, I made the edge a &lt;em&gt;multi-edge&lt;/em&gt; effectively, that is, I gave it an integer weight counting the number of connecting length-2 walks.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;In the above picture, edges drawn as thick lines have a &lt;em&gt;multiplicity&lt;/em&gt; (weight) of two. All others are simple edges (i.e. have multiplicity one). Higher multiplicities than two did not occur.&lt;/p&gt;
+
+&lt;p&gt;So, after this little procedure, instead of a bipartite graph, we now have to deal with two weighted unipartite graphs. Unfortunately, that is &lt;em&gt;not&lt;/em&gt; easier at all &lt;a href=&quot;#Latapy2008Basic-notions-f&quot;&gt;(Latapy, Magnien, and Vecchio 2008 pp. 34-35)&lt;/a&gt;, especially if the projections are large and dense graphs. In such cases, community detection is possible in principle, but may become a significant drain on the computational resources. One may face exceedingly long convergence times and unsatisfiable memory requirements. Therefore, our next goal is to convert the weighted graphs into &lt;em&gt;sparse&lt;/em&gt; and &lt;em&gt;unweighted&lt;/em&gt; graphs. We want to preserve only those edges whose weights are large enough to suggest that they are important. To this end, we can:&lt;/p&gt;
+
+&lt;ol start=&quot;4&quot;&gt;
+  &lt;li&gt;
+    Define a threshold multiplicity $t$ and keep only those edges that occur at least $t$ times &lt;a href=&quot;#Watts1998Collective-dyna&quot;&gt;(Watts and Strogatz 1998)&lt;/a&gt;. In particular, if I set $t = 1$, then the above projections retain all their edges. The graphs appear unchanged except that each edge has now a weight of one. For $t = 2$, only two edges per projection survive (the thick ones). For $t \ge 3$, the graphs retain no edges at all.
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;What is the correct choice for $t$? It&amp;#39;s not clear. What can be said is that, if the graph has the &lt;em&gt;small-world property&lt;/em&gt; &lt;a href=&quot;#Watts1998Collective-dyna&quot;&gt;(Watts and Strogatz 1998)&lt;/a&gt;, a small $t$ may lead to near-to-fully connected projections with one giant community that doesn&amp;#39;t tell us anything. On the other hand, if $t$ is too large, the graph may not be connected at all, and we get equally uninformative communities consisting of single nodes. Any intermediate choice seems arbitrary. If so, can we still make use of the resulting graphs? Well, in principle, standard community detection techniques can be used on them. However, given the simplistic set of rules I used and the arbitrariness of $t$, the accuracy of the communities would be poor. An arbitrary threshold gives an equally arbitrary projection with just as arbitrary communities. The conclusion must be that the above rules are terribly naïve and happen to destroy a lot of information -- not just the identities of the discarded nodes. Hence:&lt;/p&gt;
+
+&lt;h2&gt;You should &lt;em&gt;never&lt;/em&gt; use unconditional projection rules!&lt;/h2&gt;
+
+&lt;p&gt;Let me justify this by going back to the senator-bill co-sponsorship network. The goal of projecting is to end up with a sparse graph in which vertices are only connected if they represent truly related objects. Would applying the rules 1-4 on a co-sponsorship network yield a graph of senators with edges indicating truly similar political alignment? I&amp;#39;m afraid not &lt;a href=&quot;#Neal2014The-backbone-of&quot;&gt;(Neal 2014)&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Why? Because the rules do not make a difference between senators who sponsor many bills and those who sponsor few. In particular, if a senator sponsors only a few bills, each one of her sponsorships is much more important than for the average senator. By contrast, if she promotes almost every single bill, each of these sponsorships becomes relatively unimportant. Ultimately, if she were to sponsor every single bill, then this would say absolutely nothing about her political alignment. The above projection rules ignore this fully. Instead, extensively sponsoring senators will always have more edges than modestly sponsoring senators. That is not how similarity should manifest itself, because the significance of co-sponsorships is different for senators with different total number of sponsorships. Indeed, it&amp;#39;s certainly wrong that senators who sponsor few bills are never politically allied with others, whereas those who sponsor many bills are always allied.&lt;/p&gt;
+
+&lt;p&gt;Similarly, the rules also do not differentiate between bills with single sponsors and those with multiple sponsors. This, too, provides valuable information that is lost under rules 1-4.  For instance, if a bill is sponsored by every senator, then we cannot infer anything about its political orientation or that of the sponsoring senators. In contrast, if two (otherwise modestly sponsoring) senators co-sponsor a controversial and hence unpopular bill, then that says a lot about their political like-mindedness.&lt;/p&gt;
+
+&lt;p&gt;The bottom line is that, in order to retain as much information as possible in the one-mode projection, one has to take into account the connectivities (the so-called &lt;em&gt;degrees&lt;/em&gt;) of both the senators and the bills. The projection rules have to be &lt;em&gt;degree-conditional&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2&gt;Heuristic degree-conditional projections&lt;/h2&gt;
+
+&lt;p&gt;Below I go through two degree-conditional approaches. The first one is adapted to bibliographic collaboration networks and to the question of whether or not collaborating authors tend to organize socially into communities &lt;a href=&quot;#Newman2001aScientific-col&quot;&gt;(Newman 2001; Newman 2001)&lt;/a&gt;. The second approach is geared towards document-word networks and the task of automated document categorization &lt;a href=&quot;#Srivastava2013Text-Clustering&quot;&gt;(Srivastava, Soto, and Milios 2013)&lt;/a&gt;. I pay especially close attention to this second approach, because it would have been &lt;em&gt;almost&lt;/em&gt; relevant for my purposes. I explain why it didn&amp;#39;t work out.&lt;/p&gt;
+
+&lt;p&gt;Common to both approaches is the refined use of edge weights. Recall that rule 4 also defines edge weights. In rule 4, each weight is simply the number of nearest neighbors that the connected nodes share in the original bipartite graph -- this number is also called the &lt;em&gt;co-occurrence&lt;/em&gt;. The approaches discussed below use heuristics to define better edge weights that are more suitable to their respective applications.&lt;/p&gt;
+
+&lt;h3&gt;Weights for collaboration networks&lt;/h3&gt;
+
+&lt;p&gt;While working on scientific collaboration networks, Newman &lt;a href=&quot;#Newman2001aScientific-col&quot;&gt;(“Scientific Collaboration Networks. I. Network Construction and Fundamental Results” 2001; “Scientific Collaboration Networks. II. Shortest Paths, Weighted Networks, and Centrality” 2001)&lt;/a&gt; found a heuristic degree-conditional one-mode projection method that takes into account the number of co-authors on each publication $v$ (this number is equal to the publication&amp;#39;s degree, $\mathrm{deg}(v)$). Newman was interested in the social bonds among collaborating scientists $u$, and he wanted the projection to respect the fact that two authors tend to know each other less well if they only collaborate on articles with many authors and much better if they repeatedly write papers together as the sole authors. To this end, Newman assigned weights to the edges in the projected author graph. A weight $W_{ij}$ of an edge $\{u_i, u_j\}$ was made inversely proportional to the degrees of the publications the authors had collaborated in,
+\[
+  W_{ij} = \sum_{k}&amp;#39; \frac{1}{\mathrm{deg}(v_k) - 1},
+\]
+where the sum runs over those publications $v_k$ in which $u_i$ and $u_j$ appeared as authors (indicated by the prime, ${}^{\prime}$). The thought leading to this formula was that, while working on a publication $v_k$, an author would have to divide her time between $\mathrm{deg}(v_k) - 1$ co-authors on average. This prescription was found to estimate the strength of the collaborative bonds adequately. From the weighted author graph, an unweighted graph can be obtained via thresholding as in rule 4 above. This threshold is arbitrary, however.&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;a href=&quot;http://olihb.com/2014/08/11/map-of-scientific-collaboration-redux/&quot;&gt;&lt;img src=&quot;/assets/images/map_clusters_hi.jpg&quot; title=&quot;collaboration network map&quot;&gt;&lt;/a&gt;
+    &lt;figcaption&gt;Map of the collaboration networks between researchers in different cities around the world made by &lt;a href=&quot;http://olihb.com&quot;&gt;Olivier H. Beauchesne&lt;/a&gt; and &lt;a href=&quot;https://scholar.google.com/citations?user=IvruGDUAAAAJ&quot;&gt;Félix de Moya-Anegón&lt;/a&gt; by aggregating bibliographical data from the Scopus database. The colors correspond to different collaboration patterns as discovered by a community detection algorithm.&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/p&gt;
+
+&lt;h3&gt;Weights for document-word networks&lt;/h3&gt;
+
+&lt;p&gt;Another interesting application of weights is the work of Srivastava et al. &lt;a href=&quot;#Srivastava2013Text-Clustering&quot;&gt;(“Text Clustering Using One-Mode Projection of Document-Word Bipartite Graphs” 2013)&lt;/a&gt;, who obtained document clusterings from bipartite graphs representing document-word relationships. They did so by first creating weighted document-document similarity graphs and then running community detection algorithms on them. This procedure was found to outperform conventional document clustering techniques by a large margin, in particular, those based on the popular k-means algorithm &lt;a href=&quot;#Sculley2010Web-scale-k-mea&quot;&gt;(Sculley 2010; Abu-Mostafa, Magdon-Ismail, and Lin 2012)&lt;/a&gt;. The weights were derived from a degree-conditional measure called the &lt;em&gt;term-frequency inverse-document-frequency statistic&lt;/em&gt; (tf-idf) that is the de-facto standard in the field of textual data mining &lt;a href=&quot;#Manning2008Introduction-to&quot;&gt;(Manning et al. 2008)&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;When I first saw their paper, I thought I had finally found the right method to study my own networks. Unfortunately, it is not, for several reasons. Let me first explain what exactly they did and then why this won&amp;#39;t help me.&lt;/p&gt;
+
+&lt;p&gt;To understand what they did, consider a document-word network. Such a network is a bipartite multi-graph. The first mode of nodes is given by the text documents $d$ in a corpus $D = \{d_1, \ldots, d_m\}$, while the second mode of nodes is given by sufficiently descriptive words or terms $t$. &amp;quot;Descriptive&amp;quot; means that these words are not prepositions or other fillers and that they appear in at least one of the documents. The co-occurrence network is a multi-graph because terms can (and usually will) occur multiple times per document. Srivastava et al. went ahead and replaced the multi-edges of such graphs with weighted simple edges. The weights were derived from the tf-idf statistic. In their scheme, the weight $w_{ik}$ of an edge $\{d_i, t_k\}$ between a document $d_i$ and a term $t_k$ has two components that are multiplied with each other,
+\[
+  w_{ik} = \mathrm{tf}(d_i, t_k) \, \mathrm{idf}(t_k).
+\]
+The first component, the &lt;em&gt;term frequency&lt;/em&gt; $\mathrm{tf}$, is defined as the number of times the term $t_k$ is occurring in the document $d_i$. The term frequency is therefore equal to the multiplicity of the multi-edge $\{d_i, t_k\}$. Sometimes, $\mathrm{tf}(d_i, t_k)$ is logarithmized or divided by the document length $\left|d_i\right|$, but Srivastava et al. left it as it is. I have not yet figured out the reason for this, but it is justified by their results.&lt;/p&gt;
+
+&lt;p&gt;The second component, the &lt;em&gt;inverse document frequency&lt;/em&gt; $\mathrm{idf}$, is log-inversely proportional to the number of documents using the term $t_k$ (and therefore also to $\mathrm{deg}(t_k)$). It is usually defined as
+\[
+  \mathrm{idf}(t_k) = \log \frac{\left|D\right|}{\left|\left\{d \in D : t_k \in d\right\}\right|} = \log m - \log \mathrm{deg}(t_k)
+\]
+and is thus always non-negative. With this definition, terms that are used in fewer documents acquire more weight. They acquire no weight at all if they appear in all $\left|D\right| = m$ documents of the corpus. The effect is similar to that of Newman&amp;#39;s edge weights in the scientific collaboration networks above.&lt;/p&gt;
+
+&lt;p&gt;After obtaining the weighted network, a projection onto the document mode was performed. Srivastava et al. proposed a new one-mode projection method that takes the tf-idf statistic into account. In particular, they defined a document-document similarity graph with edges $\{d_i, d_j\}$ weighted as the matrix product
+\[
+  W_{ij} = \sum_{k} w_{ik} w_{jk},
+\]
+where $k$ runs over all terms $t_k$ occurring in the corpus $D$. The larger $W_{ij}$, the larger the similarity between the documents. To understand this, consider that, for any $k$, the product $w_{ik} w_{jk}$ is large if the term $t_k$ occurs often in the documents $d_i$ and $d_j$ and rarely in any other document. Then, it is intuitively clear that the documents $d_i$ and $d_j$ must be very similar compared to other documents if $w_{ik} w_{jk}$ is large for many $k$. The weight $W_{ij}$ is related to the &lt;em&gt;cosine similarity&lt;/em&gt; used for spherical k-means clustering &lt;a href=&quot;#Dhillon2001Concept-decompo&quot;&gt;(Dhillon and Modha 2001)&lt;/a&gt; -- in fact, it would be equal to it if the $w_{ik}$ were Euclidean-normalized along the $k$ direction.&lt;/p&gt;
+
+&lt;p&gt;Next was community detection. Srivastava et al. did this in two stages. In the first, they deployed a weight-sensitive community detection algorithm (based on modularity optimization) on a pruned document-document similarity graph in which all edges with weights lower than a global threshold had been deleted. The threshold was chosen such that the largest connected component contained roughly half of the documents. This was preferable for computational reasons. Detecting communities in the pruned graph gave a first rough estimate of the structure of the corpus. In the second and final stage, the missing edges were re-added to the graph, and the community detection was continued to refine the results. They compared them with &lt;em&gt;ground-truth data&lt;/em&gt; and found the accuracy to be very high, much higher than for conventional techniques like k-means. They attributed this success to their new 2-stage procedure. Their rationale was that edges with low weights either connect very different or very insignificant documents. Those latter documents do not offer a lot of useful information that allows for them to be associated with other documents in a meaningful way. In other words, they are subject to a lot of noise. Leaving them out in the first stage makes the community detection both more efficient and reliable.&lt;/p&gt;
+
+&lt;h6&gt;Let me now tell you what prevents me from using this method.&lt;/h6&gt;
+
+&lt;p&gt;I see two major issues. First and worst, the weighting and pruning scheme is heuristic and problem-specific. It is tailored to the case of document-term co-occurrence networks, and it is unknown whether or not it can assess similarity in more general settings, for instance, consumer-item networks. Not knowing whether or not a method produces meaningful results becomes a huge problem when ground-truth data is unavailable. Again, consumer-item networks are an important example. It should be noted that Newman&amp;#39;s weighted collaboration networks discussed before suffer from the same issue. I will continue discussing this topic in more detail below when I introduce problem-independent methods to assess statistical significance. The application of these methods to consumer-item networks is the subject of the last section of this article. This is part of my own research.&lt;/p&gt;
+
+&lt;p&gt;The second issue has to do with the size and the high density of the obtained document-document graphs. This is not so much an issue for Srivastava et al., since they -- I assume for good reason -- study only medium-sized corpora of around $10,000$ documents. However, there will definitely be a problem when the corpus becomes as large or larger than, say, a $100,000$ documents. To clarify, note that the document-document similarity graphs in their article ended up being highly connected and that, even after pruning, the largest fully connected subgraphs were still half as big as its parent graphs. Note further that each edge in these graphs comes with a real-valued weight that needs to be stored. For a fully connected graph with $100,000$ nodes, that would require approximately $40$ GB of main memory. Therefore, it seems a size of $100,000$ is just beyond of what a consumer class computer can handle. Even if we have access to a large shared-memory machine, we will hardly be able to go up in size by another decimal power. What can be done about this? Can we perhaps reduce the document-document graph to a sparser, more manageable graph? Maybe, but it is not obvious how this can be done while retaining all significant information. It seems clear at this point that we cannot use global thresholding like in rule 4, since this, as we have discussed, introduces uncontrollable effects. I provide a solution in the next section.&lt;/p&gt;
+
+&lt;h2&gt;Systematic and problem-independent projections&lt;/h2&gt;
+
+&lt;p&gt;I now have laid out several approaches for inferring unobserved relationships and for  arriving at sparse one-mode projections encoding these relationships. These approaches included a very naïve weighting and pruning scheme with an arbitrary global threshold (rule 4 further above) and two more sophisticated, yet but imperfect, degree-conditional approaches (just above). As discussed, these methods are flawed because they are problem-specific or make use of arbitrary choices and ad-hoc methodologies. Additionally, they do not assess the statistical significance of any extracted relationship. Depending on the dataset, these flaws may or may not be severe. They are disastrous when ground-truth data is unavailable, in which case one cannot rely on a method that has been developed specifically for another purpose, problem, or dataset, since any such method would produce results with unknown quality or meaning. The results would be worthless.&lt;/p&gt;
+
+&lt;p&gt;Recently, there has been increased interest in solving this problem &lt;a href=&quot;#Zweig2011A-systematic-ap&quot;&gt;(Zweig and Kaufmann 2011; Horvát and Zweig 2013; Horvát 2013; Neal 2014)&lt;/a&gt;. In a nutshell, the new idea is to use an ensemble of certain randomly generated one-mode projections as a reference to compare with a candidate one-mode projection. Of the candidate, only those edges are kept that are sufficiently different from the random patterns of the reference. The rest is discarded. This is to ensure that all relationships extracted by the one-mode projection are statistically significant. I explain this new method below. It supersedes the problem-specific approaches.&lt;/p&gt;
+
+&lt;h3&gt;The setup&lt;/h3&gt;
+
+&lt;p&gt;So let&amp;#39;s go, shall we? To make things more precise, first some definitions: Let $G = (U, V, E)$ denote the observed bipartite graph with the edges $E$ and the non-intersecting node sets $U = \left\{u_{1}, \ldots u_{m}\right\}$ and $V = \left\{v_{1}, \ldots v_{n}\right\}$, where $m = \left|U\right|$ and $n = \left|V\right|$. Following the graph of gulls and seals pictured above, I will refer to $U$ as the &lt;em&gt;top mode&lt;/em&gt; and to $V$ as the &lt;em&gt;bottom mode&lt;/em&gt;. Let $A$ be the adjacency matrix of $G$. The entries $A_{ik}$ of this $m \times n$ matrix are binary. $A_{ik}$ is $1$ if the nodes $u_i \in U$ and $v_k \in V$ are connected by an edge. Otherwise, $A_{ik} = 0$. Thus, top nodes are represented in $A$ as rows, whereas bottom nodes are represented as columns. From $A$ we can derive two matrices $T$ and $B$. They are called the top and the bottom &lt;em&gt;co-occurrence matrix&lt;/em&gt; and can be defined as &lt;a href=&quot;#Breiger1974The-duality-of-&quot;&gt;(Breiger 1974)&lt;/a&gt;
+\[
+  T = A A^{\mathrm{T}}
+\]
+and
+\[
+  B = A^{\mathrm{T}} A,
+\]
+respectively. $T$ is an $m \times m$ matrix and $B$ an $n \times n$ matrix. As the name suggests, the entries $T_{ij}$ (or $B_{kl}$) of $T$ ($B$) are equal to the &lt;em&gt;co-occurrences&lt;/em&gt; of the nodes $u_i$, $u_j \in U$ ($v_k$, $v_l \in V$). The co-occurrence is the number of neighbors $v \in V$ ($u \in U$) common to both $u_i$ and $u_j$ ($v_k$ and $v_l$). It is also equal to the number of connecting length-2 walks. Thus, calculating $T$ (or $B$) is equivalent to applying rules 1-3 from earlier above!&lt;/p&gt;
+
+&lt;p&gt;This is essentially all we need. Yet, since we are interested in a degree-conditional one-mode projection, we should spend one more moment to make sure that we agree on what that means. The degree $\mathrm{deg}(v)$ of a vertex $v \in V$ is the number vertices $u \in U$ that share an edge with $v$. The degree $\mathrm{deg}(u)$ of $u$ is defined analogously. Degree-conditional therefore means that the one-mode projection is sensitive to the degrees of both the top and the bottom mode vertices.&lt;/p&gt;
+
+&lt;h3&gt;The method&lt;/h3&gt;
+
+&lt;p&gt;Let me now describe the actual projection procedure. For the sake of clarity, I&amp;#39;m focussing on the top mode projection only, since the procedure for the bottom mode projection is analogous. If you write the degrees of all top vertices down in a sorted list, 
+\[
+  \mathcal{D}(U) = \left(\mathrm{deg}(u_1), \ldots, \mathrm{deg}(u_m)\right),
+\]
+you get the so-called top &lt;em&gt;degree sequence&lt;/em&gt;. For the procedure, it is important to note that the two degree sequences of $G$ -- its top and its bottom sequence, $\mathcal{D}(U)$ and $\mathcal{D}(V)$, respectively -- are insufficient to uniquely identify $G$. In other words, there are many bipartite graphs with the same top and bottom degree sequence. In the method proposed by Zweig et al. &lt;a href=&quot;#Zweig2011A-systematic-ap&quot;&gt;(“A Systematic Approach to the One-Mode Projection of Bipartite Graphs” 2011; “A Fixed Degree Sequence Model for the One-Mode Projection of Multiplex Bipartite Graphs” 2013)&lt;/a&gt;, the entirety $\mathcal{G}$ of all these graphs defines the reference that we need to test our observation for statistical significance. In particular, by comparison with the average top co-occurrences among all these graphs, we can decide whether or not the observed co-occurrence of a pair of top vertices in $G$ is too unlikely to have occurred by chance and thus presents a pattern. That decision is formalized by a statistical hypothesis test. If the test says that the co-occurrence of two top vertices is statistically significant, we place an edge in the top-mode projection. Otherwise, we don&amp;#39;t.&lt;/p&gt;
+
+&lt;p&gt;In practical terms, the steps to get a reduced top mode graph are:&lt;/p&gt;
+
+&lt;ol start=&quot;4&quot;&gt;
+  &lt;li&gt;
+    From the population $\mathcal{G}$ of bipartite graphs with the &lt;em&gt;same&lt;/em&gt; degree sequence as that of $G$, generate a representative sample $\left\{G^{(k)}\right\}_{k=1, \ldots, N}$ of $N$ unbiased random graphs $G^{(k)} = \left(U^{(k)}, V^{(k)}, E^{(k)}\right)$. Sampling is necessary because $\mathcal{G}$ is almost always too large to be enumerated in its entirety.
+  &lt;/li&gt;
+  &lt;li&gt;
+    Project each $G^{(k)}$ onto its top mode and calculate the &lt;em&gt;estimate&lt;/em&gt; of the mean co-occurrence matrix, $\overline{T}{}^{(k)} = N^{-1} \sum_{k} T^{(k)}$, of the population $\mathcal{G}$.
+  &lt;/li&gt;
+  &lt;li&gt;
+    For each pair $\left\{u_i, u_j\right\}$ of vertices in the top mode $U$, perform a statistical hypothesis test at the &lt;em&gt;significance level&lt;/em&gt; $\alpha$. There is an element of choice to the value of $\alpha$, although usually $\alpha$ is not larger than $0.05$. For the test, default to the assumption that the true mean $\mu_{ij}$ of $u_i$ and $u_j$&#39;s co-occurrence in the population $\mathcal{G}$ is not smaller than the one observed, that is, $\mu_{ij} \ge T_{ij}$. This will be referred to as the &lt;em&gt;null hypothesis&lt;/em&gt; $H^{0}_{ij}$ for the edge between the nodes $u_i$ and $u_j$ in the projection. The &lt;em&gt;alternative hypothesis&lt;/em&gt; $H^{1}_{ij}$ is that the observed co-occurrence $T_{ij}$ is larger than what one would expect from a random graph. Now, from Student&#39;s $t$-distribution, compute the probability $p_{ij}$ of obtaining $\overline{T}_{ij}$ given that $H^{0}_{ij}$ is true. If $p_{ij}$ is less than the significance level $\alpha$, the result is statistically significant, and the null hypothesis has to be rejected in favor of the alternative hypothesis. In this case, place an edge between $u_i$ and $u_j$ in the reduced one-mode graph. If there is not sufficient evidence to warrant rejection of $H^{0}_{ij}$ at the significance level $\alpha$, do &lt;em&gt;not&lt;/em&gt; connect $u_i$ and $u_j$.
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;These rules replace the old rule 4 from before. Rules 1-3 remain untouched.&lt;/p&gt;
+
+&lt;p&gt;I haven&amp;#39;t told you yet how you can sample from the population  $\mathcal{G}$ (as required by the new rule 4). Zweig and Kaufmann &lt;a href=&quot;#Zweig2011A-systematic-ap&quot;&gt;(“A Systematic Approach to the One-Mode Projection of Bipartite Graphs” 2011)&lt;/a&gt; used the &lt;em&gt;Markov Chain Monte Carlo&lt;/em&gt; (MCMC) sampling algorithm introduced by Gionis et al. &lt;a href=&quot;#Gionis2007Assessing-data-&quot;&gt;(“Assessing Data Mining Results via Swap Randomization” 2007)&lt;/a&gt;. Its pseudo-code is reproduced below:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$G^{(0)}$ ← $G$
+$k$ ← $1$
+while $k$ ≤ $N$ do
+  $G^{(k)}$ ← $G^{(k-1)}$
+  $t$ ← $0$
+  while $t$ &amp;lt; $T$ do
+    draw uniformly at random \ 
+      two edges $\{u, v\}$, $\{u&amp;#39;, v&amp;#39;\}$ ∈ $E^{(k)}$ \
+      where $u$ ≠ $u&amp;#39;$ ∈ $U^{(k)}$ and $v$ ≠ $v&amp;#39;$ ∈ $V^{(k)}$
+    if $\{u, v&amp;#39;\}$ and $\{u&amp;#39;, v\}$ ∉ $E^{(k)}$
+      remove $\{u, v\}$ and $\{u&amp;#39;, v&amp;#39;\}$ from $E^{(k)}$
+      and add $\{u, v&amp;#39;\}$ and $\{u&amp;#39;, v\}$ to $E^{(k)}$
+    else
+      do nothing
+    end if
+    $t$ ← $t + 1$
+  end while
+  $k$ ← $k + 1$
+end while
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The algorithm produces $N$ samples from the population $\mathcal{G}$, one after the other. In the beginning, it uses $G$ as a template. Later, it uses the end result $G^{(k-1)}$ of the previous generation as the starting point of the next one. Each generation $k$ is the outcome of a Markovian random walk, and each walk has $T$ (time) steps, where $T$ is called the &lt;em&gt;mixing time&lt;/em&gt;. $T$ has to be chosen sufficiently large such that the random walk reaches its equilibrium. Only then the produced graph $G^{(k)}$ will be independent from its predecessor $G^{(k-1)}$. In each step $t$ of the walk, two non-adjacent edges $e = \{u, v\}$ and $e&amp;#39; = \{u&amp;#39;, v&amp;#39;\}$ are drawn randomly from a uniform distribution. Then the algorithm tries to exchange the bottom-mode vertices between the edges. This operation is called an &lt;em&gt;edge swap&lt;/em&gt;. It is designed to keep the degree sequences $\mathcal{D}\left(U^{(k)}\right)$ and $\mathcal{D}\left(V^{(k)}\right)$ the same. If the swapped edges are not already in the graph $G^{(k)}$, then they are added to it, after $e$ and $e&amp;#39;$ have been removed. Otherwise, the algorithm proceeds to the next step. Note that the edge swap can be implemented by performing a bitwise NOT operation on those four elements of the adjacency matrix of $G^{(k)}$ that corresponding to $e$, $\{u, v&amp;#39;\}$, $\{u&amp;#39;, v\}$, and $e&amp;#39;$.&lt;/p&gt;
+
+&lt;h3&gt;The benefits&lt;/h3&gt;
+
+&lt;p&gt;An immediate question is how large $N$ and $T$ have to be in practice. Zweig and Kaufmann &lt;a href=&quot;#Zweig2011A-systematic-ap&quot;&gt;(“A Systematic Approach to the One-Mode Projection of Bipartite Graphs” 2011)&lt;/a&gt; report that $N = 5,000$ and $T = 70,000$ were sufficient for the &lt;a href=&quot;https://en.wikipedia.org/wiki/Netflix_Prize&quot;&gt;Netflix price data&lt;/a&gt;. Note, though, that they deployed their method on subgraphs of $20,000$ user nodes only. The complete Netflix graph has movie ratings from $480,000$ users. For each one of these subgraphs, the computation took roughly a second on a low-end PC. Rule 4 is therefore quite inexpensive computationally. However, the authors observed that processing of rule 5 is considerably slower, in their case, by a factor of five. We recall that the purpose of rule 5 was to estimate the average top and bottom co-occurrence matrices. This can become a serious bottleneck. However, in most real-world cases, the effort is worth it, since Zweig and Kaufmann&amp;#39;s method is currently the only one that:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;DOES THE JOB&lt;/strong&gt; -- i.e., allows for &lt;em&gt;high-quality&lt;/em&gt; detection of communities of entities (users, consumers, items, authors, documents, terms, etc.) whose relationships are &lt;em&gt;not&lt;/em&gt; directly available (due to being unobserved or unobtainable) --,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;IS ACCURATE&lt;/strong&gt; -- even if accurate labels are unavailable (e.g., weak or unknown ground-truth), i.e. the method is &lt;em&gt;unsupervised&lt;/em&gt; --,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;IS SCALABLE&lt;/strong&gt; -- works for large, &lt;em&gt;big-data&lt;/em&gt; networks (e.g., the Netflix price data) --,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;IS EFFICIENT&lt;/strong&gt; -- i.e., extracts a &lt;em&gt;manageable&lt;/em&gt; (sparse and unweighted) graph that encodes all entity relationships --,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;IS RELIABLE AND STABLE&lt;/strong&gt; -- ensures that all extracted relationships are statistically significant, i.e. vertices are connected only if their relationship is &lt;em&gt;important&lt;/em&gt; and &lt;em&gt;unexpected&lt;/em&gt; --,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;IS VERSATILE&lt;/strong&gt; -- i.e., is &lt;em&gt;not&lt;/em&gt; problem-specific and can replace all miscellaneous, heuristic approaches --,&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;IS FLEXIBLE&lt;/strong&gt; -- can handle graphs with strongly skewed, &lt;em&gt;heavy-tailed&lt;/em&gt; degree distributions, a very common situation in real-world data --,&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Beware, there are also a few limitations. For instance, the extraction method itself can be computationally expensive. Another issue is that, so far, it works for data only that can be represented as unweighted simple bipartite graph. This is probably the biggest complaint I have, see below.&lt;/p&gt;
+
+&lt;h1&gt;Market Segmentation And Recommendation Systems&lt;/h1&gt;
+
+&lt;p&gt;After talking about all that fascinating theory, it is now time to put it all together and to experiment with it. For a market with a large number of consumers and purchase items, I am addressing the following two questions:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Do consumers organize into weakly overlapping communities with homogeneous buying interests, so-called market segments?&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;And:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Do items divide into clusters of similar items that are co-purchased more often than expected from pure chance?&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Market segmentation is relevant for the success of targeted advertising and marketing campaigns, for instance, in the form of special offers, coupons, vouchers, or promotions. Since the consumers of a segment tend to have very similar shopping habits, it becomes possible to predict and -- via algorithmically curated recommendations -- to influence some of their future purchases. The clustering of items assists in this task. Clustering sheds light on the similarity of items, particularly, the similarity inferred from them being purchased by the same consumers. Understanding which items are bought together and by whom is at the heart of successful recommendation.&lt;/p&gt;
+
+&lt;p&gt;The challenge is to answer the above questions in the absence of any direct data about consumer interests or item similarity. All that information has to be inferred from somewhere. Thanks to the extensive discussion in the previous sections, we know from where. That is what bipartite graphs are good for. Here, in particular, I deal with &lt;em&gt;consumer-item graphs&lt;/em&gt; that I introduce below. First, however, a disclaimer:&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Please note that the following is work in progress. At this time, I can only discuss the problem and the basic methodology. Everything else, including the results, will be published here on this blog when they are ready.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2&gt;The graph-based approach&lt;/h2&gt;
+
+&lt;p&gt;Consider an Internet-based retailer like &lt;a href=&quot;http://qz.com/393360/amazon-is-in-danger-of-becoming-a-lumbering-conglomerate/&quot;&gt;Amazon&lt;/a&gt; or &lt;a href=&quot;http://www.forbes.com/sites/ryanmac/2014/07/30/zalando-europe-zappos-fashion/&quot;&gt;Zalando&lt;/a&gt;. The elementary pieces of such a marketplace are usually the consumers and the items. In a consumer-item graph, these pieces become vertices, whereas the interactions between the consumers and items become edges. The following types of interactions are common:
+\[
+  \text{consumer} \xrightarrow{\text{browses/investigates}} \text{item}, \\
+  \text{consumer} \xrightarrow{\text{favors/loves/endorses}} \text{item}, \\
+  \text{consumer} \xrightarrow{\text{recommends/shares}} \text{item}, \\
+  \text{consumer} \xrightarrow{\text{rates}} \text{item}, \\
+  \text{consumer} \xrightarrow{\text{purchases}} \text{item}, \\
+  \text{consumer} \xrightarrow{\text{uploads picture of}} \text{item}, \\
+  \text{consumer} \xrightarrow{\text{returns}} \text{item}, \\
+  \text{consumer} \xrightarrow{\text{reviews}} \text{item}.
+\]
+Since all these interactions have only one logical direction (e.g., an item cannot buy a consumer), they can be modeled as undirected edges. And, since there are neither interactions among any two consumers nor any two items, the graph is bipartite.&lt;/p&gt;
+
+&lt;p&gt;In the graphs we encountered in previous sections, each edge describes only one type of interaction. It is possible to extend the theory to the case of edges with multiple types. The graphs in this generalized theory are called &lt;em&gt;multiplex graphs&lt;/em&gt; (missing reference). Many of the ideas and methods that we discussed extend to multiplex graphs. But it&amp;#39;s a complication that I want to leave for later. For now, I want to concentrate on monoplex graphs with one edge type only. Therefore, I have to make a decision what type of interaction I want to consider. The rest is abandoned.&lt;/p&gt;
+
+&lt;p&gt;For the two questions I am addressing, only the purchases (and, to an undetermined degree, the returns) are relevant. I was therefore looking for a source of real purchase transaction data.&lt;/p&gt;
+
+&lt;h2&gt;The data&lt;/h2&gt;
+
+&lt;p&gt;I settled on the &lt;a href=&quot;https://www.kaggle.com/c/acquire-valued-shoppers-challenge&quot;&gt;Acquire Valued Shoppers Challenge&lt;/a&gt; data from Kaggle. That challenge has ended, but the data is still available. It contains $349,555,789$ transactions (i.e. atomic item purchase and return records) of $311,452$ unique consumers. The original challenge was about predicting whether or not consumers would become loyal to a product or brand if they were presented an offer.&lt;/p&gt;
+
+&lt;p&gt;The data is fully anonymous. It holds information solely about which items consumers have bought, when, at which price, and at what quantity, where negative prices and/or quantities more or less consistently indicate item returns. For each consumer, there is a year&amp;#39;s worth of transaction data. The items are represented in terms of three numbers that uniquely identify the manufacturer, the brand, and the item&amp;#39;s category. It is not disclosed, however, what these manufacturers, brands, and categories are. There is some further information about item sizes and the units they are measured in, but this serves little to understand the nature or origin of an item. Transactions of items with missing manufacturer, brand, or category are discarded from my studies. So are transactions by unidentifiable consumers.&lt;/p&gt;
+
+&lt;p&gt;The transaction dataset is large, it has a size of over $20 \mathrm{GB}$. I defer a discussion about the logistics and mechanics of my dealings with this dataset to &lt;a href=&quot;javaScript:void(0);&quot;&gt;a later blog post&lt;/a&gt;. For now, I am more interested in discussing the properties of the graphs. To this end, I would like to direct your attention towards the following figure:&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;a href=&quot;https://plot.ly/~tscholak/100/&quot; target=&quot;_blank&quot; title=&quot;Probability density of the number of distinct items purchased by a consumer&quot; style=&quot;display: block; text-align: center;&quot;&gt;&lt;img src=&quot;https://plot.ly/~tscholak/100.png&quot; alt=&quot;Probability density of the number of distinct items purchased by a consumer&quot; style=&quot;max-width: 100%;&quot;  onerror=&quot;this.onerror=null;this.src=&#39;https://plot.ly/404.png&#39;;&quot; /&gt;&lt;/a&gt;
+    &lt;script data-plotly=&quot;tscholak:100&quot; src=&quot;https://plot.ly/embed.js&quot; async&gt;&lt;/script&gt;
+  &lt;/figure&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Shown is a histogram of the number of distinct items (the &amp;quot;counts&amp;quot; on the horizontal axis) purchased by the consumers. &amp;quot;Distinct&amp;quot; means that repeated purchases of the same item are not counted. Visually, the distribution bears some similarity to the &lt;a href=&quot;https://en.wikipedia.org/wiki/Weibull_distribution&quot;&gt;Weibull distribution&lt;/a&gt; that is used to describe the lifetime and failure rate of engineered systems or components. However, this seems coincidental, since there is no mechanism in the consumer&amp;#39;s shopping behavior that would justify the resemblance.&lt;/p&gt;
+
+&lt;p&gt;The most obvious thing we learn from this distribution is that the typical consumer in the Kaggle dataset bought roughly $340$ different items. The spread is quite high, the standard deviation is $220$ approximately. On the left side of the histogram are the consumers who purchased only a few different items -- because they either left the market early or are fiercely determined in their choices. On the other side is the tail of consumers who explored a much larger portion of the inventory. There are transactions for $116,071$ unique items in the dataset, and some lavishly spending consumers managed to purchase a significant fraction of them. The above plot does not give this justice, however. I therefore show you another histogram with logarithmic rather than linear binning, plotted on a log-log scale:&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;a href=&quot;https://plot.ly/~tscholak/98/&quot; target=&quot;_blank&quot; title=&quot;Probability densities with logarithmic binning&quot; style=&quot;display: block; text-align: center;&quot;&gt;&lt;img src=&quot;https://plot.ly/~tscholak/98.png&quot; alt=&quot;Probability densities with logarithmic binning&quot; style=&quot;max-width: 100%;&quot;  onerror=&quot;this.onerror=null;this.src=&#39;https://plot.ly/404.png&#39;;&quot; /&gt;&lt;/a&gt;
+    &lt;script data-plotly=&quot;tscholak:98&quot; src=&quot;https://plot.ly/embed.js&quot; async&gt;&lt;/script&gt;
+  &lt;/figure&gt;
+  &lt;figcaption&gt;I am sorry that these plots don&#39;t work that great on phones.&lt;/figcaption&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The pink curve shows the same distribution as before. Clearly, the curve is increasing linearly for small counts. Since this is a log-log plot, it means that the distribution is a power-law in the count. The decay has two stages. The first one can be seen in the previous figure and is Weibull-like. The second stage begins at $1,300$ counts, extends to at least $15,000$ counts, and is very different. There is some noise, but it appears to be a linear descent, again indicating a power-law in the count. There seems to be a small number of consumers in the market with atypical, extremely lavish spending habits. I have not yet decided whether or not I will remove these consumers from the data. They could be using company spending accounts or just be artifacts produced by faulty data. I am not interested in either.&lt;/p&gt;
+
+&lt;p&gt;There are two other curves in the figure. The yellow curve is a histogram of the number of distinct consumers that purchased an item. Its shape is much different than that of the distinct item count histogram. The curve is continuously decreasing and has an extremely long tail. This means that niche items that are bought by only a handful of consumers are as significant as extremely popular items that are bought by a $100,000$ individual consumers.&lt;/p&gt;
+
+&lt;p&gt;Finally, the green curve is a histogram of the edge multiplicity. Recall that consumers and items are presented as bipartite graph, where the edges indicate purchases. Hence, the edge multiplicity counts how many times an item has been purchased by the same consumer, and the histogram states the likelihood that this count has a specific value. The curve decays as a power law and also much stronger than the yellow curve does. However, the tails of this distribution are still heavy and thus the probability of repeated purchases highly significant.&lt;/p&gt;
+
+&lt;h2&gt;Methodology and outlook&lt;/h2&gt;
+
+&lt;p&gt;In previous sections, I have discussed bipartite graphs and how one can deduce unobserved relationships from them. In this project, I want to deduce both the similarity between items and the similarity in the shopping habits of consumers. What method should I use?&lt;/p&gt;
+
+&lt;p&gt;Since I aim for accuracy and reliability, there is really only one choice: the method of Zweig and Kaufmann &lt;a href=&quot;#Zweig2011A-systematic-ap&quot;&gt;(“A Systematic Approach to the One-Mode Projection of Bipartite Graphs” 2011)&lt;/a&gt;. Let me spell out three reasons for why I cannot use heuristic similarity metrics for this particular transaction dataset.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;The ground-truth provided is weak. There is some information on price, shop category, item brand, and item manufacturer. The dataset also mentions the branch and store department in which the purchased items appeared. Maybe the results will correspond somehow to these miscellaneous taxonomies, maybe they won&amp;#39;t. If I were to borrow a method originally developed for another purpose -- e.g., a method using edge weights derived from the tf-idf statistic and the cosine distance --, without ground-truth validation, I would be unable to make sense out of the results. &lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;The graph has power-law degree distributions and small-world properties. As shown above, the distributions of both the edge multiplicity and the number of distinct consumers exhibit heavy tails. Zweig and Kaufmann&amp;#39;s method is flexible enough to handle graphs with heavy-tailed degree distributions.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;The graphs are big. The consumer-similarity graph will have $116,071$ nodes, and the item-similarity graph will have $311,452$. I can only work with these graphs if they are sufficiently sparse. Zweig and Kaufmann&amp;#39;s method produces sparse and unweighted single-mode graphs. It places edges between nodes only if their co-occurrence is unexpectedly large.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;All this tells you that I am determined to use Zweig and Kaufmann&amp;#39;s method. However, there is a problem. The transaction graph is a multigraph, i.e., a pair of nodes can be -- and, as evident from the multiplicity histogram, usually &lt;em&gt;is&lt;/em&gt; -- connected by an edge not once, but many times. However, the method of Zweig and Kaufmann has not yet been generalized to multigraphs, and it is far from trivial to do so. It is not clear what the random null model should be. Since ignoring the multiplicity is not an option, someone will have to overcome the problem of edge multiplicity, and it seems this person will be me. I am working on it ...&lt;/p&gt;
+
+&lt;p&gt;That is all for now. I will write more when time permits.&lt;/p&gt;
+
+&lt;h1&gt;References&lt;/h1&gt;
+
+&lt;ol class=&quot;bibliography&quot;&gt;&lt;li&gt;&lt;span id=&quot;De-Domenico2015Structural-redu&quot;&gt;De Domenico, Manlio, Vincenzo Nicosia, Alexandre Arenas, and Vito Latora, 2015, “Structural Reducibility of Multilayer Networks,” Nat. Commun. &lt;b&gt;6&lt;/b&gt;. doi:10.1038/ncomms7864.&lt;/span&gt;
+
+&lt;div id=&quot;De-Domenico2015Structural-redu-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#De-Domenico2015Structural-redu-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;De-Domenico2015Structural-redu-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{De-Domenico2015Structural-redu,
+  author = {De Domenico, Manlio and Nicosia, Vincenzo and Arenas, Alexandre and Latora, Vito},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1038/ncomms7864},
+  journal = {Nat. Commun.},
+  title = {Structural reducibility of multilayer networks},
+  volume = {6},
+  year = {2015},
+  bdsk-url-1 = {http://dx.doi.org/10.1038/ncomms7864}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#De-Domenico2015Structural-redu-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Jeub2015Think-locally-a&quot;&gt;Jeub, Lucas G. S., Prakash Balachandran, Mason A. Porter, Peter J. Mucha, and Michael W. Mahoney, 2015, “Think Locally, Act Locally: Detection of Small, Medium-Sized, and Large Communities in Large Networks,” Phys. Rev. E &lt;b&gt;91&lt;/b&gt;. doi:10.1103/PhysRevE.91.012821.&lt;/span&gt;
+
+&lt;div id=&quot;Jeub2015Think-locally-a-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Jeub2015Think-locally-a-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Jeub2015Think-locally-a-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Jeub2015Think-locally-a,
+  author = {Jeub, Lucas G. S. and Balachandran, Prakash and Porter, Mason A. and Mucha, Peter J. and Mahoney, Michael W.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1103/PhysRevE.91.012821},
+  journal = {Phys. Rev. E},
+  number = {1},
+  title = {Think locally, act locally: Detection of small, medium-sized, and large communities in large networks},
+  volume = {91},
+  year = {2015},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevE.91.012821}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Jeub2015Think-locally-a-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Neal2014The-backbone-of&quot;&gt;Neal, Zachary, 2014, “The Backbone of Bipartite Projections: Inferring Relationships from Co-Authorship, Co-Sponsorship, Co-Attendance and Other Co-Behaviors,” Soc. Netw. &lt;b&gt;39&lt;/b&gt;, 84–97. doi:10.1016/j.socnet.2014.06.001.&lt;/span&gt;
+
+&lt;div id=&quot;Neal2014The-backbone-of-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Neal2014The-backbone-of-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Neal2014The-backbone-of-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Neal2014The-backbone-of,
+  author = {Neal, Zachary},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1016/j.socnet.2014.06.001},
+  journal = {Soc. Netw.},
+  number = {0},
+  pages = {84--97},
+  title = {The backbone of bipartite projections: Inferring relationships from co-authorship, co-sponsorship, co-attendance and other co-behaviors},
+  volume = {39},
+  year = {2014},
+  bdsk-url-1 = {http://dx.doi.org/10.1016/j.socnet.2014.06.001}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Neal2014The-backbone-of-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;James2013An-Introduction&quot;&gt;James, G., D. Witten, T. Hastie, and R. Tibshirani, 2013, &lt;i&gt;An Introduction To Statistical Learning: with Applications in R&lt;/i&gt;. Springer Texts In Statistics (Springer New York).&lt;/span&gt;
+
+&lt;div id=&quot;James2013An-Introduction-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#James2013An-Introduction-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;James2013An-Introduction-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{James2013An-Introduction,
+  author = {James, G. and Witten, D. and Hastie, T. and Tibshirani, R.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  isbn = {978-1461471387},
+  publisher = {Springer New York},
+  series = {Springer Texts in Statistics},
+  title = {An Introduction to Statistical Learning: with Applications in R},
+  year = {2013}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#James2013An-Introduction-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Peixoto2013Parsimonious-Mo&quot;&gt;Peixoto, Tiago P., 2013, “Parsimonious Module Inference In Large Networks,” Phys. Rev. Lett. &lt;b&gt;110&lt;/b&gt;. doi:10.1103/PhysRevLett.110.148701.&lt;/span&gt;
+
+&lt;div id=&quot;Peixoto2013Parsimonious-Mo-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Peixoto2013Parsimonious-Mo-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Peixoto2013Parsimonious-Mo-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Peixoto2013Parsimonious-Mo,
+  author = {Peixoto, Tiago P.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1103/PhysRevLett.110.148701},
+  journal = {Phys. Rev. Lett.},
+  number = {14},
+  title = {Parsimonious Module Inference in Large Networks},
+  volume = {110},
+  year = {2013},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevLett.110.148701}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Peixoto2013Parsimonious-Mo-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Srivastava2013Text-Clustering&quot;&gt;Srivastava, Ajitesh, Axel J. Soto, and Evangelos Milios, 2013, “Text Clustering Using One-Mode Projection of Document-Word Bipartite Graphs,” in &lt;i&gt;Proceedings Of the 28th Annual ACM Symposium on Applied Computing&lt;/i&gt;. SAC ’13 (ACM, New York, NY, USA), pp. 927–932. doi:10.1145/2480362.2480539.&lt;/span&gt;
+
+&lt;div id=&quot;Srivastava2013Text-Clustering-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Srivastava2013Text-Clustering-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Srivastava2013Text-Clustering-tabs-3&quot;&gt;
+    &lt;pre&gt;@inproceedings{Srivastava2013Text-Clustering,
+  address = {New York, NY, USA},
+  author = {Srivastava, Ajitesh and Soto, Axel J. and Milios, Evangelos},
+  booktitle = {Proceedings of the 28th Annual ACM Symposium on Applied Computing},
+  date-added = {2015-06-28 00:40:23 +0000},
+  date-modified = {2015-06-28 01:19:47 +0000},
+  doi = {10.1145/2480362.2480539},
+  isbn = {978-1-4503-1656-9},
+  location = {Coimbra, Portugal},
+  numpages = {6},
+  pages = {927--932},
+  publisher = {ACM},
+  series = {SAC &#39;13},
+  title = {Text Clustering Using One-mode Projection of Document-word Bipartite Graphs},
+  year = {2013},
+  bdsk-url-1 = {http://dx.doi.org/10.1145/2480362.2480539}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Srivastava2013Text-Clustering-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Horvat2013Modelling-and-i&quot;&gt;Horvát, Emöke-Ágnes, 2013, “Modelling And Inferring Connections in Complex Networks,” PhD thesis, (Universität Heidelberg).&lt;/span&gt;
+
+&lt;div id=&quot;Horvat2013Modelling-and-i-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Horvat2013Modelling-and-i-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Horvat2013Modelling-and-i-tabs-3&quot;&gt;
+    &lt;pre&gt;@phdthesis{Horvat2013Modelling-and-i,
+  author = {Horvát, Emöke-Ágnes},
+  date-added = {2015-07-07 20:55:10 +0000},
+  date-modified = {2015-07-07 20:58:40 +0000},
+  school = {Universität Heidelberg},
+  title = {Modelling and inferring connections in complex networks},
+  year = {2013}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Horvat2013Modelling-and-i-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Horvat2013A-fixed-degree-&quot;&gt;Horvát, Emőke-Ágnes, and Katharina Anna Zweig, 2013, “A Fixed Degree Sequence Model for the One-Mode Projection of Multiplex Bipartite Graphs,” Soc. Netw. Anal. Min. &lt;b&gt;3&lt;/b&gt;, 1209–1224. doi:10.1007/s13278-013-0133-9.&lt;/span&gt;
+
+&lt;div id=&quot;Horvat2013A-fixed-degree--tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Horvat2013A-fixed-degree--tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Horvat2013A-fixed-degree--tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Horvat2013A-fixed-degree-,
+  author = {Horvát, Emőke-Ágnes and Zweig, Katharina Anna},
+  date-added = {2015-06-28 00:00:44 +0000},
+  date-modified = {2015-06-28 00:12:21 +0000},
+  doi = {10.1007/s13278-013-0133-9},
+  journal = {Soc. Netw. Anal. Min.},
+  number = {4},
+  pages = {1209-1224},
+  title = {A fixed degree sequence model for the one-mode projection of multiplex bipartite graphs},
+  volume = {3},
+  year = {2013},
+  bdsk-url-1 = {http://dx.doi.org/10.1007/s13278-013-0133-9}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Horvat2013A-fixed-degree--tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Abu-Mostafa2012Learning-from-D&quot;&gt;Abu-Mostafa, Y.S., M. Magdon-Ismail, and H.T. Lin, 2012, &lt;i&gt;Learning From Data: A Short Course&lt;/i&gt; (AMLBook).&lt;/span&gt;
+
+&lt;div id=&quot;Abu-Mostafa2012Learning-from-D-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Abu-Mostafa2012Learning-from-D-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Abu-Mostafa2012Learning-from-D-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{Abu-Mostafa2012Learning-from-D,
+  author = {Abu-Mostafa, Y.S. and Magdon-Ismail, M. and Lin, H.T.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  isbn = {978-1600490064},
+  publisher = {AMLBook},
+  title = {Learning from Data: A Short Course},
+  year = {2012}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Abu-Mostafa2012Learning-from-D-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Zweig2011A-systematic-ap&quot;&gt;Zweig, Katharina Anna, and Michael Kaufmann, 2011, “A Systematic Approach to the One-Mode Projection of Bipartite Graphs,” Soc. Netw. Anal. Min. &lt;b&gt;1&lt;/b&gt;, 187–218. doi:10.1007/s13278-011-0021-0.&lt;/span&gt;
+
+&lt;div id=&quot;Zweig2011A-systematic-ap-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Zweig2011A-systematic-ap-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Zweig2011A-systematic-ap-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Zweig2011A-systematic-ap,
+  author = {Zweig, Katharina Anna and Kaufmann, Michael},
+  date-added = {2015-06-28 00:02:19 +0000},
+  date-modified = {2015-06-28 00:12:12 +0000},
+  doi = {10.1007/s13278-011-0021-0},
+  journal = {Soc. Netw. Anal. Min.},
+  number = {3},
+  pages = {187-218},
+  title = {A systematic approach to the one-mode projection of bipartite graphs},
+  volume = {1},
+  year = {2011},
+  bdsk-url-1 = {http://dx.doi.org/10.1007/s13278-011-0021-0}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Zweig2011A-systematic-ap-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Fortunato2010Community-detec&quot;&gt;Fortunato, Santo, 2010, “Community Detection in Graphs,” Phys. Rep. &lt;b&gt;486&lt;/b&gt;, 75–174. doi:10.1016/j.physrep.2009.11.002.&lt;/span&gt;
+
+&lt;div id=&quot;Fortunato2010Community-detec-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Fortunato2010Community-detec-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Fortunato2010Community-detec-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Fortunato2010Community-detec,
+  author = {Fortunato, Santo},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1016/j.physrep.2009.11.002},
+  journal = {Phys. Rep.},
+  number = {3--5},
+  pages = {75--174},
+  title = {Community detection in graphs},
+  volume = {486},
+  year = {2010},
+  bdsk-url-1 = {http://dx.doi.org/10.1016/j.physrep.2009.11.002}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Fortunato2010Community-detec-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Sculley2010Web-scale-k-mea&quot;&gt;Sculley, David, 2010, “Web-Scale k-Means Clustering,” in &lt;i&gt;Proceedings Of the 19th International Conference on World Wide Web&lt;/i&gt; (ACM), pp. 1177–1178.&lt;/span&gt;
+
+&lt;div id=&quot;Sculley2010Web-scale-k-mea-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Sculley2010Web-scale-k-mea-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Sculley2010Web-scale-k-mea-tabs-3&quot;&gt;
+    &lt;pre&gt;@inproceedings{Sculley2010Web-scale-k-mea,
+  author = {Sculley, David},
+  booktitle = {Proceedings of the 19th international conference on World wide web},
+  date-added = {2015-07-07 02:32:27 +0000},
+  date-modified = {2015-07-07 02:32:30 +0000},
+  organization = {ACM},
+  pages = {1177--1178},
+  title = {Web-scale k-means clustering},
+  year = {2010}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Sculley2010Web-scale-k-mea-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;De-Choudhury2010How-does-the-da&quot;&gt;De Choudhury, Munmun, Yu-Ru Lin, Hari Sundaram, K Selcuk Candan, Lexing Xie, and Aisling Kelliher, 2010, “How Does the Data Sampling Strategy Impact the Discovery of Information Diffusion in Social Media?,” ICWSM &lt;b&gt;10&lt;/b&gt;, 34–41.&lt;/span&gt;
+
+&lt;div id=&quot;De-Choudhury2010How-does-the-da-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#De-Choudhury2010How-does-the-da-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;De-Choudhury2010How-does-the-da-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{De-Choudhury2010How-does-the-da,
+  author = {De Choudhury, Munmun and Lin, Yu-Ru and Sundaram, Hari and Candan, K Selcuk and Xie, Lexing and Kelliher, Aisling},
+  date-added = {2015-06-28 01:41:33 +0000},
+  date-modified = {2015-06-28 01:41:37 +0000},
+  journal = {ICWSM},
+  pages = {34--41},
+  title = {How does the data sampling strategy impact the discovery of information diffusion in social media?},
+  volume = {10},
+  year = {2010}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#De-Choudhury2010How-does-the-da-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Lancichinetti2009Community-detec&quot;&gt;Lancichinetti, Andrea, and Santo Fortunato, 2009, “Community Detection Algorithms: A Comparative Analysis,” Phys. Rev. E &lt;b&gt;80&lt;/b&gt;, 056117. doi:10.1103/PhysRevE.80.056117.&lt;/span&gt;
+
+&lt;div id=&quot;Lancichinetti2009Community-detec-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Lancichinetti2009Community-detec-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Lancichinetti2009Community-detec-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Lancichinetti2009Community-detec,
+  author = {Lancichinetti, Andrea and Fortunato, Santo},
+  date-modified = {2015-06-28 00:13:30 +0000},
+  doi = {10.1103/PhysRevE.80.056117},
+  journal = {Phys. Rev. E},
+  number = {5},
+  pages = {056117},
+  title = {Community detection algorithms: A comparative analysis},
+  volume = {80},
+  year = {2009},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevE.80.056117}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Lancichinetti2009Community-detec-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Blondel2008Fast-unfolding-&quot;&gt;Blondel, Vincent D, Jean-Loup Guillaume, Renaud Lambiotte, and Etienne Lefebvre, 2008, “Fast Unfolding of Communities in Large Networks,” J. Stat. Mech. &lt;b&gt;2008&lt;/b&gt;, P10008. doi:10.1088/1742-5468/2008/10/P10008.&lt;/span&gt;
+
+&lt;div id=&quot;Blondel2008Fast-unfolding--tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Blondel2008Fast-unfolding--tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Blondel2008Fast-unfolding--tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Blondel2008Fast-unfolding-,
+  author = {Blondel, Vincent D and Guillaume, Jean-Loup and Lambiotte, Renaud and Lefebvre, Etienne},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1088/1742-5468/2008/10/P10008},
+  journal = {J. Stat. Mech.},
+  number = {10},
+  pages = {P10008},
+  title = {Fast unfolding of communities in large networks},
+  volume = {2008},
+  year = {2008},
+  bdsk-url-1 = {http://dx.doi.org/10.1088/1742-5468/2008/10/P10008}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Blondel2008Fast-unfolding--tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Reichardt2008Understanding-C&quot;&gt;Reichardt, Jörg, and Stefan Bornholdt, 2008, “Understanding Complex Systems,” in &lt;i&gt;Managing Complexity: Insights, Concepts, Applications&lt;/i&gt;, edited by D. Helbing (Springer Berlin Heidelberg), pp. 19–36. doi:10.1007/978-3-540-75261-5_2.&lt;/span&gt;
+
+&lt;div id=&quot;Reichardt2008Understanding-C-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Reichardt2008Understanding-C-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Reichardt2008Understanding-C-tabs-3&quot;&gt;
+    &lt;pre&gt;@inbook{Reichardt2008Understanding-C,
+  author = {Reichardt, Jörg and Bornholdt, Stefan},
+  booktitle = {Managing Complexity: Insights, Concepts, Applications},
+  date-added = {2015-06-28 00:04:23 +0000},
+  date-modified = {2015-06-28 00:05:21 +0000},
+  doi = {10.1007/978-3-540-75261-5{\_}2},
+  editor = {Helbing, D.},
+  isbn = {978-3-540-75260-8},
+  pages = {19-36},
+  publisher = {Springer Berlin Heidelberg},
+  se = {2},
+  title = {Understanding Complex Systems},
+  title1 = {Market Segmentation: The Network Approach},
+  year = {2008},
+  bdsk-url-1 = {http://dx.doi.org/10.1007/978-3-540-75261-5%7B%5C_%7D2}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Reichardt2008Understanding-C-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Latapy2008Basic-notions-f&quot;&gt;Latapy, Matthieu, Clémence Magnien, and Nathalie Del Vecchio, 2008, “Basic Notions for the Analysis of Large Two-Mode Networks,” Soc. Netw. &lt;b&gt;30&lt;/b&gt;, 31–48. doi:10.1016/j.socnet.2007.04.006.&lt;/span&gt;
+
+&lt;div id=&quot;Latapy2008Basic-notions-f-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Latapy2008Basic-notions-f-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Latapy2008Basic-notions-f-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Latapy2008Basic-notions-f,
+  author = {Latapy, Matthieu and Magnien, Clémence and Vecchio, Nathalie Del},
+  date-added = {2015-06-28 01:17:31 +0000},
+  date-modified = {2015-06-28 01:18:09 +0000},
+  doi = {10.1016/j.socnet.2007.04.006},
+  journal = {Soc. Netw.},
+  number = {1},
+  pages = {31--48},
+  title = {Basic notions for the analysis of large two-mode networks},
+  volume = {30},
+  year = {2008},
+  bdsk-url-1 = {http://dx.doi.org/10.1016/j.socnet.2007.04.006}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Latapy2008Basic-notions-f-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Manning2008Introduction-to&quot;&gt;Manning, Christopher D, Prabhakar Raghavan, Hinrich Schütze, and others, 2008, &lt;i&gt;Introduction To Information Retrieval&lt;/i&gt;. Vol. 1 (Cambridge university press Cambridge).&lt;/span&gt;
+
+&lt;div id=&quot;Manning2008Introduction-to-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Manning2008Introduction-to-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Manning2008Introduction-to-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{Manning2008Introduction-to,
+  author = {Manning, Christopher D and Raghavan, Prabhakar and Schütze, Hinrich and others},
+  date-added = {2015-06-28 00:41:21 +0000},
+  date-modified = {2015-06-28 00:41:24 +0000},
+  publisher = {Cambridge university press Cambridge},
+  title = {Introduction to information retrieval},
+  volume = {1},
+  year = {2008}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Manning2008Introduction-to-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Reichardt2008Structure-in-Co&quot;&gt;Reichardt, J., 2008, &lt;i&gt;Structure In Complex Networks&lt;/i&gt;. Lecture Notes In Physics (Springer).&lt;/span&gt;
+
+&lt;div id=&quot;Reichardt2008Structure-in-Co-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Reichardt2008Structure-in-Co-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Reichardt2008Structure-in-Co-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{Reichardt2008Structure-in-Co,
+  author = {Reichardt, J.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  isbn = {978-3540878322},
+  publisher = {Springer},
+  series = {Lecture Notes in Physics},
+  title = {Structure in Complex Networks},
+  year = {2008}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Reichardt2008Structure-in-Co-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Gionis2007Assessing-data-&quot;&gt;Gionis, Aristides, Heikki Mannila, Taneli Mielikäinen, and Panayiotis Tsaparas, 2007, “Assessing Data Mining Results via Swap Randomization,” ACM Transactions on Knowledge Discovery from Data (TKDD) &lt;b&gt;1&lt;/b&gt; (ACM), 14.&lt;/span&gt;
+
+&lt;div id=&quot;Gionis2007Assessing-data--tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Gionis2007Assessing-data--tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Gionis2007Assessing-data--tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Gionis2007Assessing-data-,
+  author = {Gionis, Aristides and Mannila, Heikki and Mielikäinen, Taneli and Tsaparas, Panayiotis},
+  date-added = {2015-07-04 17:42:02 +0000},
+  date-modified = {2015-07-04 17:42:04 +0000},
+  journal = {ACM Transactions on Knowledge Discovery from Data (TKDD)},
+  number = {3},
+  pages = {14},
+  publisher = {ACM},
+  title = {Assessing data mining results via swap randomization},
+  volume = {1},
+  year = {2007}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Gionis2007Assessing-data--tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Schaeffer2007Graph-clusterin&quot;&gt;Schaeffer, Satu Elisa, 2007, “Graph Clustering,” Comp. Sci. Rev. &lt;b&gt;1&lt;/b&gt;, 27–64. doi:10.1016/j.cosrev.2007.05.001.&lt;/span&gt;
+
+&lt;div id=&quot;Schaeffer2007Graph-clusterin-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Schaeffer2007Graph-clusterin-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Schaeffer2007Graph-clusterin-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Schaeffer2007Graph-clusterin,
+  author = {Schaeffer, Satu Elisa},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1016/j.cosrev.2007.05.001},
+  journal = {Comp. Sci. Rev.},
+  number = {1},
+  pages = {27--64},
+  title = {Graph clustering},
+  volume = {1},
+  year = {2007},
+  bdsk-url-1 = {http://dx.doi.org/10.1016/j.cosrev.2007.05.001}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Schaeffer2007Graph-clusterin-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Newman2006Modularity-and-&quot;&gt;Newman, Mark E. J., 2006, “Modularity And Community Structure in Networks,” Proc. Natl. Acad. Sci. &lt;b&gt;103&lt;/b&gt;, 8577–8582.&lt;/span&gt;
+
+&lt;div id=&quot;Newman2006Modularity-and--tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Newman2006Modularity-and--tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Newman2006Modularity-and--tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Newman2006Modularity-and-,
+  author = {Newman, Mark E. J.},
+  date-added = {2015-07-07 05:57:10 +0000},
+  date-modified = {2015-07-07 05:58:37 +0000},
+  journal = {Proc. Natl. Acad. Sci.},
+  number = {23},
+  pages = {8577--8582},
+  title = {Modularity and community structure in networks},
+  volume = {103},
+  year = {2006}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Newman2006Modularity-and--tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Newman2004Finding-and-eva&quot;&gt;Newman, M. E. J., and M. Girvan, 2004, “Finding And Evaluating Community Structure in Networks,” Phys. Rev. E &lt;b&gt;69&lt;/b&gt;, 026113. doi:10.1103/PhysRevE.69.026113.&lt;/span&gt;
+
+&lt;div id=&quot;Newman2004Finding-and-eva-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Newman2004Finding-and-eva-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Newman2004Finding-and-eva-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Newman2004Finding-and-eva,
+  author = {Newman, M. E. J. and Girvan, M.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1103/PhysRevE.69.026113},
+  journal = {Phys. Rev. E},
+  pages = {026113},
+  title = {Finding and evaluating community structure in networks},
+  volume = {69},
+  year = {2004},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevE.69.026113}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Newman2004Finding-and-eva-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Freeman2003Finding-social-&quot;&gt;Freeman, Linton C, 2003, “Finding Social Groups: A Meta-Analysis of the Southern Women Data,” Dynamic social network modeling and analysis (The National Academies Press Washington), 39–97.&lt;/span&gt;
+
+&lt;div id=&quot;Freeman2003Finding-social--tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Freeman2003Finding-social--tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Freeman2003Finding-social--tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Freeman2003Finding-social-,
+  author = {Freeman, Linton C},
+  date-added = {2015-06-28 21:09:19 +0000},
+  date-modified = {2015-06-28 21:09:22 +0000},
+  journal = {Dynamic social network modeling and analysis},
+  pages = {39--97},
+  publisher = {The National Academies Press Washington},
+  title = {Finding social groups: A meta-analysis of the southern women data},
+  year = {2003}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Freeman2003Finding-social--tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Newman2001bScientific-col&quot;&gt;Newman, M. E. J., 2001, “Scientific Collaboration Networks. II. Shortest Paths, Weighted Networks, and Centrality,” Phys. Rev. E &lt;b&gt;64&lt;/b&gt;, 016132. doi:10.1103/PhysRevE.64.016132.&lt;/span&gt;
+
+&lt;div id=&quot;Newman2001bScientific-col-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Newman2001bScientific-col-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Newman2001bScientific-col-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Newman2001bScientific-col,
+  author = {Newman, M. E. J.},
+  date-added = {2015-06-27 23:59:12 +0000},
+  date-modified = {2015-06-28 00:09:15 +0000},
+  doi = {10.1103/PhysRevE.64.016132},
+  journal = {Phys. Rev. E},
+  number = {1},
+  pages = {016132},
+  title = {Scientific collaboration networks. II. Shortest paths, weighted networks, and centrality},
+  volume = {64},
+  year = {2001},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevE.64.016132}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Newman2001bScientific-col-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Dhillon2001Concept-decompo&quot;&gt;Dhillon, Inderjit S, and Dharmendra S Modha, 2001, “Concept Decompositions for Large Sparse Text Data Using Clustering,” Machine learning &lt;b&gt;42&lt;/b&gt; (Springer), 143–175.&lt;/span&gt;
+
+&lt;div id=&quot;Dhillon2001Concept-decompo-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Dhillon2001Concept-decompo-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Dhillon2001Concept-decompo-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Dhillon2001Concept-decompo,
+  author = {Dhillon, Inderjit S and Modha, Dharmendra S},
+  date-added = {2015-06-30 04:47:29 +0000},
+  date-modified = {2015-06-30 04:47:33 +0000},
+  journal = {Machine learning},
+  number = {1-2},
+  pages = {143--175},
+  publisher = {Springer},
+  title = {Concept decompositions for large sparse text data using clustering},
+  volume = {42},
+  year = {2001}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Dhillon2001Concept-decompo-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Newman2001aScientific-col&quot;&gt;Newman, M. E. J., 2001, “Scientific Collaboration Networks. I. Network Construction and Fundamental Results,” Phys. Rev. E &lt;b&gt;64&lt;/b&gt;, 016131. doi:10.1103/PhysRevE.64.016131.&lt;/span&gt;
+
+&lt;div id=&quot;Newman2001aScientific-col-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Newman2001aScientific-col-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Newman2001aScientific-col-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Newman2001aScientific-col,
+  author = {Newman, M. E. J.},
+  date-added = {2015-06-27 23:59:12 +0000},
+  date-modified = {2015-06-28 00:08:49 +0000},
+  doi = {10.1103/PhysRevE.64.016131},
+  journal = {Phys. Rev. E},
+  number = {1},
+  pages = {016131},
+  title = {Scientific collaboration networks. I. Network construction and fundamental results},
+  volume = {64},
+  year = {2001},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevE.64.016131}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Newman2001aScientific-col-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Watts1998Collective-dyna&quot;&gt;Watts, Duncan J, and Steven H Strogatz, 1998, “Collective Dynamics of ‘Small-World’Networks,” Nature &lt;b&gt;393&lt;/b&gt;, 440–442.&lt;/span&gt;
+
+&lt;div id=&quot;Watts1998Collective-dyna-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Watts1998Collective-dyna-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Watts1998Collective-dyna-tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Watts1998Collective-dyna,
+  author = {Watts, Duncan J and Strogatz, Steven H},
+  date-added = {2015-06-28 02:57:46 +0000},
+  date-modified = {2015-06-28 02:58:04 +0000},
+  journal = {Nature},
+  number = {6684},
+  pages = {440--442},
+  title = {Collective dynamics of `small-world&#39;networks},
+  volume = {393},
+  year = {1998}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Watts1998Collective-dyna-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Breiger1974The-duality-of-&quot;&gt;Breiger, Ronald L, 1974, “The Duality of Persons and Groups,” Social forces &lt;b&gt;53&lt;/b&gt; (Oxford University Press), 181–190.&lt;/span&gt;
+
+&lt;div id=&quot;Breiger1974The-duality-of--tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Breiger1974The-duality-of--tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Breiger1974The-duality-of--tabs-3&quot;&gt;
+    &lt;pre&gt;@article{Breiger1974The-duality-of-,
+  author = {Breiger, Ronald L},
+  date-added = {2015-07-03 15:41:55 +0000},
+  date-modified = {2015-07-03 15:41:58 +0000},
+  journal = {Social forces},
+  number = {2},
+  pages = {181--190},
+  publisher = {Oxford University Press},
+  title = {The duality of persons and groups},
+  volume = {53},
+  year = {1974}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Breiger1974The-duality-of--tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&quot;Davis1969Deep-south&quot;&gt;Davis, Allison, Burleigh Bradford Gardner, and Mary R.. Gardner, 1969, &lt;i&gt;Deep South&lt;/i&gt; (University of Chicago Press).&lt;/span&gt;
+
+&lt;div id=&quot;Davis1969Deep-south-tabs&quot;&gt;
+  View
+  &lt;ul&gt;
+    
+    
+    &lt;li&gt;&lt;a href=&quot;#Davis1969Deep-south-tabs-3&quot;&gt;BibTeX entry&lt;/a&gt;.&lt;/li&gt;
+  &lt;/ul&gt;
+  
+  
+  
+  &lt;div id=&quot;Davis1969Deep-south-tabs-3&quot;&gt;
+    &lt;pre&gt;@book{Davis1969Deep-south,
+  author = {Davis, Allison and Gardner, Burleigh Bradford and Gardner, Mary R..},
+  date-added = {2015-06-28 21:20:58 +0000},
+  date-modified = {2015-06-28 21:20:59 +0000},
+  publisher = {University of Chicago Press},
+  title = {Deep south},
+  year = {1969}
+}
+&lt;/pre&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  $(function() {
+    $( &quot;#Davis1969Deep-south-tabs&quot; ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+&lt;/script&gt;&lt;/li&gt;&lt;/ol&gt;
+</description>
+        <pubDate>Tue, 07 Jul 2015 08:00:00 -0400</pubDate>
+        <link>http://tscholak.github.io//big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html</guid>
+        
+        
+        <category>big data</category>
+        
+        <category>graphs</category>
+        
+        <category>community detection</category>
+        
+        <category>market segmentation</category>
+        
+      </item>
     
       <item>
         <title>Unfold with unfoldr</title>
@@ -16,42 +1468,42 @@
 &lt;p&gt;Like histogramr, unfoldr reads and writes &lt;a href=&quot;http://www.hdfgroup.org/HDF5/&quot;&gt;HDF5&lt;/a&gt; files. HDF5 files are organized in a hierarchical, file-system-like data structure. HDF5 is &lt;a href=&quot;https://www.hdfgroup.org/users.html&quot;&gt;commonly used in scientific environments&lt;/a&gt;. It is designed to handle big scientific data sets. Please see my &lt;a href=&quot;/code/big%20data/2015/03/07/histogramr.html&quot;&gt;earlier blog post&lt;/a&gt; for a description of HDF5 and how it is used.&lt;/p&gt;
 
 &lt;p&gt;unfoldr and histogramr are designed to work in tandem. Output from unfoldr can (but doesn&amp;#39;t have to) be processed by histogramr. unfoldr produces a HDF5 file that contains the level spacings in a single data set:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;unfoldr -d &amp;quot;spectrum&amp;quot; -m &amp;quot;eigval&amp;quot; -o nnls.h5 spectra.h5
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;unfoldr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;spectrum&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;eigval&amp;quot;&lt;/span&gt; -o nnls.h5 spectra.h5
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;And histogramr then creates a discretized probability density function from it:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;histogramr -d &amp;quot;inf&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0,10 -o nnlsd.h5 nnls.h5
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;histogramr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;inf&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;spacing&amp;quot;&lt;/span&gt; -b .1 -l 0,10 -o nnlsd.h5 nnls.h5
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Boom! You&amp;#39;ve got the nearest-neighbor level spacing distribution stored nicely in &lt;code&gt;nnlsd.h5&lt;/code&gt;. Then you can do this:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;import numpy as np
-import h5py
-import plotly.plotly as py
-from plotly.graph_objs import *
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;numpy&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;np&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;h5py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;plotly.plotly&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;plotly.graph_objs&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
 
-fS_Poisson = np.array((lambda x: [x, np.exp(-x)])(np.linspace(0, 4, 100))).transpose()
-fS_GOE = np.array((lambda x: [x, np.pi*x*np.exp(-np.pi*x**2./4.)/2.])(np.linspace(0, 4, 100))).transpose()
+&lt;span class=&quot;n&quot;&gt;fS_Poisson&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;lambda&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)])(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;linspace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transpose&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fS_GOE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;lambda&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;2.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;4.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;2.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;linspace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transpose&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 
-h5file = h5py.File(&amp;#39;nnlsd.h5&amp;#39;,&amp;#39;r&amp;#39;)
-fS_unfoldr = np.array(h5file[&amp;#39;probability density&amp;#39;])
-h5file.close()
+&lt;span class=&quot;n&quot;&gt;h5file&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;h5py&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;File&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;nnlsd.h5&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;r&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fS_unfoldr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;h5file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;probability density&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;h5file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 
-trace_Poisson = Scatter(x=fS_Poisson[:,0],
-                        y=fS_Poisson[:,1],
-                        mode=&amp;#39;lines&amp;#39;,
-                        name=u&amp;quot;Poisson distribution&amp;quot;)
-trace_GOE = Scatter(x=fS_GOE[:,0],
-                    y=fS_GOE[:,1],
-                    mode=&amp;#39;lines&amp;#39;,
-                    name=u&amp;quot;Wigner&amp;#39;s surmise&amp;quot;)
-trace_unfoldr = Scatter(x=fS_unfoldr[:,0],
-                        y=fS_unfoldr[:,1],
-                        mode=&amp;#39;markers&amp;#39;,
-                        name=u&amp;#39;unfoldr data&amp;#39;,
-                        marker=Marker(symbol=&amp;#39;square&amp;#39;))
-data = Data([trace_Poisson, trace_GOE, trace_unfoldr])
-layout = Layout(title=u&amp;#39;Nearest-neighbor level spacing distribution&amp;#39;)
-fig = Figure(data=data, layout=layout)
+&lt;span class=&quot;n&quot;&gt;trace_Poisson&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Scatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fS_Poisson&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                        &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fS_Poisson&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                        &lt;span class=&quot;n&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;lines&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                        &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;u&amp;quot;Poisson distribution&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;trace_GOE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Scatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fS_GOE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fS_GOE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;lines&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;u&amp;quot;Wigner&amp;#39;s surmise&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;trace_unfoldr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Scatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fS_unfoldr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                        &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fS_unfoldr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                        &lt;span class=&quot;n&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;markers&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                        &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;u&amp;#39;unfoldr data&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                        &lt;span class=&quot;n&quot;&gt;marker&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Marker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;symbol&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;square&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;trace_Poisson&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;trace_GOE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;trace_unfoldr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;layout&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Layout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;title&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;u&amp;#39;Nearest-neighbor level spacing distribution&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Figure&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;layout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;layout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
-py.iplot(fig, filename=&amp;quot;unfoldr-demonstration&amp;quot;)
+&lt;span class=&quot;n&quot;&gt;py&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iplot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filename&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;unfoldr-demonstration&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;The output is:&lt;/p&gt;
 
@@ -65,13 +1517,13 @@ py.iplot(fig, filename=&amp;quot;unfoldr-demonstration&amp;quot;)
 &lt;h1&gt;Get unfoldr today from GitHub!&lt;/h1&gt;
 
 &lt;p&gt;You can &lt;a href=&quot;https://github.com/tscholak/unfoldr&quot;&gt;download unfoldr from GitHub&lt;/a&gt;. In Linux or Mac OS X, open a terminal session and run:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ git clone git@github.com:tscholak/unfoldr.git
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git clone git@github.com:tscholak/unfoldr.git
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;(get Git &lt;a href=&quot;http://git-scm.com&quot;&gt;here&lt;/a&gt;). Since I released unfoldr under the GPLv3, you can use, study, share, and modify it for &lt;em&gt;free&lt;/em&gt; (as long as you retain these rights for others). unfoldr is written in &lt;a href=&quot;https://www.python.org&quot;&gt;Python&lt;/a&gt; and uses the &lt;a href=&quot;https://pypi.python.org/pypi/setuptools&quot;&gt;setuptools&lt;/a&gt;. From within the source code directory, run:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;python setup.py install
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python setup.py install
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Make sure your Python&amp;#39;s &lt;code&gt;bin&lt;/code&gt; directory is in your &lt;code&gt;$PATH&lt;/code&gt;. On Mac OS X, if you use Macports and haven&amp;#39;t done so already, add&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;export PATH=/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin:$PATH
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin:&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;to your &lt;code&gt;~/.bash_login&lt;/code&gt; or &lt;code&gt;~/.bash_profile&lt;/code&gt; file. Once done, you can call unfoldr from the command line by invoking &lt;code&gt;unfoldr&lt;/code&gt;. &lt;code&gt;unfoldr -h&lt;/code&gt; will show you the command line arguments.&lt;/p&gt;
 
@@ -228,16 +1680,16 @@ histogramr -d &amp;quot;9.75&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0
 \]&lt;/p&gt;
 
 &lt;p&gt;&lt;a name=&quot;implementation&quot;&gt;&lt;/a&gt;How is unfolding done in unfoldr? When you load your spectral data with unfoldr, two-thirds of them are taken away to populate what I call the unfolding pool. The unfolding pool is a flat, sorted array of eigenvalues. I use it to estimate the ensemble averaged spectral staircase function $\overline{\mathcal{N}}$ and to do the transformation $\Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu}$. The following Python pseudo code shows how this is implemented:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;i = 0
-for j in range(number of eigenvalues):
-  while unfolding_pool[i] &amp;lt; eigenvalue[j]:
-    i += 1
-    if i &amp;gt;= length of the unfolding pool:
-      break
-  if j + 1 &amp;lt; number of eigenvalues:
-    level_spacing[j] -= i / (number of spectra in the unfolding pool)
-  if j &amp;gt; 0:
-    level_spacing[j-1] += i / (number of spectra in the unfolding pool)
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;eigenvalues&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unfolding_pool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;eigenvalue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unfolding&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;pool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;eigenvalues&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;level_spacing&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spectra&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unfolding&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;level_spacing&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spectra&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unfolding&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;This calculation is done for each of the remaining spectra (the third that doesn&amp;#39;t go into the unfolding pool). The above piece of code does not only unfold the spectrum, but also calculates the level spacings. The code is compiled with Cython, so it should be fast.&lt;/p&gt;
 
@@ -279,7 +1731,7 @@ for j in range(number of eigenvalues):
   date-modified = {2015-05-06 20:28:24 +0000},
   doi = {10.1103/PhysRevA.90.063415},
   journal = {Phys. Rev. A},
-  month = {dec},
+  month = dec,
   number = {6},
   pages = {063415},
   publisher = {American Physical Society},
@@ -299,7 +1751,7 @@ for j in range(number of eigenvalues):
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Walschaers2014A-Statistical-B&quot;&gt;Walschaers, M., J. Kuipers, J.-D. Urbina, K. Mayer, M. C. Tichy, K. Richter, and A. Buchleitner, 2014, “A Statistical Benchmark for BosonSampling,” ArXiv e-prints.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Walschaers2014A-Statistical-B&quot;&gt;Walschaers, M., J. Kuipers, J.-D. Urbina, K. Mayer, M. C. Tichy, K. Richter, and A. Buchleitner, 2014, “A Statistical Benchmark For BosonSampling,” ArXiv e-prints.&lt;/span&gt;
 
 &lt;div id=&quot;Walschaers2014A-Statistical-B-tabs&quot;&gt;
   View
@@ -369,7 +1821,7 @@ for j in range(number of eigenvalues):
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Tao2012Topics-in-Rando&quot;&gt;Tao, T., 2012, &lt;i&gt;Topics in Random Matrix Theory&lt;/i&gt;. Graduate Studies in Mathematics (American Mathematical Society).&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Tao2012Topics-in-Rando&quot;&gt;Tao, T., 2012, &lt;i&gt;Topics In Random Matrix Theory&lt;/i&gt;. Graduate Studies in Mathematics (American Mathematical Society).&lt;/span&gt;
 
 &lt;div id=&quot;Tao2012Topics-in-Rando-tabs&quot;&gt;
   View
@@ -404,7 +1856,7 @@ for j in range(number of eigenvalues):
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Backer2011Fractional-Powe&quot;&gt;Bäcker, Arnd, Roland Ketzmerick, Steffen Löck, and Normann Mertig, 2011, “Fractional-Power-Law Level Statistics Due to Dynamical Tunneling,” Phys. Rev. Lett. &lt;b&gt;106&lt;/b&gt;, 024101. doi:10.1103/PhysRevLett.106.024101.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Backer2011Fractional-Powe&quot;&gt;Bäcker, Arnd, Roland Ketzmerick, Steffen Löck, and Normann Mertig, 2011, “Fractional-Power-Law Level Statistics Due To Dynamical Tunneling,” Phys. Rev. Lett. &lt;b&gt;106&lt;/b&gt;, 024101. doi:10.1103/PhysRevLett.106.024101.&lt;/span&gt;
 
 &lt;div id=&quot;Backer2011Fractional-Powe-tabs&quot;&gt;
   View
@@ -426,7 +1878,8 @@ for j in range(number of eigenvalues):
   pages = {024101},
   title = {Fractional-Power-Law Level Statistics Due to Dynamical Tunneling},
   volume = {106},
-  year = {2011}
+  year = {2011},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevLett.106.024101}
 }
 &lt;/pre&gt;
   &lt;/div&gt;
@@ -439,7 +1892,7 @@ for j in range(number of eigenvalues):
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Bouchaud2009Financial-Appli&quot;&gt;Bouchaud, J. P., and M. Potters, 2009, “Financial Applications of Random Matrix Theory: a Short Review,” ArXiv e-prints.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Bouchaud2009Financial-Appli&quot;&gt;Bouchaud, J. P., and M. Potters, 2009, “Financial Applications Of Random Matrix Theory: a Short Review,” ArXiv e-prints.&lt;/span&gt;
 
 &lt;div id=&quot;Bouchaud2009Financial-Appli-tabs&quot;&gt;
   View
@@ -488,16 +1941,12 @@ for j in range(number of eigenvalues):
   
   &lt;div id=&quot;Erdos2007Semicircle-law--tabs-3&quot;&gt;
     &lt;pre&gt;@article{Erdos2007Semicircle-law-,
-  adsnote = {Provided by the SAO/NASA Astrophysics Data System},
-  adsurl = {http://adsabs.harvard.edu/abs/2007arXiv0711.1730E},
   archiveprefix = {arXiv},
-  author = {{Erd{\H o}s}, L. and {Schlein}, B. and {Yau}, H.-T.},
+  author = {{Erdős}, L. and {Schlein}, B. and {Yau}, H.-T.},
   date-added = {2015-05-07 15:31:02 +0000},
-  date-modified = {2015-05-07 18:44:22 +0000},
+  date-modified = {2015-06-24 16:04:45 +0000},
   eprint = {0711.1730},
   journal = {ArXiv e-prints},
-  keywords = {Mathematical Physics, 15A52, 82B44 (Primary)},
-  month = {nov},
   primaryclass = {math-ph},
   title = {{Semicircle law on short scales and delocalization of eigenvectors for Wigner random matrices}},
   year = {2007}
@@ -527,7 +1976,7 @@ for j in range(number of eigenvalues):
   
   &lt;div id=&quot;Bollobas2001Random-Graphs-tabs-3&quot;&gt;
     &lt;pre&gt;@book{Bollobas2001Random-Graphs,
-  author = {Bollob{\&#39;a}s, B.},
+  author = {Bollobás, B.},
   date-added = {2015-05-06 20:24:48 +0000},
   date-modified = {2015-05-07 18:56:23 +0000},
   isbn = {9780521797221},
@@ -594,7 +2043,7 @@ for j in range(number of eigenvalues):
   
   &lt;div id=&quot;Guhr1998Random-matrix-t-tabs-3&quot;&gt;
     &lt;pre&gt;@article{Guhr1998Random-matrix-t,
-  author = {Guhr, Thomas and M{\&quot;u}ller--Groeling, Axel and Weidenm{\&quot;u}ller, Hans A.},
+  author = {Guhr, Thomas and Müller--Groeling, Axel and Weidenmüller, Hans A.},
   date-modified = {2015-05-07 18:48:01 +0000},
   issn = {0370-1573},
   journal = {Phys. Rep.},
@@ -615,7 +2064,7 @@ for j in range(number of eigenvalues):
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Mirlin1996Transition-from&quot;&gt;Mirlin, Alexander D., Yan V. Fyodorov, Frank-Michael Dittes, Javier Quezada, and Thomas H. Seligman, 1996, “Transition from Localized to Extended Eigenstates in the Ensemble of Power-Law Random Banded Matrices,” Phys. Rev. E &lt;b&gt;54&lt;/b&gt;, 3221.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Mirlin1996Transition-from&quot;&gt;Mirlin, Alexander D., Yan V. Fyodorov, Frank-Michael Dittes, Javier Quezada, and Thomas H. Seligman, 1996, “Transition From Localized to Extended Eigenstates in the Ensemble of Power-Law Random Banded Matrices,” Phys. Rev. E &lt;b&gt;54&lt;/b&gt;, 3221.&lt;/span&gt;
 
 &lt;div id=&quot;Mirlin1996Transition-from-tabs&quot;&gt;
   View
@@ -649,7 +2098,7 @@ for j in range(number of eigenvalues):
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Cizeau1994Theory-of-Levy-&quot;&gt;Cizeau, P., and J. P. Bouchaud, 1994, “Theory of Lévy Matrices,” Phys. Rev. E &lt;b&gt;50&lt;/b&gt;, 1810.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Cizeau1994Theory-of-Levy-&quot;&gt;Cizeau, P., and J. P. Bouchaud, 1994, “Theory Of Lévy Matrices,” Phys. Rev. E &lt;b&gt;50&lt;/b&gt;, 1810.&lt;/span&gt;
 
 &lt;div id=&quot;Cizeau1994Theory-of-Levy--tabs&quot;&gt;
   View
@@ -668,7 +2117,7 @@ for j in range(number of eigenvalues):
   date-modified = {2015-05-07 18:45:26 +0000},
   journal = {Phys. Rev. E},
   pages = {1810},
-  title = {Theory of L{\&#39;e}vy matrices},
+  title = {Theory of Lévy matrices},
   volume = {50},
   year = {1994}
 }
@@ -793,7 +2242,7 @@ for j in range(number of eigenvalues):
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Dyson1970Correlations-be&quot;&gt;Dyson, Freeman J., 1970, “Correlations between Eigenvalues of a Random Matrix,” Comm. Math. Phys. &lt;b&gt;19&lt;/b&gt;, 235.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Dyson1970Correlations-be&quot;&gt;Dyson, Freeman J., 1970, “Correlations Between Eigenvalues of a Random Matrix,” Comm. Math. Phys. &lt;b&gt;19&lt;/b&gt;, 235.&lt;/span&gt;
 
 &lt;div id=&quot;Dyson1970Correlations-be-tabs&quot;&gt;
   View
@@ -828,7 +2277,7 @@ for j in range(number of eigenvalues):
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;Wigner1967Random-Matrices&quot;&gt;Wigner, E., 1967, “Random Matrices in Physics,” SIAM Rev. &lt;b&gt;9&lt;/b&gt;, 1.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;Wigner1967Random-Matrices&quot;&gt;Wigner, E., 1967, “Random Matrices In Physics,” SIAM Rev. &lt;b&gt;9&lt;/b&gt;, 1.&lt;/span&gt;
 
 &lt;div id=&quot;Wigner1967Random-Matrices-tabs&quot;&gt;
   View
@@ -963,7 +2412,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
   date-modified = {2015-03-01 05:48:42 +0000},
   doi = {10.1103/PhysRevA.90.063415},
   journal = {Phys. Rev. A},
-  month = {dec},
+  month = dec,
   number = {6},
   pages = {063415},
   publisher = {American Physical Society},
@@ -983,7 +2432,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;zech2013quantum&quot;&gt;Zech, Tobias, Mattia Walschaers, Torsten Scholak, Roberto Mulet, Thomas Wellens, and Andreas Buchleitner, 2013, “Quantum Transport in Biological Functional Units: Noise, Disorder, Structure,” Fluct. Noise Lett. &lt;b&gt;12&lt;/b&gt; (World Scientific Publishing Company), 1340007. doi:10.1142/S0219477513400075.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;zech2013quantum&quot;&gt;Zech, Tobias, Mattia Walschaers, Torsten Scholak, Roberto Mulet, Thomas Wellens, and Andreas Buchleitner, 2013, “Quantum Transport In Biological Functional Units: Noise, Disorder, Structure,” Fluct. Noise Lett. &lt;b&gt;12&lt;/b&gt; (World Scientific Publishing Company), 1340007. doi:10.1142/S0219477513400075.&lt;/span&gt;
 
 &lt;div id=&quot;zech2013quantum-tabs&quot;&gt;
   View
@@ -1017,7 +2466,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
   date-modified = {2015-03-01 05:47:35 +0000},
   doi = {10.1142/S0219477513400075},
   journal = {Fluct. Noise Lett.},
-  month = {jun},
+  month = jun,
   number = {02},
   pages = {1340007},
   publisher = {World Scientific Publishing Company},
@@ -1070,7 +2519,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
   date-added = {2015-03-01 05:21:08 +0000},
   date-modified = {2015-03-01 15:55:23 +0000},
   journal = {Acta Phys. Pol. A},
-  month = {dec},
+  month = dec,
   number = {6A},
   pages = {89},
   publisher = {Institute of Physics, Polish Academy of Science},
@@ -1125,7 +2574,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
   date-modified = {2015-03-01 05:45:12 +0000},
   doi = {10.1088/0953-4075/44/18/184012},
   journal = {J. Phys. B},
-  month = {sep},
+  month = sep,
   number = {18},
   pages = {184012},
   publisher = {IOP Publishing},
@@ -1179,7 +2628,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
   date-modified = {2015-03-01 05:46:22 +0000},
   doi = {10.1209/0295-5075/96/10001},
   journal = {Europhys. Lett.},
-  month = {aug},
+  month = aug,
   number = {1},
   pages = {10001},
   publisher = {IOP Publishing},
@@ -1199,7 +2648,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;scholak2011efficient&quot;&gt;Scholak, Torsten, Fernando de Melo, Thomas Wellens, Florian Mintert, and Andreas Buchleitner, 2011, “Efficient and Coherent Excitation Transfer across Disordered Molecular Networks,” Phys. Rev. E &lt;b&gt;83&lt;/b&gt; (American Physical Society), 021912. doi:10.1103/PhysRevE.83.021912.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;scholak2011efficient&quot;&gt;Scholak, Torsten, Fernando de Melo, Thomas Wellens, Florian Mintert, and Andreas Buchleitner, 2011, “Efficient And Coherent Excitation Transfer across Disordered Molecular Networks,” Phys. Rev. E &lt;b&gt;83&lt;/b&gt; (American Physical Society), 021912. doi:10.1103/PhysRevE.83.021912.&lt;/span&gt;
 
 &lt;div id=&quot;scholak2011efficient-tabs&quot;&gt;
   View
@@ -1233,7 +2682,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
   date-modified = {2015-03-01 05:44:18 +0000},
   doi = {10.1103/PhysRevE.83.021912},
   journal = {Phys. Rev. E},
-  month = {feb},
+  month = feb,
   number = {2},
   pages = {021912},
   publisher = {American Physical Society},
@@ -1253,7 +2702,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
     });
   });
 &lt;/script&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span id=&quot;scholak2010transport&quot;&gt;Scholak, Torsten, Florian Mintert, Thomas Wellens, and Andreas Buchleitner, 2010, “Transport and Entanglement,” in &lt;i&gt;Quantum Efficiency in Complex Systems, Part I: Biomolecular Systems, Part 1&lt;/i&gt;. Vol. 83. Semiconductors and Semimetals (Elsevier Science), pp. 1–38. doi:10.1016/B978-0-12-375042-6.00001-8.&lt;/span&gt;
+&lt;li&gt;&lt;span id=&quot;scholak2010transport&quot;&gt;Scholak, Torsten, Florian Mintert, Thomas Wellens, and Andreas Buchleitner, 2010, “Transport And Entanglement,” in &lt;i&gt;Quantum Efficiency In Complex Systems, Part I: Biomolecular Systems, Part 1&lt;/i&gt;. Vol. 83. Semiconductors And Semimetals (Elsevier Science), pp. 1–38. doi:10.1016/B978-0-12-375042-6.00001-8.&lt;/span&gt;
 
 &lt;div id=&quot;scholak2010transport-tabs&quot;&gt;
   View
@@ -1286,7 +2735,7 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
   date-modified = {2015-03-01 16:56:55 +0000},
   doi = {10.1016/B978-0-12-375042-6.00001-8},
   journal = {Quantum Efficiency in Complex Systems, Part I: Biomolecular Systems, Part 1},
-  month = {dec},
+  month = dec,
   pages = {1--38},
   publisher = {Elsevier Science},
   series = {Semiconductors and semimetals},

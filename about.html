@@ -24,7 +24,18 @@
     <script type="text/javascript" src="/vendor/js/jquery.lettering.js"></script>
 
     <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          skipTags: ["script", "noscript", "style", "textarea"]
+        },
+        "HTML-CSS": {
+          mtextFontInherit: true
+        },
+        "SVG": {
+          mtextFontInherit: true
+        },
+      });
     </script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
@@ -188,7 +199,7 @@ Send me an <a href="mailto:tscholak@chem.utoronto.ca">email</a> instead.</p>
 
 <h2>References</h2>
 
-<ol class="bibliography"><li><span id="scholak2011transport">Scholak, Torsten, 2011, “Transport and Coherence in Disordered Networks,” PhD thesis, (Universitätsbibliothek Freiburg). Available at: http://www.freidok.uni-freiburg.de/volltexte/8283/.</span>
+<ol class="bibliography"><li><span id="scholak2011transport">Scholak, Torsten, 2011, “Transport And Coherence in Disordered Networks,” PhD thesis, (Universitätsbibliothek Freiburg). Available at: http://www.freidok.uni-freiburg.de/volltexte/8283/.</span>
 
 <div id="scholak2011transport-tabs">
   View
@@ -215,7 +226,7 @@ In this thesis, we will investigate the transport properties of an ensemble of s
   author = {Scholak, Torsten},
   date-added = {2015-03-01 05:21:10 +0000},
   date-modified = {2015-03-02 06:01:15 +0000},
-  month = {sep},
+  month = sep,
   school = {Universit{\"a}tsbibliothek Freiburg},
   title = {Transport and coherence in disordered networks},
   url = {http://www.freidok.uni-freiburg.de/volltexte/8283/},
@@ -259,7 +270,7 @@ In this thesis, we will investigate the transport properties of an ensemble of s
   date-added = {2015-03-01 05:25:59 +0000},
   date-modified = {2015-03-01 16:17:05 +0000},
   language = {german},
-  month = {jan},
+  month = jan,
   school = {Universit{\"a}t Bayreuth},
   title = {Photon-Interferenz bei Streuung an verschr{\"a}nkten Atomen},
   year = {2008}

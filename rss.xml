@@ -8,7 +8,17 @@
     <title>Meticulous Disorder</title>
     <link>http://tscholak.github.io</link>
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
-    <pubDate>Tue, 05 May 2015 20:00:00 -0400</pubDate>
+    <pubDate>Tue, 07 Jul 2015 08:00:00 -0400</pubDate>
+    <item>
+      <title>Communities and Markets</title>
+      <link>http://tscholak.github.io/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html</link>
+      <description>&lt;p&gt;I have been fairly quiet as of late. This is not because nothing has happened, but rather because I have been (and still am) busy working on a data science project in which I try something new and exciting. Recently, I was out of town for a couple of days traveling the Maritimes, and I found some time to reflect and to start writing on a series of articles about this particular project. This is now the first.&lt;/p&gt;
+
+&lt;p&gt;In my new project, I am studying the segmentation of large markets by identifying communities of consumers with similar shopping habits. This is an effort to improve recommendation systems and to allow for better business opportunities. &lt;/p&gt;
+</description>
+      <pubDate>Tue, 07 Jul 2015 08:00:00 -0400</pubDate>
+      <dc:date>2015-07-07T08:00:00-04:00</dc:date>
+    </item>
     <item>
       <title>Unfold with unfoldr</title>
       <link>http://tscholak.github.io/code/physics/2015/05/05/unfoldr.html</link>
@@ -49,6 +59,6 @@
       <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-05-05T20:00:00-04:00</dc:date>
+    <dc:date>2015-07-07T08:00:00-04:00</dc:date>
   </channel>
 </rss>

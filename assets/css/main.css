@@ -448,3 +448,6 @@ textarea {
 
 .more {
   display: none; }
+
+figcaption {
+  font-style: italic; }
