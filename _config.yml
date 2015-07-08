@@ -39,6 +39,7 @@ exclude:
 
 gems:
   - jekyll/scholar
+  - jekyll-pseudo
 
 scholar:
   style: assets/bibliography/tscholak.csl
