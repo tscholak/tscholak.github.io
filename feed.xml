@@ -5,8 +5,8 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 08 Jul 2015 17:14:18 -0400</pubDate>
-    <lastBuildDate>Wed, 08 Jul 2015 17:14:18 -0400</lastBuildDate>
+    <pubDate>Wed, 08 Jul 2015 17:20:34 -0400</pubDate>
+    <lastBuildDate>Wed, 08 Jul 2015 17:20:34 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
@@ -382,6 +382,8 @@ Since all these interactions have only one logical direction (e.g., an item cann
 &lt;p&gt;All this tells you that I am determined to use Zweig and Kaufmann&amp;#39;s method. However, there is a problem. The transaction graph is a multigraph, i.e., a pair of nodes can be -- and, as evident from the multiplicity histogram, usually &lt;em&gt;is&lt;/em&gt; -- connected by an edge not once, but many times. However, the method of Zweig and Kaufmann has not yet been generalized to multigraphs, and it is far from trivial to do so. It is not clear what the random null model should be. Since ignoring the multiplicity is not an option, someone will have to overcome the problem of edge multiplicity, and it seems this person will be me. I am working on it ...&lt;/p&gt;
 
 &lt;p&gt;That is all for now. I will write more when time permits.&lt;/p&gt;
+
+&lt;hr&gt;
 
 &lt;h1&gt;References&lt;/h1&gt;
 
@@ -1694,6 +1696,8 @@ histogramr -d &amp;quot;9.75&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0
 &lt;p&gt;This calculation is done for each of the remaining spectra (the third that doesn&amp;#39;t go into the unfolding pool). The above piece of code does not only unfold the spectrum, but also calculates the level spacings. The code is compiled with Cython, so it should be fast.&lt;/p&gt;
 
 &lt;p&gt;You can control the size of the unfolding pool with the command line argument &lt;code&gt;-p&lt;/code&gt;. The default value is 2. That means that the number of spectra in the unfolding pool is twice as large as the number of spectra that are unfolded. The default value should work in most cases. However, if you see oscillations or weird artifacts in your level spacing densities, then try a larger number.&lt;/p&gt;
+
+&lt;hr&gt;
 
 &lt;h1&gt;References&lt;/h1&gt;
 
