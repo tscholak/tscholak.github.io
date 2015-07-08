@@ -384,6 +384,8 @@ All this tells you that I am determined to use Zweig and Kaufmann's method. Howe
 
 That is all for now. I will write more when time permits.
 
+* * *
+
 # References
 
 {% bibliography --file 2015-07-07-communities-and-markets --cited %}
