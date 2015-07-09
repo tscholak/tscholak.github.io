@@ -171,7 +171,7 @@
 
 <p>The above examples have something in common. In each one of them, the link structure is either fully known or easily obtainable. In many cases, however, this is not the case. In fact, it can be very challenging or even impossible to collect information about the links between the network nodes directly. This section is about the methods that have been developed to cope with this situation.</p>
 
-<p>Consider the task of collecting data about the political alliances between members of a parliament <a href="#Neal2014The-backbone-of">(Neal 2014)</a>. Here, asking every pair of politicians about their mutual alignment is not really an option. That would give only a very biased picture of reality, either because the politicians would decline to comment or because their answer would just reflect their respective party memberships. A solution to this problem is to get the data not from the politicians directly, but indirectly from their actions, for instance, from whether records show that they tend to agree or disagree in matters of legislation. For example, in an effort to detect political alliances, Neal <a href="#Neal2014The-backbone-of">(“The Backbone of Bipartite Projections: Inferring Relationships from Co-Authorship, Co-Sponsorship, Co-Attendance and Other Co-Behaviors” 2014)</a> analyzed data about the sponsorship of bills by senators in the US congress.</p>
+<p>Consider the task of collecting data about the political alliances between members of a parliament <a href="#Neal2014The-backbone-of">(Neal 2014)</a>. Here, asking every pair of politicians about their mutual alignment is not really an option. That would give only a very biased picture of reality, either because the politicians would decline to comment or because their answer would just reflect their respective party memberships. A solution to this problem is to get the data not from the politicians directly, but indirectly from their actions, for instance, from whether records show that they tend to agree or disagree in matters of legislation. For example, in an effort to detecting political alliances, Neal <a href="#Neal2014The-backbone-of">(“The Backbone of Bipartite Projections: Inferring Relationships from Co-Authorship, Co-Sponsorship, Co-Attendance and Other Co-Behaviors” 2014)</a> analyzed data about the sponsorship of bills by senators in the US congress.</p>
 
 <p>One of the earliest attempts of inferring unobserved relationships is the work of Davis et al. <a href="#Davis1969Deep-south">(<i>Deep South</i> 1969)</a>, who studied what is now known as the classic Southern Women network (see picture below). This ethnographic dataset is a record of the attendance of 18 women at 14 informal social events that took place in the 1930s in southern Alabama. The goal was to unravel the connection between an individual&#39;s social class and her pattern of informal interaction in 1930s America. In the absence of any modern community detection methods, Davis et al. relied fully on their ethnographic knowledge and intuition. They discovered that the women were split into two loosely overlapping groups, evidencing two latent social classes.</p>
 
@@ -415,17 +415,17 @@ end while
 \]
 Since all these interactions have only one logical direction (e.g., an item cannot buy a consumer), they can be modeled as undirected edges. And, since there are neither interactions among any two consumers nor any two items, the graph is bipartite.</p>
 
-<p>In the graphs we encountered in previous sections, each edge describes only one type of interaction. It is possible to extend the theory to the case of edges with multiple types. The graphs in this generalized theory are called <em>multiplex graphs</em> (missing reference). Many of the ideas and methods that we discussed extend to multiplex graphs. But it&#39;s a complication that I want to leave for later. For now, I want to concentrate on monoplex graphs with one edge type only. Therefore, I have to make a decision what type of interaction I want to consider. The rest is abandoned.</p>
+<p>In the graphs we encountered in previous sections, each edge describes only one type of interaction. It is possible to extend the theory to the case of edges with multiple types. The graphs in this generalized theory are called <em>multiplex graphs</em> <a href="#De-Domenico2013Mathematical-fo">(De Domenico et al. 2013; Horvát and Zweig 2013; De Domenico et al. 2015)</a>. Many of the ideas and methods that we discussed extend to multiplex graphs. But it&#39;s a complication that I want to leave for later. For now, I want to concentrate on monoplex graphs with one edge type only. Therefore, I have to make a decision what type of interaction I want to consider. The rest is abandoned.</p>
 
 <p>For the two questions I am addressing, only the purchases (and, to an undetermined degree, the returns) are relevant. I was therefore looking for a source of real purchase transaction data.</p>
 
 <h2>The data</h2>
 
-<p>I settled on the <a href="https://www.kaggle.com/c/acquire-valued-shoppers-challenge">Acquire Valued Shoppers Challenge</a> data from Kaggle. That challenge has ended, but the data is still available. It contains $349,555,789$ transactions (i.e. atomic item purchase and return records) of $311,452$ unique consumers. The original challenge was about predicting whether or not consumers would become loyal to a product or brand if they were presented an offer.</p>
+<p>I settled on the <a href="https://www.kaggle.com/c/acquire-valued-shoppers-challenge">Acquire Valued Shoppers Challenge</a> data from Kaggle. That challenge has ended, but the data is still available. It contains $349,555,789$ transactions (i.e. atomic item purchase and return records) of $311,452$ unique consumers. The dataset is large, it has a size of over $20 \mathrm{GB}$. The original challenge was about predicting whether or not consumers would become loyal to a product or brand if they were presented an offer.</p>
 
 <p>The data is fully anonymous. It holds information solely about which items consumers have bought, when, at which price, and at what quantity, where negative prices and/or quantities more or less consistently indicate item returns. For each consumer, there is a year&#39;s worth of transaction data. The items are represented in terms of three numbers that uniquely identify the manufacturer, the brand, and the item&#39;s category. It is not disclosed, however, what these manufacturers, brands, and categories are. There is some further information about item sizes and the units they are measured in, but this serves little to understand the nature or origin of an item. Transactions of items with missing manufacturer, brand, or category are discarded from my studies. So are transactions by unidentifiable consumers.</p>
 
-<p>The transaction dataset is large, it has a size of over $20 \mathrm{GB}$. I defer a discussion about the logistics and mechanics of my dealings with this dataset to <a href="javaScript:void(0);">a later blog post</a>. For now, I am more interested in discussing the properties of the graphs. To this end, I would like to direct your attention towards the following figure:</p>
+<p>I defer a discussion about the logistics and mechanics of my dealings with this dataset to <a href="javaScript:void(0);">a later blog post</a>. For now, I am more interested in discussing the properties of the graphs. To this end, I would like to direct your attention towards the following figure:</p>
 
 <p>
   <figure>
@@ -472,41 +472,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
 
 <h1>References</h1>
 
-<ol class="bibliography"><li><span id="De-Domenico2015Structural-redu">De Domenico, Manlio, Vincenzo Nicosia, Alexandre Arenas, and Vito Latora, 2015, “Structural Reducibility of Multilayer Networks,” Nat. Commun. <b>6</b>. doi:10.1038/ncomms7864.</span>
-
-<div id="De-Domenico2015Structural-redu-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#De-Domenico2015Structural-redu-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="De-Domenico2015Structural-redu-tabs-3">
-    <pre>@article{De-Domenico2015Structural-redu,
-  author = {De Domenico, Manlio and Nicosia, Vincenzo and Arenas, Alexandre and Latora, Vito},
-  date-modified = {2015-06-26 16:01:46 +0000},
-  doi = {10.1038/ncomms7864},
-  journal = {Nat. Commun.},
-  title = {Structural reducibility of multilayer networks},
-  volume = {6},
-  year = {2015},
-  bdsk-url-1 = {http://dx.doi.org/10.1038/ncomms7864}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#De-Domenico2015Structural-redu-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Jeub2015Think-locally-a">Jeub, Lucas G. S., Prakash Balachandran, Mason A. Porter, Peter J. Mucha, and Michael W. Mahoney, 2015, “Think Locally, Act Locally: Detection of Small, Medium-Sized, and Large Communities in Large Networks,” Phys. Rev. E <b>91</b>. doi:10.1103/PhysRevE.91.012821.</span>
+<ol class="bibliography"><li><span id="Jeub2015Think-locally-a">Jeub, Lucas G. S., Prakash Balachandran, Mason A. Porter, Peter J. Mucha, and Michael W. Mahoney, 2015, “Think Locally, Act Locally: Detection of Small, Medium-Sized, and Large Communities in Large Networks,” Phys. Rev. E <b>91</b>. doi:10.1103/PhysRevE.91.012821.</span>
 
 <div id="Jeub2015Think-locally-a-tabs">
   View
@@ -536,6 +502,40 @@ Since all these interactions have only one logical direction (e.g., an item cann
 <script>
   $(function() {
     $( "#Jeub2015Think-locally-a-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="De-Domenico2015Structural-redu">De Domenico, Manlio, Vincenzo Nicosia, Alexandre Arenas, and Vito Latora, 2015, “Structural Reducibility of Multilayer Networks,” Nat. Commun. <b>6</b>. doi:10.1038/ncomms7864.</span>
+
+<div id="De-Domenico2015Structural-redu-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#De-Domenico2015Structural-redu-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="De-Domenico2015Structural-redu-tabs-3">
+    <pre>@article{De-Domenico2015Structural-redu,
+  author = {De Domenico, Manlio and Nicosia, Vincenzo and Arenas, Alexandre and Latora, Vito},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1038/ncomms7864},
+  journal = {Nat. Commun.},
+  title = {Structural reducibility of multilayer networks},
+  volume = {6},
+  year = {2015},
+  bdsk-url-1 = {http://dx.doi.org/10.1038/ncomms7864}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#De-Domenico2015Structural-redu-tabs" ).tabs({
       collapsible: true,
       active: false
     });
@@ -577,6 +577,41 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
+<li><span id="De-Domenico2013Mathematical-fo">De Domenico, Manlio, Albert Solé-Ribalta, Emanuele Cozzo, Mikko Kivelä, Yamir Moreno, Mason A Porter, Sergio Gómez, and Alex Arenas, 2013, “Mathematical Formulation of Multilayer Networks,” Phys. Rev. X <b>3</b>, 041022.</span>
+
+<div id="De-Domenico2013Mathematical-fo-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#De-Domenico2013Mathematical-fo-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="De-Domenico2013Mathematical-fo-tabs-3">
+    <pre>@article{De-Domenico2013Mathematical-fo,
+  author = {De Domenico, Manlio and Sol{\'e}-Ribalta, Albert and Cozzo, Emanuele and Kivel{\"a}, Mikko and Moreno, Yamir and Porter, Mason A and G{\'o}mez, Sergio and Arenas, Alex},
+  date-added = {2015-07-09 13:45:45 +0000},
+  date-modified = {2015-07-09 13:45:59 +0000},
+  journal = {Phys. Rev. X},
+  number = {4},
+  pages = {041022},
+  title = {Mathematical formulation of multilayer networks},
+  volume = {3},
+  year = {2013}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#De-Domenico2013Mathematical-fo-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
 <li><span id="James2013An-Introduction">James, G., D. Witten, T. Hastie, and R. Tibshirani, 2013, <i>An Introduction To Statistical Learning: with Applications in R</i>. Springer Texts In Statistics (Springer New York).</span>
 
 <div id="James2013An-Introduction-tabs">
@@ -610,36 +645,33 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Peixoto2013Parsimonious-Mo">Peixoto, Tiago P., 2013, “Parsimonious Module Inference In Large Networks,” Phys. Rev. Lett. <b>110</b>. doi:10.1103/PhysRevLett.110.148701.</span>
+<li><span id="Horvat2013Modelling-and-i">Horvát, Emöke-Ágnes, 2013, “Modelling And Inferring Connections in Complex Networks,” PhD thesis, (Universität Heidelberg).</span>
 
-<div id="Peixoto2013Parsimonious-Mo-tabs">
+<div id="Horvat2013Modelling-and-i-tabs">
   View
   <ul>
     
     
-    <li><a href="#Peixoto2013Parsimonious-Mo-tabs-3">BibTeX entry</a>.</li>
+    <li><a href="#Horvat2013Modelling-and-i-tabs-3">BibTeX entry</a>.</li>
   </ul>
   
   
   
-  <div id="Peixoto2013Parsimonious-Mo-tabs-3">
-    <pre>@article{Peixoto2013Parsimonious-Mo,
-  author = {Peixoto, Tiago P.},
-  date-modified = {2015-06-26 16:01:46 +0000},
-  doi = {10.1103/PhysRevLett.110.148701},
-  journal = {Phys. Rev. Lett.},
-  number = {14},
-  title = {Parsimonious Module Inference in Large Networks},
-  volume = {110},
-  year = {2013},
-  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevLett.110.148701}
+  <div id="Horvat2013Modelling-and-i-tabs-3">
+    <pre>@phdthesis{Horvat2013Modelling-and-i,
+  author = {Horv{\'a}t, Em{\"o}ke-{\'A}gnes},
+  date-added = {2015-07-07 20:55:10 +0000},
+  date-modified = {2015-07-07 20:58:40 +0000},
+  school = {Universit{\"a}t Heidelberg},
+  title = {Modelling and inferring connections in complex networks},
+  year = {2013}
 }
 </pre>
   </div>
 </div>
 <script>
   $(function() {
-    $( "#Peixoto2013Parsimonious-Mo-tabs" ).tabs({
+    $( "#Horvat2013Modelling-and-i-tabs" ).tabs({
       collapsible: true,
       active: false
     });
@@ -686,33 +718,36 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Horvat2013Modelling-and-i">Horvát, Emöke-Ágnes, 2013, “Modelling And Inferring Connections in Complex Networks,” PhD thesis, (Universität Heidelberg).</span>
+<li><span id="Peixoto2013Parsimonious-Mo">Peixoto, Tiago P., 2013, “Parsimonious Module Inference In Large Networks,” Phys. Rev. Lett. <b>110</b>. doi:10.1103/PhysRevLett.110.148701.</span>
 
-<div id="Horvat2013Modelling-and-i-tabs">
+<div id="Peixoto2013Parsimonious-Mo-tabs">
   View
   <ul>
     
     
-    <li><a href="#Horvat2013Modelling-and-i-tabs-3">BibTeX entry</a>.</li>
+    <li><a href="#Peixoto2013Parsimonious-Mo-tabs-3">BibTeX entry</a>.</li>
   </ul>
   
   
   
-  <div id="Horvat2013Modelling-and-i-tabs-3">
-    <pre>@phdthesis{Horvat2013Modelling-and-i,
-  author = {Horvát, Emöke-Ágnes},
-  date-added = {2015-07-07 20:55:10 +0000},
-  date-modified = {2015-07-07 20:58:40 +0000},
-  school = {Universität Heidelberg},
-  title = {Modelling and inferring connections in complex networks},
-  year = {2013}
+  <div id="Peixoto2013Parsimonious-Mo-tabs-3">
+    <pre>@article{Peixoto2013Parsimonious-Mo,
+  author = {Peixoto, Tiago P.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1103/PhysRevLett.110.148701},
+  journal = {Phys. Rev. Lett.},
+  number = {14},
+  title = {Parsimonious Module Inference in Large Networks},
+  volume = {110},
+  year = {2013},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevLett.110.148701}
 }
 </pre>
   </div>
 </div>
 <script>
   $(function() {
-    $( "#Horvat2013Modelling-and-i-tabs" ).tabs({
+    $( "#Peixoto2013Parsimonious-Mo-tabs" ).tabs({
       collapsible: true,
       active: false
     });
@@ -732,7 +767,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
   
   <div id="Horvat2013A-fixed-degree--tabs-3">
     <pre>@article{Horvat2013A-fixed-degree-,
-  author = {Horvát, Emőke-Ágnes and Zweig, Katharina Anna},
+  author = {Horv{\'a}t, Em{\H o}ke-{\'A}gnes and Zweig, Katharina Anna},
   date-added = {2015-06-28 00:00:44 +0000},
   date-modified = {2015-06-28 00:12:21 +0000},
   doi = {10.1007/s13278-013-0133-9},
@@ -860,40 +895,6 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Sculley2010Web-scale-k-mea">Sculley, David, 2010, “Web-Scale k-Means Clustering,” in <i>Proceedings Of the 19th International Conference on World Wide Web</i> (ACM), pp. 1177–1178.</span>
-
-<div id="Sculley2010Web-scale-k-mea-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Sculley2010Web-scale-k-mea-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Sculley2010Web-scale-k-mea-tabs-3">
-    <pre>@inproceedings{Sculley2010Web-scale-k-mea,
-  author = {Sculley, David},
-  booktitle = {Proceedings of the 19th international conference on World wide web},
-  date-added = {2015-07-07 02:32:27 +0000},
-  date-modified = {2015-07-07 02:32:30 +0000},
-  organization = {ACM},
-  pages = {1177--1178},
-  title = {Web-scale k-means clustering},
-  year = {2010}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Sculley2010Web-scale-k-mea-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
 <li><span id="De-Choudhury2010How-does-the-da">De Choudhury, Munmun, Yu-Ru Lin, Hari Sundaram, K Selcuk Candan, Lexing Xie, and Aisling Kelliher, 2010, “How Does the Data Sampling Strategy Impact the Discovery of Information Diffusion in Social Media?,” ICWSM <b>10</b>, 34–41.</span>
 
 <div id="De-Choudhury2010How-does-the-da-tabs">
@@ -923,6 +924,40 @@ Since all these interactions have only one logical direction (e.g., an item cann
 <script>
   $(function() {
     $( "#De-Choudhury2010How-does-the-da-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Sculley2010Web-scale-k-mea">Sculley, David, 2010, “Web-Scale k-Means Clustering,” in <i>Proceedings Of the 19th International Conference on World Wide Web</i> (ACM), pp. 1177–1178.</span>
+
+<div id="Sculley2010Web-scale-k-mea-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Sculley2010Web-scale-k-mea-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Sculley2010Web-scale-k-mea-tabs-3">
+    <pre>@inproceedings{Sculley2010Web-scale-k-mea,
+  author = {Sculley, David},
+  booktitle = {Proceedings of the 19th international conference on World wide web},
+  date-added = {2015-07-07 02:32:27 +0000},
+  date-modified = {2015-07-07 02:32:30 +0000},
+  organization = {ACM},
+  pages = {1177--1178},
+  title = {Web-scale k-means clustering},
+  year = {2010}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Sculley2010Web-scale-k-mea-tabs" ).tabs({
       collapsible: true,
       active: false
     });
@@ -964,6 +999,39 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
+<li><span id="Reichardt2008Structure-in-Co">Reichardt, J., 2008, <i>Structure In Complex Networks</i>. Lecture Notes In Physics (Springer).</span>
+
+<div id="Reichardt2008Structure-in-Co-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Reichardt2008Structure-in-Co-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Reichardt2008Structure-in-Co-tabs-3">
+    <pre>@book{Reichardt2008Structure-in-Co,
+  author = {Reichardt, J.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  isbn = {978-3540878322},
+  publisher = {Springer},
+  series = {Lecture Notes in Physics},
+  title = {Structure in Complex Networks},
+  year = {2008}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Reichardt2008Structure-in-Co-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
 <li><span id="Blondel2008Fast-unfolding-">Blondel, Vincent D, Jean-Loup Guillaume, Renaud Lambiotte, and Etienne Lefebvre, 2008, “Fast Unfolding of Communities in Large Networks,” J. Stat. Mech. <b>2008</b>, P10008. doi:10.1088/1742-5468/2008/10/P10008.</span>
 
 <div id="Blondel2008Fast-unfolding--tabs">
@@ -1000,6 +1068,39 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
+<li><span id="Manning2008Introduction-to">Manning, Christopher D, Prabhakar Raghavan, Hinrich Schütze, and others, 2008, <i>Introduction To Information Retrieval</i>. Vol. 1 (Cambridge university press Cambridge).</span>
+
+<div id="Manning2008Introduction-to-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Manning2008Introduction-to-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Manning2008Introduction-to-tabs-3">
+    <pre>@book{Manning2008Introduction-to,
+  author = {Manning, Christopher D and Raghavan, Prabhakar and Sch{\"u}tze, Hinrich and others},
+  date-added = {2015-06-28 00:41:21 +0000},
+  date-modified = {2015-06-28 00:41:24 +0000},
+  publisher = {Cambridge university press Cambridge},
+  title = {Introduction to information retrieval},
+  volume = {1},
+  year = {2008}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Manning2008Introduction-to-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
 <li><span id="Reichardt2008Understanding-C">Reichardt, Jörg, and Stefan Bornholdt, 2008, “Understanding Complex Systems,” in <i>Managing Complexity: Insights, Concepts, Applications</i>, edited by D. Helbing (Springer Berlin Heidelberg), pp. 19–36. doi:10.1007/978-3-540-75261-5_2.</span>
 
 <div id="Reichardt2008Understanding-C-tabs">
@@ -1014,7 +1115,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
   
   <div id="Reichardt2008Understanding-C-tabs-3">
     <pre>@inbook{Reichardt2008Understanding-C,
-  author = {Reichardt, Jörg and Bornholdt, Stefan},
+  author = {Reichardt, J{\"o}rg and Bornholdt, Stefan},
   booktitle = {Managing Complexity: Insights, Concepts, Applications},
   date-added = {2015-06-28 00:04:23 +0000},
   date-modified = {2015-06-28 00:05:21 +0000},
@@ -1054,7 +1155,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
   
   <div id="Latapy2008Basic-notions-f-tabs-3">
     <pre>@article{Latapy2008Basic-notions-f,
-  author = {Latapy, Matthieu and Magnien, Clémence and Vecchio, Nathalie Del},
+  author = {Latapy, Matthieu and Magnien, Cl{\'e}mence and Vecchio, Nathalie Del},
   date-added = {2015-06-28 01:17:31 +0000},
   date-modified = {2015-06-28 01:18:09 +0000},
   doi = {10.1016/j.socnet.2007.04.006},
@@ -1077,72 +1178,6 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Manning2008Introduction-to">Manning, Christopher D, Prabhakar Raghavan, Hinrich Schütze, and others, 2008, <i>Introduction To Information Retrieval</i>. Vol. 1 (Cambridge university press Cambridge).</span>
-
-<div id="Manning2008Introduction-to-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Manning2008Introduction-to-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Manning2008Introduction-to-tabs-3">
-    <pre>@book{Manning2008Introduction-to,
-  author = {Manning, Christopher D and Raghavan, Prabhakar and Schütze, Hinrich and others},
-  date-added = {2015-06-28 00:41:21 +0000},
-  date-modified = {2015-06-28 00:41:24 +0000},
-  publisher = {Cambridge university press Cambridge},
-  title = {Introduction to information retrieval},
-  volume = {1},
-  year = {2008}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Manning2008Introduction-to-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Reichardt2008Structure-in-Co">Reichardt, J., 2008, <i>Structure In Complex Networks</i>. Lecture Notes In Physics (Springer).</span>
-
-<div id="Reichardt2008Structure-in-Co-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Reichardt2008Structure-in-Co-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Reichardt2008Structure-in-Co-tabs-3">
-    <pre>@book{Reichardt2008Structure-in-Co,
-  author = {Reichardt, J.},
-  date-modified = {2015-06-26 16:01:46 +0000},
-  isbn = {978-3540878322},
-  publisher = {Springer},
-  series = {Lecture Notes in Physics},
-  title = {Structure in Complex Networks},
-  year = {2008}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Reichardt2008Structure-in-Co-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
 <li><span id="Gionis2007Assessing-data-">Gionis, Aristides, Heikki Mannila, Taneli Mielikäinen, and Panayiotis Tsaparas, 2007, “Assessing Data Mining Results via Swap Randomization,” ACM Transactions on Knowledge Discovery from Data (TKDD) <b>1</b> (ACM), 14.</span>
 
 <div id="Gionis2007Assessing-data--tabs">
@@ -1157,7 +1192,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
   
   <div id="Gionis2007Assessing-data--tabs-3">
     <pre>@article{Gionis2007Assessing-data-,
-  author = {Gionis, Aristides and Mannila, Heikki and Mielikäinen, Taneli and Tsaparas, Panayiotis},
+  author = {Gionis, Aristides and Mannila, Heikki and Mielik{\"a}inen, Taneli and Tsaparas, Panayiotis},
   date-added = {2015-07-04 17:42:02 +0000},
   date-modified = {2015-07-04 17:42:04 +0000},
   journal = {ACM Transactions on Knowledge Discovery from Data (TKDD)},
@@ -1319,7 +1354,44 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Newman2001bScientific-col">Newman, M. E. J., 2001, “Scientific Collaboration Networks. II. Shortest Paths, Weighted Networks, and Centrality,” Phys. Rev. E <b>64</b>, 016132. doi:10.1103/PhysRevE.64.016132.</span>
+<li><span id="Newman2001aScientific-col">Newman, M. E. J., 2001, “Scientific Collaboration Networks. I. Network Construction and Fundamental Results,” Phys. Rev. E <b>64</b>, 016131. doi:10.1103/PhysRevE.64.016131.</span>
+
+<div id="Newman2001aScientific-col-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Newman2001aScientific-col-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Newman2001aScientific-col-tabs-3">
+    <pre>@article{Newman2001aScientific-col,
+  author = {Newman, M. E. J.},
+  date-added = {2015-06-27 23:59:12 +0000},
+  date-modified = {2015-06-28 00:08:49 +0000},
+  doi = {10.1103/PhysRevE.64.016131},
+  journal = {Phys. Rev. E},
+  number = {1},
+  pages = {016131},
+  title = {Scientific collaboration networks. I. Network construction and fundamental results},
+  volume = {64},
+  year = {2001},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevE.64.016131}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Newman2001aScientific-col-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Newman2001bScientific-col">———, 2001, “Scientific Collaboration Networks. II. Shortest Paths, Weighted Networks, and Centrality,” Phys. Rev. E <b>64</b>, 016132. doi:10.1103/PhysRevE.64.016132.</span>
 
 <div id="Newman2001bScientific-col-tabs">
   View
@@ -1387,43 +1459,6 @@ Since all these interactions have only one logical direction (e.g., an item cann
 <script>
   $(function() {
     $( "#Dhillon2001Concept-decompo-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Newman2001aScientific-col">Newman, M. E. J., 2001, “Scientific Collaboration Networks. I. Network Construction and Fundamental Results,” Phys. Rev. E <b>64</b>, 016131. doi:10.1103/PhysRevE.64.016131.</span>
-
-<div id="Newman2001aScientific-col-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Newman2001aScientific-col-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Newman2001aScientific-col-tabs-3">
-    <pre>@article{Newman2001aScientific-col,
-  author = {Newman, M. E. J.},
-  date-added = {2015-06-27 23:59:12 +0000},
-  date-modified = {2015-06-28 00:08:49 +0000},
-  doi = {10.1103/PhysRevE.64.016131},
-  journal = {Phys. Rev. E},
-  number = {1},
-  pages = {016131},
-  title = {Scientific collaboration networks. I. Network construction and fundamental results},
-  volume = {64},
-  year = {2001},
-  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevE.64.016131}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Newman2001aScientific-col-tabs" ).tabs({
       collapsible: true,
       active: false
     });
