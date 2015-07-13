@@ -13,17 +13,17 @@ histogramr reads and writes [HDF5](http://www.hdfgroup.org/HDF5/) files. An HDF5
 
 Today I release histogramr under the GPLv3 [on GitHub](https://github.com/tscholak/histogramr). You can download and use it for *free*. The easiest way to do so is by using [Git](http://git-scm.com). In Linux or Mac OS X, fire up a terminal and run:
 
-```
-$ git clone git@github.com:tscholak/histogramr.git
+```bash
+＄ git clone git@github.com:tscholak/histogramr.git
 ```
 
 This downloads the most recent version of histogramr into the directory `histogramr`. After that, `cd` into that folder and run:
 
-```
-$ ./autogen.sh
-$ ./configure
-$ make
-$ ln -sf "`pwd`/src/histogramr" ~/bin
+```bash
+＄ ./autogen.sh
+＄ ./configure
+＄ make
+＄ ln -sf "`pwd`/src/histogramr" ~/bin
 ```
 
 You can now [use histogramr](#usage) for your own data. Or, since you've got the source code, you can change histogramr or use pieces of it in new free software.
@@ -32,7 +32,7 @@ You can now [use histogramr](#usage) for your own data. Or, since you've got the
 
 histogramr reads in the input files one-by-one and commits the data to the histogram data structure. The output file is written multiple times, whenever a predetermined number of input files has been processed. Below the output of `histogramr --help`:
 
-```
+```bash
 histogramr: create multivariate histograms of continuous data
 
 Usage: histogramr -d <dsname1> -m <mname1[:mname2...]>

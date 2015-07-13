@@ -41,6 +41,9 @@ gems:
   - jekyll/scholar
   - jekyll-pseudo
 
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "strikethrough", "superscript"]
+
 scholar:
   style: assets/bibliography/tscholak.csl
   locale: en

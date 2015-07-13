@@ -11,8 +11,10 @@ For the moment I settled on [Fira Sans](http://typographica.org/typeface-reviews
 
 Incidentally, all three fonts can be used in a LaTeX document:
 
-    \usepackage[T1]{fontenc}
-    \usepackage{charter}
-    \usepackage[charter]{mathdesign}
-    \usepackage{sourcecodepro}
-    \usepackage[lf]{FiraSans}
+```latex
+\usepackage[T1]{fontenc}
+\usepackage{charter}
+\usepackage[charter]{mathdesign}
+\usepackage{sourcecodepro}
+\usepackage[lf]{FiraSans}
+```
