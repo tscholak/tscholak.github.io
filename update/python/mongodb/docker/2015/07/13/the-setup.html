@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>Meticulous Disorder by Torsten Scholak</title>
+    <meta name="description" content="a hodgepodge of theoretical quantum physics, computing, and typophilia, buried under a thick layer of forgettable kerfuffle" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="/assets/css/jquery-ui-1.11.3.min.css" /> -->
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <script type="text/javascript" src="/vendor/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.lettering.js"></script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          skipTags: ["script", "noscript", "style", "textarea"]
+        },
+        "HTML-CSS": {
+          mtextFontInherit: true
+        },
+        "SVG": {
+          mtextFontInherit: true
+        },
+      });
+    </script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-60317908-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+  </head>
+
+  <body class="post-template">
+
+    <header class="main-header post-head " style="background-image: url(/assets/images/container_terminal.jpg) ">
+  <nav class="main-nav  overlay  clearfix">
+    <a class="back-button icon-arrow-left" href="/">Home</a>
+    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+  </nav>
+</header>
+
+<main class="content" role="main">
+
+  <article class="post">
+
+    <header class="post-header">
+      <h1 class="post-title">The Setup</h1>
+      <section class="post-meta">                
+        <time class="post-date" datetime="2015-07-13">13 Jul 2015</time>
+         
+          on update, python, mongodb, and docker 
+        
+      </section>
+    </header>
+
+    <!-- <header class="post-header">
+      <a id="blog-logo" href="http://tscholak.github.io">
+        
+          <span class="blog-title">Meticulous Disorder</span>
+         
+      </a>
+    </header> -->
+    
+    <!-- <span class="post-meta">
+      <time datetime="2015-07-13">13 Jul 2015</time>
+       
+        on update, python, mongodb, and docker 
+      
+    </span> -->
+
+    <!-- <h1 class="post-title">The Setup</h1> -->
+
+    <section class="post-content">
+      <p>In the style of an interview on <a href="https://usesthis.com">usesthis.com</a>, I want to give you some info about the hard- and software I&#39;m currently using for my projects. I also tell you how to deploy some of that software. <span class="more"></span></p>
+
+<h2>What hardware do I use?</h2>
+
+<p>I have two machines, a desktop and a server, connected via Gigabit Ethernet. Each machine is dedicated to a very particular set of tasks, tasks that I have selected based on the systems&#39; configuration. The server is optimized for stability and runs database services 24/7, while the desktop is used for data analysis and manipulation. The server sports a &quot;Haswell&quot; Xeon E3 v3 processor and has 32GB of ECC RAM. OS, apps, and fresh data are kept on SSDs. In addition, I maintain a large <a href="https://en.wikipedia.org/wiki/ZFS#Software_RAID_using_ZFS">RAID-Z2 array</a> for archival purposes. The desktop is a Hackintosh and built around an &quot;Ivy Bridge&quot; quad-Core i7. It also has 32GB of RAM, non-ECC though.</p>
+
+<p>
+  <figure>
+    <img src="/assets/images/desktop.jpg" title="Look inside the desktop">
+  </figure>
+  <figcaption>The desktop rig from the inside.</figcaption>
+</p>
+
+<h2>And what software?</h2>
+
+<p>Most of the software I use is open-source. The server runs <a href="https://getfedora.org/en/server/">Fedora 22</a>, the desktop Mac OS X. One thing I particularly like about Mac OS is the built-in <a href="https://www.apple.com/ca/osx/advanced-technologies/">transparent memory compression technology</a>. It comes in quite handy at times, even with 32GB of RAM. Fedora, on the other hand, has a convenient web UI called <a href="http://cockpit-project.org">Cockpit</a> that gives me a lot of control over <a href="http://www.freedesktop.org/software/systemd/man/systemd.service.html">system services</a> and Docker containers.</p>
+
+<p>Oh yeah, did I mention that I use <a href="http://docker.com">Docker</a>? Docker is a virtualization solution that comes with thousands of pre-packaged applications for easy deployment. It&#39;s a neat and fun way to check out new (and potentially unstable) software plus their dependencies without messing up your base OS installation.</p>
+
+<p>
+  <figure>
+    <img src="/assets/images/cockpit.png" title="Cockpit containers view">
+  </figure>
+  <figcaption>Cockpit shows me which Docker containers are running and what ressources they are consuming.</figcaption>
+</p>
+
+<h3>MongoDB</h3>
+
+<p>For my current project I rely on <a href="https://www.mongodb.com/what-is-mongodb">MongoDB</a> as my data warehouse. MongoDB is a NoSQL database, and, unlike relational databases, it is built around the philosophy of dynamic schemas that allows me to make up and change the way I store data along as I go. It couldn&#39;t be any other way, though, because MongoDB has a serious restriction in that it <a href="http://docs.mongodb.org/manual/faq/fundamentals/#what-kind-of-database-is-mongodb">doesn&#39;t support joins</a>.</p>
+
+<p>Let me tell you quickly how I deployed a MongoDB 3.0 instance on my server. I followed the <a href="http://s3.amazonaws.com/info-mongodb-com/MongoDB-Performance-Best-Practices.pdf">Performance Best Practices for MongoDB</a> white paper where I could. My setup is simple and doesn&#39;t make use of <a href="http://docs.mongodb.org/manual/replication/">replication</a> or <a href="http://docs.mongodb.org/manual/sharding/">sharding</a>.</p>
+
+<h6>Step 1: Prepare the server.</h6>
+
+<p>Luckily, most of my working datasets (and their indexes) fit in RAM. However, since I wanted to cut down the latency associated with some of my more write-heavy operations, I decided to put everything on SSDs. So the first step is to figure out the partitioning and the file system. I use XFS, mounted in <code>/srv/docker/mongodb</code>.</p>
+
+<p>MongoDB works best with <a href="https://www.kernel.org/doc/Documentation/vm/transhuge.txt">transparent hugepages</a> turned off. The default for Fedora is to have them enabled. To disable them permanently, I created two files: the script <code>/usr/lib/systemd/scripts/transparent-hugepages.sh</code> and the service file <code>/usr/lib/systemd/system/transparent-hugepages.service</code>. Their contents, respectively, are:</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="c">#!/bin/sh</span>
+
+<span class="k">if</span> /usr/bin/test -f /sys/kernel/mm/transparent_hugepage/khugepaged/defrag<span class="p">;</span> <span class="k">then</span>
+  /usr/bin/echo <span class="m">0</span> &gt; /sys/kernel/mm/transparent_hugepage/khugepaged/defrag
+<span class="k">fi</span>
+
+<span class="k">if</span> /usr/bin/test -f /sys/kernel/mm/transparent_hugepage/defrag<span class="p">;</span> <span class="k">then</span>
+  /usr/bin/echo never &gt; /sys/kernel/mm/transparent_hugepage/defrag
+<span class="k">fi</span>
+
+<span class="k">if</span> /usr/bin/test -f /sys/kernel/mm/transparent_hugepage/enabled<span class="p">;</span> <span class="k">then</span>
+  /usr/bin/echo never &gt; /sys/kernel/mm/transparent_hugepage/enabled
+<span class="k">fi</span>
+</code></pre></div>
+<p>and</p>
+<div class="highlight"><pre><code class="language-ini" data-lang="ini"><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">Turn off transparent hugepages</span>
+
+<span class="k">[Service]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/lib/systemd/scripts/transparent-hugepages.sh</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+</code></pre></div>
+<p>As root, I then typed</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ chown <span class="m">755</span> /usr/lib/systemd/scripts/transparent-hugepages.sh
+<span class="o">[</span>root@server ~<span class="o">]</span>＄ systemctl <span class="nb">enable </span>transparent-hugepages
+<span class="o">[</span>root@server ~<span class="o">]</span>＄ systemctl start transparent-hugepages
+</code></pre></div>
+<p>to start the service.</p>
+
+<p>Finally, I created a firewall rule for mongodb. On Fedora, firewall rules are stored as XML files in <code>/etc/firewalld/services</code>. There, I created a file called <code>mongodb.xml</code> reading:</p>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="nt">&lt;service&gt;</span>
+  <span class="nt">&lt;short&gt;</span>MongoDB 1<span class="nt">&lt;/short&gt;</span>
+  <span class="nt">&lt;description&gt;</span>MongoDB for Kaggle&#39;s Acquire Valued Shoppers Challenge<span class="nt">&lt;/description&gt;</span>
+  <span class="nt">&lt;port</span> <span class="na">protocol=</span><span class="s">&quot;tcp&quot;</span> <span class="na">port=</span><span class="s">&quot;27017&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/service&gt;</span>
+</code></pre></div>
+<p>I then added the rule to the active zone and reloaded the firewall:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ firewall-cmd --permanent --zone<span class="o">=</span>FedoraServer --add-service<span class="o">=</span>mongodb
+<span class="o">[</span>root@server ~<span class="o">]</span>＄ firewall-cmd --reload
+</code></pre></div>
+<p>That is all in terms of preparations.</p>
+
+<h6>Step 2: Get the Docker image.</h6>
+
+<p>There&#39;s a popular and well-maintained Docker image with MongoDB 3.0. I got it with:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ docker pull docker.io/mongo:latest
+</code></pre></div>
+<p>You can find more information about the <code>mongo</code> repository <a href="https://registry.hub.docker.com/_/mongo/">here</a>. It is based on the <a href="https://registry.hub.docker.com/_/debian/">Debian Wheezy image</a>.</p>
+
+<h6>Step 3: Create and start a Docker container over the MongoDB image.</h6>
+
+<p>Then, I ran:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ docker run -d <span class="se">\</span>
+  --name mongodb_acquire_valued_shoppers_challenge <span class="se">\</span>
+  --net<span class="o">=</span>host <span class="se">\</span>
+  -p 27017:27017 <span class="se">\</span>
+  -v /srv/docker/mongodb/acquire_valued_shoppers_challenge:/data/db
+  --privileged<span class="o">=</span><span class="nb">false</span> <span class="se">\</span>
+  mongo --storageEngine<span class="o">=</span>wiredTiger
+</code></pre></div>
+<p>A couple of things happened here:</p>
+
+<ol>
+<li><p>I sent the container to the background.</p></li>
+<li><p>I gave the container a name that is not a <a href="https://github.com/docker/docker/blob/master/pkg/namesgenerator/names-generator.go">nerdy joke</a>.</p></li>
+<li><p>I gave the container full access to the host&#39;s network interface, barring the right to reconfigure it.</p></li>
+<li><p>I mapped the port 27017 on the docker server to the port 27017 in the container.</p></li>
+<li><p>I mapped a data directory on the Docker host, <code>/srv/docker/mongodb/acquire_valued_shoppers_challenge</code>, to a directory inside the container. Beforehand, that folder&#39;s SELinux context was changed to <code>unconfined_u:object_r:svirt_sandbox_file_t:s0</code>.</p></li>
+<li><p>Otherwise, however, I isolated the container from others and from the host.</p></li>
+<li><p>I selected the <code>mongo</code> image.</p></li>
+<li><p>I activated MongoDB&#39;s all-new <a href="http://www.wiredtiger.com">WiredTiger</a> storage engine that -- thanks to a combination of deep algorithm improvements and native data compression -- is <a href="http://smalldatum.blogspot.ca/2014/12/read-modify-write-optimized.html">more I/O efficient</a> than the legacy MMAPv1 engine.</p></li>
+</ol>
+
+<p>However, I did not configure any security measures within the container -- no <a href="http://docs.mongodb.org/manual/tutorial/manage-users-and-roles/">database users</a>, no <a href="http://docs.mongodb.org/manual/tutorial/generate-key-file/">SSL certificates</a>, nothing. Of course, you may find this outrageously unsafe, but it&#39;s deployed on a private network, after all.</p>
+
+<h3>Python, Pandas, and PyMongo</h3>
+
+<p>Now for the desktop. At its core, my data science software stack consists of <a href="https://www.python.org">Python</a>, <a href="http://ipython.org/notebook.html">IPython Notebook</a>, <a href="http://www.numpy.org">Numpy</a>, <a href="http://matplotlib.org">Matplotlib</a>, <a href="http://www.scipy.org">SciPy</a>, <a href="">Pandas</a>, and the <a href="https://github.com/mongodb/mongo-python-driver">PyMongo</a> MongoDB driver. With the <a href="https://www.macports.org">MacPorts</a> package management system, I got these up and running with</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo xcode-select --install
+<span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo port selfupdate
+<span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo port install python27 py27-numpy py27-matplotlib py27-scipy py27-pandas py27-pymongo py27-ipython +notebook
+<span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo port <span class="k">select</span> --set python python27
+<span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo port <span class="k">select</span> --set ipython ipython27
+<span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ <span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span>/opt/local/bin:/opt/local/sbin:<span class="nv">$PATH</span>
+<span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ ipython notebook
+</code></pre></div>
+<p>The last command starts an interactive Python shell and opens the <a href="https://jupyter.org">Jupyter web UI</a> in the default web browser, e.g. in Safari.</p>
+
+<h3>Hydrogen &amp; Atom</h3>
+
+<p>Jupyter notebooks are great for interactive exploratory analyses. They are convenient, flexible, and give you instant gratification. However, I find they are not the best choice for hacking together complex algorithms and batch jobs. That&#39;s why I started using <a href="https://atom.io/packages/hydrogen">Hydrogen</a>, a plugin for GitHub&#39;s <a href="https://atom.io">Atom editor</a>. The user experience is similar to what <a href="http://lighttable.com">Light Table</a> and <a href="http://junolab.org">Juno</a> offer for the <a href="http://julialang.org">Julia</a> language. Hydrogen connects to the IPython Jupyter kernel to allow for executing and displaying output of any Python code directly within Atom. Since Jupyter is language agnostic, Hydrogen also works with other languages, e.g. R. The only inconvenience it has is that for it to work you have to start Atom from the command line, e.g. via</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ atom awesome_algorithm.py
+</code></pre></div>
+<p>It&#39;s quite annoying when you find out right after clicking on the Atom icon that you forgot about this... Again...</p>
+
+<p>
+  <figure>
+    <img src="/assets/images/hydrogen.png" title="Hydrogen">
+  </figure>
+  <figcaption>Hydrogen runs your code directly in Atom using any Jupyter kernels you have installed. Output is displayed in a small overlay window, as can be seen here for a Pandas <code>DataFrame</code> object formatted as a table.</figcaption>
+</p>
+
+<h3>MongoHub</h3>
+
+<p><a href="https://github.com/jeromelebel/MongoHub-Mac">MongoHub</a> is a graphical front-end for MongoDB that runs natively on OS-X. It&#39;s stable, capable, but not a revelation in user experience.</p>
+
+<p>
+  <figure>
+    <img src="/assets/images/mongohub.jpg" title="MongoHub displays query results">
+  </figure>
+  <figcaption>MongoHub in action. Here I browse through some query results.</figcaption>
+</p>
+
+<h3>Monary</h3>
+
+<p><a href="https://bitbucket.org/djcbeach/monary/wiki/Home">Monary</a> is an alternative MongoDB driver for Python that is slowly but steadily advancing. Whereas PyMongo is implemented in pure Python, Monary is a Python wrapper for the super-fast <a href="http://hergert.me/blog/2014/04/07/mongo-c-driver-0-94-0.html">MongoDB C driver</a>. The biggest advantage of Monary is <a href="https://www.youtube.com/watch?v=E70AO8r5sMs">speed</a>, its biggest disadvantage the yet incomplete feature set. For instance, it <a href="https://monary.readthedocs.org/faq.html#can-monary-do-removes-updates-and-or-upserts">doesn&#39;t do any updates</a>, and <a href="https://bitbucket.org/djcbeach/monary/issues/14/passing-options-to-aggregate">aggregation lacks support for certain keyword arguments</a>. It&#39;s also not as well tested as PyMongo. That being said, I use Monary quite often and haven&#39;t observed any serious problems so far.</p>
+
+<p>You can get Monary like this:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ sudo port install mercurial libbson mongo-c-driver
+＄ hg clone https://bitbucket.org/djcbeach/monary
+＄ <span class="nb">cd </span>monary
+＄ python setup.py install
+</code></pre></div>
+<h1>What Would Be My Dream Setup?</h1>
+
+<p>I think it qualifies as a self-evident truth that you can never have enough RAM. This may change one day with the arrival of HP&#39;s <a href="http://www.engadget.com/2015/06/05/hp-the-machine-no-memristors/">&quot;The Machine&quot;</a>. Until then, however, the more RAM the better. LGA 115x motherboards max out at $32 \mathrm{GB}$. That&#39;s why both, my desktop and my server, will never run with more than that. If I had had the budget for it, I would have gone for an LGA 2011 board instead. They usually come with eight DIMM slots that each accept modules with as much as $64 \mathrm{GB}$, for a total of $512 \mathrm{GB}$ of RAM.</p>
+
+    </section>
+
+    
+
+    <footer class="post-footer">
+      <!-- If we want to display author's name and bio -->
+      
+        <figure class="author-image">
+          <a class="img" href="/" style="background-image: url(/assets/images/profile.png)">
+          <span class="hidden">that's me</span></a>
+        </figure>
+        <section class="author">
+          <!-- Author Name -->
+          <h4> Torsten Scholak </h4>
+          <!-- Author Bio -->
+          <p>
+            Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
+          </p>
+        </section>                
+      
+
+      <!-- Share links section -->
+      <!-- <section class="share">
+  <h4>Share this post</h4>
+  <a class="icon-twitter" href="http://twitter.com/share?text=The Setup&amp;url=http://tscholak.github.io/update/python/mongodb/docker/2015/07/13/the-setup.html"
+    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+    <span class="hidden">Twitter</span>
+  </a>
+  <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://tscholak.github.io/update/python/mongodb/docker/2015/07/13/the-setup.html"
+    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+    <span class="hidden">Facebook</span>
+  </a>
+  <a class="icon-google-plus" href="https://plus.google.com/share?url=http://tscholak.github.io/update/python/mongodb/docker/2015/07/13/the-setup.html"
+     onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+    <span class="hidden">Google+</span>
+  </a>
+</section> -->
+
+      <!-- Follow me section -->
+      <section class="follow">
+  <h4>Follow me</h4>
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Facebook');" class="facebook_follow" title="Follow on Facebook" href="http://www.facebook.com/tscholak" target="_blank"><i class="fa fa-lg fa-facebook-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Twitter');" class="twitter_follow" title="Follow on Twitter" href="https://twitter.com/tscholak" target="_blank"><i class="fa fa-lg fa-twitter-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on LinkedIn');" class="linkedin_follow" title="Follow on LinkedIn" href="http://www.linkedin.com/in/tscholak" target="_blank"><i class="fa fa-lg fa-linkedin-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Google+');" class="googleplus_follow" title="Follow on LinkedIn" href="https://plus.google.com/u/0/+TorstenScholak" target="_blank"><i class="fa fa-lg fa-google-plus-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on StackOverflow');" class="stackoverflow_follow" title="Follow on StackOverflow" href="https://stackoverflow.com/users/700435" target="_blank"><i class="fa fa-lg fa-stack-exchange"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
+  
+</section>
+      
+      <!-- Disqus comments -->
+      
+      
+    </footer>
+
+  </article>
+
+</main>
+
+
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/">Meticulous Disorder</a> &copy; 
+               &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer> 
+  </body>
+</html>

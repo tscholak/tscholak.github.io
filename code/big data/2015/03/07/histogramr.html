@@ -103,40 +103,40 @@
 <h1>histogramr is now on GitHub!</h1>
 
 <p>Today I release histogramr under the GPLv3 <a href="https://github.com/tscholak/histogramr">on GitHub</a>. You can download and use it for <em>free</em>. The easiest way to do so is by using <a href="http://git-scm.com">Git</a>. In Linux or Mac OS X, fire up a terminal and run:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$ git clone git@github.com:tscholak/histogramr.git
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ git clone git@github.com:tscholak/histogramr.git
 </code></pre></div>
 <p>This downloads the most recent version of histogramr into the directory <code>histogramr</code>. After that, <code>cd</code> into that folder and run:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$ ./autogen.sh
-$ ./configure
-$ make
-$ ln -sf &quot;`pwd`/src/histogramr&quot; ~/bin
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ ./autogen.sh
+＄ ./configure
+＄ make
+＄ ln -sf <span class="s2">&quot;`pwd`/src/histogramr&quot;</span> ~/bin
 </code></pre></div>
 <p>You can now <a href="#usage">use histogramr</a> for your own data. Or, since you&#39;ve got the source code, you can change histogramr or use pieces of it in new free software.</p>
 
 <h1><a name="usage"></a>Usage</h1>
 
 <p>histogramr reads in the input files one-by-one and commits the data to the histogram data structure. The output file is written multiple times, whenever a predetermined number of input files has been processed. Below the output of <code>histogramr --help</code>:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">histogramr: create multivariate histograms of continuous data
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">histogramr: create multivariate histograms of continuous data
 
-Usage: histogramr -d &lt;dsname1&gt; -m &lt;mname1[:mname2...]&gt;
-  -b &lt;size1[:size2...]&gt; -l &lt;range1[:range2...]&gt;
-  [-L &lt;boolean1[:boolean2...]&gt;] [-d &lt;dsname2&gt; ...] [-e &lt;number&gt;]
-  -o &lt;outfile&gt; &lt;infile1&gt; [&lt;infile2&gt; ...]
+Usage: histogramr -d &lt;dsname1&gt; -m &lt;mname1<span class="o">[</span>:mname2...<span class="o">]</span>&gt;
+  -b &lt;size1<span class="o">[</span>:size2...<span class="o">]</span>&gt; -l &lt;range1<span class="o">[</span>:range2...<span class="o">]</span>&gt;
+  <span class="o">[</span>-L &lt;boolean1<span class="o">[</span>:boolean2...<span class="o">]</span>&gt;<span class="o">]</span> <span class="o">[</span>-d &lt;dsname2&gt; ...<span class="o">]</span> <span class="o">[</span>-e &lt;number&gt;<span class="o">]</span>
+  -o &lt;outfile&gt; &lt;infile1&gt; <span class="o">[</span>&lt;infile2&gt; ...<span class="o">]</span>
 
 Mandatory options:
-  -d, --dataset &lt;dsname&gt;     data set(s) must be specified first
-  -m, --member &lt;mname&gt;       data set member(s)
-  -b, --binning &lt;size&gt;       histogram binning(s)
+  -d, --dataset &lt;dsname&gt;     data <span class="nb">set</span><span class="o">(</span>s<span class="o">)</span> must be specified first
+  -m, --member &lt;mname&gt;       data <span class="nb">set </span>member<span class="o">(</span>s<span class="o">)</span>
+  -b, --binning &lt;size&gt;       histogram binning<span class="o">(</span>s<span class="o">)</span>
   -l, --limit &lt;range&gt;        histogram limits
   -o, --output &lt;outfile&gt;     name the output file
 
 Optional options:
   -e, --save-every &lt;number&gt;  save every &lt;number&gt; of files
-                             (default: 1)
-  -L, --l10 &lt;boolean&gt;        logarithmic transform (default: false)
+                             <span class="o">(</span>default: 1<span class="o">)</span>
+  -L, --l10 &lt;boolean&gt;        logarithmic transform <span class="o">(</span>default: <span class="nb">false</span><span class="o">)</span>
 
 Other options:
-  -h, --help                 print this help message and quit
+  -h, --help                 print this <span class="nb">help </span>message and quit
   -v, --version              print version information and quit
 
 Report bugs to: torsten.scholak+histogramr@googlemail.com

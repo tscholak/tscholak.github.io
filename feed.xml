@@ -5,9 +5,486 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 09 Jul 2015 09:52:07 -0400</pubDate>
-    <lastBuildDate>Thu, 09 Jul 2015 09:52:07 -0400</lastBuildDate>
+    <pubDate>Mon, 13 Jul 2015 13:14:19 -0400</pubDate>
+    <lastBuildDate>Mon, 13 Jul 2015 13:14:19 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
+    
+      <item>
+        <title>Large-Data Work-Flow with MongoDB</title>
+        <description>&lt;p&gt;On Containers, Databases, And ...
+programming languages
+developer tools
+&lt;span class=&quot;more&quot;&gt;&lt;/span&gt;
+This is the second in my series of blog posts about my current project. As I said in my previous post, this is ongoing work and I .... &lt;/p&gt;
+
+&lt;p&gt;For &lt;a href=&quot;&quot;&gt;my current project&lt;/a&gt;, I need to be able to routinely handle tens of gigabytes of data. After a failed attempt to create a convenient work-flow with &lt;a href=&quot;https://www.hdfgroup.org/HDF5/&quot;&gt;HDF5&lt;/a&gt;, I decided to store everything in a MongoDB database on my server and to have my desktop retrieving only the data that I need. I&amp;#39;m happy to report I got it working like a charm.&lt;/p&gt;
+
+&lt;p&gt;Let me demonstrate with an example. Currently, I am working with the &lt;a href=&quot;https://www.kaggle.com/c/acquire-valued-shoppers-challenge&quot;&gt;Acquire Valued Shoppers Challenge&lt;/a&gt; data from Kaggle. This data comes in five gzipped CSV files, the interesting one being &lt;code&gt;transactions.csv&lt;/code&gt;. This file contains at least one year of transaction history for $311,452$ different consumers. It is over $20 \mathrm{GB}$ in size. Each transaction record consists of eleven fields listed in the following table:&lt;/p&gt;
+
+&lt;table&gt;&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&quot;text-align: right&quot;&gt;field&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;description&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;id&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;unique id representing a consumer&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;chain&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;integer representing a store chain&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;dept&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;aggregate groupings of item categories&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;category&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the item&amp;#39;s category&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;company&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the company selling the item&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;brand&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the brand the item belongs to&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;date&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;purchase date&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;productsize&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;amount of the item purchase&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;productmeasure&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;unit the amount is measured in&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;purchasequantity&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;number of units purchased&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;purchaseamount&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;dollar amount of the purchase&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;My first task was to load that file and store its contents in MongoDB. I wrote a little Python script that does exactly that. I have it listed below.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note that this and all following code examples have been edited for length and clarity. There is no error handling, no logging, and no user feedback.&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pandas&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pd&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;json&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pymongo&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MongoClient&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_host&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;server.local&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_db_name&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;mydb&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_port&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27017&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;chunk_size&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;drop_collections_on_load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_source_csv_gz&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions.csv.gz&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;to_mongo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idxs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;drop_collections_on_load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;drop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chunk&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;insert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;loads&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;chunk&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;to_json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;orient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;records&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idxs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ensure_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# establish connection:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MongoClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_host&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                               &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_port&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_db_name&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# load data:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;transactions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;read_csv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_source_csv_gz&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;parse_dates&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;date&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;compression&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;gzip&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;chunksize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;chunk_size&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# insert data:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;to_mongo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]],&lt;/span&gt;
+             &lt;span class=&quot;n&quot;&gt;transactions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;brand&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;company&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;date&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# close connection:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With this script I copy all data in &lt;code&gt;transactions.csv&lt;/code&gt; to a MongoDB collection called &lt;code&gt;transactions&lt;/code&gt; using the PyMongo driver. Any preexisting collection with that name is wiped.&lt;/p&gt;
+
+&lt;p&gt;First, I use Pandas to parse the CSV file and to load its contents chunk by chunk into an ordered data structure, a Pandas &lt;code&gt;DataFrame&lt;/code&gt;. In this example, Pandas divides the file into read chunks of a $100000$ rows each. Pandas then returns an iterator on the chunks and only reads the data when requested. That reduces the memory consumption significantly as compared to reading the file as a whole. A &lt;code&gt;DataFrame&lt;/code&gt; with all of the file&amp;#39;s contents would barely fit in RAM.&lt;/p&gt;
+
+&lt;p&gt;Second, I pass the Pandas iterator to the &lt;code&gt;to_mongo&lt;/code&gt; function. There, it is iterated over. PyMongo doesn&amp;#39;t know what to do with a &lt;code&gt;DataFrame&lt;/code&gt; object. It only understands Python&amp;#39;s &lt;code&gt;dict&lt;/code&gt; objects. Therefore, I use Pandas&amp;#39; &lt;code&gt;to_json&lt;/code&gt; method to convert the chunk to a JSON string and then &lt;code&gt;json.loads&lt;/code&gt; to de-serialize that string to a &lt;code&gt;dict&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;Finally, after all data has been copied, I create several single field indexes in the &lt;code&gt;transactions&lt;/code&gt; collection. &lt;/p&gt;
+
+&lt;p&gt;it&amp;#39;s too much data.
+Every bit of additional information means more waiting.
+more data than ....
+doesn&amp;#39;t fit in RAM.
+that is a problem although I use SSDs.
+Even though SSDs alleviate the I/O bottleneck of spinning hard drives, they remain vastly inferior to RAM.&lt;/p&gt;
+
+&lt;p&gt;so in order to speed everything up,
+I&amp;#39;m aggregating data.
+pivoting data.&lt;/p&gt;
+
+&lt;p&gt;I&amp;#39;m saving here also certain item tags:
+the item&amp;#39;s category, brand, and selling company&lt;/p&gt;
+
+&lt;p&gt;this is still more data than I will potentially need.&lt;/p&gt;
+
+&lt;p&gt;The difference between a bipartite graph and a database collection is mostly one of semantics rather than of data.&lt;/p&gt;
+
+&lt;p&gt;storage model for the bipartite graph.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pandas&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pd&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pymongo&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MongoClient&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_host&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;server.local&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_db_name&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;mydb&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_port&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27017&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;drop_collections_on_load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;graph_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;graph&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# establish connection:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MongoClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_host&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                               &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_port&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_db_name&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# get collections:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;transactions_collection&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;graph_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;drop_collections_on_load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;drop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# query items:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pipeline&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$group&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$category&amp;quot;&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}},&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$project&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.category&amp;quot;&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transactions_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;aggregate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pipeline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                               &lt;span class=&quot;n&quot;&gt;allowDiskUse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;item&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reset_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;level&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;set_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;brand&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                             &lt;span class=&quot;s&quot;&gt;&amp;#39;company&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                             &lt;span class=&quot;s&quot;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# for each consumer and item, aggregate purchases and returns:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pipeline&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$group&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;consumer&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$category&amp;quot;&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;dept&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$first&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$dept&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;transactioncount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$sum&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;purchasecount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$sum&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;$cond&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$and&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$gt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$gt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchaseamount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                        &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                        &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                    &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;}},&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;returncount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$sum&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;$cond&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$or&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$lt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$lt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchaseamount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$cond&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$lt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$subtract&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                            &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                        &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                    &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;}}&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}},&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$project&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;consumer&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.consumer&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;dept&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;transactioncount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;purchasecount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;returncount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transactions_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;aggregate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pipeline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                               &lt;span class=&quot;n&quot;&gt;allowDiskUse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# process records:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;item&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;loc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;brand&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+             &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;company&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+             &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]),&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;&amp;#39;item&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;c&quot;&gt;# insert data:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;insert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# create indexes:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;consumer&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;item&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;brand&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;company&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# close connection&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+        <pubDate>Mon, 13 Jul 2015 09:00:00 -0400</pubDate>
+        <link>http://tscholak.github.io//big%20data/python/mongodb/2015/07/13/.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//big%20data/python/mongodb/2015/07/13/.html</guid>
+        
+        
+        <category>big data</category>
+        
+        <category>python</category>
+        
+        <category>mongodb</category>
+        
+      </item>
+    
+      <item>
+        <title>The Setup</title>
+        <description>&lt;p&gt;In the style of an interview on &lt;a href=&quot;https://usesthis.com&quot;&gt;usesthis.com&lt;/a&gt;, I want to give you some info about the hard- and software I&amp;#39;m currently using for my projects. I also tell you how to deploy some of that software. &lt;span class=&quot;more&quot;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;h2&gt;What hardware do I use?&lt;/h2&gt;
+
+&lt;p&gt;I have two machines, a desktop and a server, connected via Gigabit Ethernet. Each machine is dedicated to a very particular set of tasks, tasks that I have selected based on the systems&amp;#39; configuration. The server is optimized for stability and runs database services 24/7, while the desktop is used for data analysis and manipulation. The server sports a &amp;quot;Haswell&amp;quot; Xeon E3 v3 processor and has 32GB of ECC RAM. OS, apps, and fresh data are kept on SSDs. In addition, I maintain a large &lt;a href=&quot;https://en.wikipedia.org/wiki/ZFS#Software_RAID_using_ZFS&quot;&gt;RAID-Z2 array&lt;/a&gt; for archival purposes. The desktop is a Hackintosh and built around an &amp;quot;Ivy Bridge&amp;quot; quad-Core i7. It also has 32GB of RAM, non-ECC though.&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;img src=&quot;/assets/images/desktop.jpg&quot; title=&quot;Look inside the desktop&quot;&gt;
+  &lt;/figure&gt;
+  &lt;figcaption&gt;The desktop rig from the inside.&lt;/figcaption&gt;
+&lt;/p&gt;
+
+&lt;h2&gt;And what software?&lt;/h2&gt;
+
+&lt;p&gt;Most of the software I use is open-source. The server runs &lt;a href=&quot;https://getfedora.org/en/server/&quot;&gt;Fedora 22&lt;/a&gt;, the desktop Mac OS X. One thing I particularly like about Mac OS is the built-in &lt;a href=&quot;https://www.apple.com/ca/osx/advanced-technologies/&quot;&gt;transparent memory compression technology&lt;/a&gt;. It comes in quite handy at times, even with 32GB of RAM. Fedora, on the other hand, has a convenient web UI called &lt;a href=&quot;http://cockpit-project.org&quot;&gt;Cockpit&lt;/a&gt; that gives me a lot of control over &lt;a href=&quot;http://www.freedesktop.org/software/systemd/man/systemd.service.html&quot;&gt;system services&lt;/a&gt; and Docker containers.&lt;/p&gt;
+
+&lt;p&gt;Oh yeah, did I mention that I use &lt;a href=&quot;http://docker.com&quot;&gt;Docker&lt;/a&gt;? Docker is a virtualization solution that comes with thousands of pre-packaged applications for easy deployment. It&amp;#39;s a neat and fun way to check out new (and potentially unstable) software plus their dependencies without messing up your base OS installation.&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;img src=&quot;/assets/images/cockpit.png&quot; title=&quot;Cockpit containers view&quot;&gt;
+  &lt;/figure&gt;
+  &lt;figcaption&gt;Cockpit shows me which Docker containers are running and what ressources they are consuming.&lt;/figcaption&gt;
+&lt;/p&gt;
+
+&lt;h3&gt;MongoDB&lt;/h3&gt;
+
+&lt;p&gt;For my current project I rely on &lt;a href=&quot;https://www.mongodb.com/what-is-mongodb&quot;&gt;MongoDB&lt;/a&gt; as my data warehouse. MongoDB is a NoSQL database, and, unlike relational databases, it is built around the philosophy of dynamic schemas that allows me to make up and change the way I store data along as I go. It couldn&amp;#39;t be any other way, though, because MongoDB has a serious restriction in that it &lt;a href=&quot;http://docs.mongodb.org/manual/faq/fundamentals/#what-kind-of-database-is-mongodb&quot;&gt;doesn&amp;#39;t support joins&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Let me tell you quickly how I deployed a MongoDB 3.0 instance on my server. I followed the &lt;a href=&quot;http://s3.amazonaws.com/info-mongodb-com/MongoDB-Performance-Best-Practices.pdf&quot;&gt;Performance Best Practices for MongoDB&lt;/a&gt; white paper where I could. My setup is simple and doesn&amp;#39;t make use of &lt;a href=&quot;http://docs.mongodb.org/manual/replication/&quot;&gt;replication&lt;/a&gt; or &lt;a href=&quot;http://docs.mongodb.org/manual/sharding/&quot;&gt;sharding&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h6&gt;Step 1: Prepare the server.&lt;/h6&gt;
+
+&lt;p&gt;Luckily, most of my working datasets (and their indexes) fit in RAM. However, since I wanted to cut down the latency associated with some of my more write-heavy operations, I decided to put everything on SSDs. So the first step is to figure out the partitioning and the file system. I use XFS, mounted in &lt;code&gt;/srv/docker/mongodb&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;MongoDB works best with &lt;a href=&quot;https://www.kernel.org/doc/Documentation/vm/transhuge.txt&quot;&gt;transparent hugepages&lt;/a&gt; turned off. The default for Fedora is to have them enabled. To disable them permanently, I created two files: the script &lt;code&gt;/usr/lib/systemd/scripts/transparent-hugepages.sh&lt;/code&gt; and the service file &lt;code&gt;/usr/lib/systemd/system/transparent-hugepages.service&lt;/code&gt;. Their contents, respectively, are:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; /usr/bin/test -f /sys/kernel/mm/transparent_hugepage/khugepaged/defrag&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+  /usr/bin/echo &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt; &amp;gt; /sys/kernel/mm/transparent_hugepage/khugepaged/defrag
+&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; /usr/bin/test -f /sys/kernel/mm/transparent_hugepage/defrag&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+  /usr/bin/echo never &amp;gt; /sys/kernel/mm/transparent_hugepage/defrag
+&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; /usr/bin/test -f /sys/kernel/mm/transparent_hugepage/enabled&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+  /usr/bin/echo never &amp;gt; /sys/kernel/mm/transparent_hugepage/enabled
+&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ini&quot; data-lang=&quot;ini&quot;&gt;&lt;span class=&quot;k&quot;&gt;[Unit]&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Turn off transparent hugepages&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;[Service]&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;oneshot&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;ExecStart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/usr/lib/systemd/scripts/transparent-hugepages.sh&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;[Install]&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;WantedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;multi-user.target&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As root, I then typed&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@server ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ chown &lt;span class=&quot;m&quot;&gt;755&lt;/span&gt; /usr/lib/systemd/scripts/transparent-hugepages.sh
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@server ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ systemctl &lt;span class=&quot;nb&quot;&gt;enable &lt;/span&gt;transparent-hugepages
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@server ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ systemctl start transparent-hugepages
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;to start the service.&lt;/p&gt;
+
+&lt;p&gt;Finally, I created a firewall rule for mongodb. On Fedora, firewall rules are stored as XML files in &lt;code&gt;/etc/firewalld/services&lt;/code&gt;. There, I created a file called &lt;code&gt;mongodb.xml&lt;/code&gt; reading:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;utf-8&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;service&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;short&amp;gt;&lt;/span&gt;MongoDB 1&lt;span class=&quot;nt&quot;&gt;&amp;lt;/short&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;description&amp;gt;&lt;/span&gt;MongoDB for Kaggle&amp;#39;s Acquire Valued Shoppers Challenge&lt;span class=&quot;nt&quot;&gt;&amp;lt;/description&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;port&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;protocol=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;tcp&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;port=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;27017&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/service&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I then added the rule to the active zone and reloaded the firewall:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@server ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ firewall-cmd --permanent --zone&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;FedoraServer --add-service&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mongodb
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@server ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ firewall-cmd --reload
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That is all in terms of preparations.&lt;/p&gt;
+
+&lt;h6&gt;Step 2: Get the Docker image.&lt;/h6&gt;
+
+&lt;p&gt;There&amp;#39;s a popular and well-maintained Docker image with MongoDB 3.0. I got it with:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@server ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ docker pull docker.io/mongo:latest
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You can find more information about the &lt;code&gt;mongo&lt;/code&gt; repository &lt;a href=&quot;https://registry.hub.docker.com/_/mongo/&quot;&gt;here&lt;/a&gt;. It is based on the &lt;a href=&quot;https://registry.hub.docker.com/_/debian/&quot;&gt;Debian Wheezy image&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h6&gt;Step 3: Create and start a Docker container over the MongoDB image.&lt;/h6&gt;
+
+&lt;p&gt;Then, I ran:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@server ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ docker run -d &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  --name mongodb_acquire_valued_shoppers_challenge &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  --net&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  -p 27017:27017 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  -v /srv/docker/mongodb/acquire_valued_shoppers_challenge:/data/db
+  --privileged&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  mongo --storageEngine&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;wiredTiger
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A couple of things happened here:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;I sent the container to the background.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;I gave the container a name that is not a &lt;a href=&quot;https://github.com/docker/docker/blob/master/pkg/namesgenerator/names-generator.go&quot;&gt;nerdy joke&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;I gave the container full access to the host&amp;#39;s network interface, barring the right to reconfigure it.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;I mapped the port 27017 on the docker server to the port 27017 in the container.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;I mapped a data directory on the Docker host, &lt;code&gt;/srv/docker/mongodb/acquire_valued_shoppers_challenge&lt;/code&gt;, to a directory inside the container. Beforehand, that folder&amp;#39;s SELinux context was changed to &lt;code&gt;unconfined_u:object_r:svirt_sandbox_file_t:s0&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Otherwise, however, I isolated the container from others and from the host.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;I selected the &lt;code&gt;mongo&lt;/code&gt; image.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;I activated MongoDB&amp;#39;s all-new &lt;a href=&quot;http://www.wiredtiger.com&quot;&gt;WiredTiger&lt;/a&gt; storage engine that -- thanks to a combination of deep algorithm improvements and native data compression -- is &lt;a href=&quot;http://smalldatum.blogspot.ca/2014/12/read-modify-write-optimized.html&quot;&gt;more I/O efficient&lt;/a&gt; than the legacy MMAPv1 engine.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;However, I did not configure any security measures within the container -- no &lt;a href=&quot;http://docs.mongodb.org/manual/tutorial/manage-users-and-roles/&quot;&gt;database users&lt;/a&gt;, no &lt;a href=&quot;http://docs.mongodb.org/manual/tutorial/generate-key-file/&quot;&gt;SSL certificates&lt;/a&gt;, nothing. Of course, you may find this outrageously unsafe, but it&amp;#39;s deployed on a private network, after all.&lt;/p&gt;
+
+&lt;h3&gt;Python, Pandas, and PyMongo&lt;/h3&gt;
+
+&lt;p&gt;Now for the desktop. At its core, my data science software stack consists of &lt;a href=&quot;https://www.python.org&quot;&gt;Python&lt;/a&gt;, &lt;a href=&quot;http://ipython.org/notebook.html&quot;&gt;IPython Notebook&lt;/a&gt;, &lt;a href=&quot;http://www.numpy.org&quot;&gt;Numpy&lt;/a&gt;, &lt;a href=&quot;http://matplotlib.org&quot;&gt;Matplotlib&lt;/a&gt;, &lt;a href=&quot;http://www.scipy.org&quot;&gt;SciPy&lt;/a&gt;, &lt;a href=&quot;&quot;&gt;Pandas&lt;/a&gt;, and the &lt;a href=&quot;https://github.com/mongodb/mongo-python-driver&quot;&gt;PyMongo&lt;/a&gt; MongoDB driver. With the &lt;a href=&quot;https://www.macports.org&quot;&gt;MacPorts&lt;/a&gt; package management system, I got these up and running with&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;tscholak@client ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ sudo xcode-select --install
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;tscholak@client ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ sudo port selfupdate
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;tscholak@client ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ sudo port install python27 py27-numpy py27-matplotlib py27-scipy py27-pandas py27-pymongo py27-ipython +notebook
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;tscholak@client ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ sudo port &lt;span class=&quot;k&quot;&gt;select&lt;/span&gt; --set python python27
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;tscholak@client ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ sudo port &lt;span class=&quot;k&quot;&gt;select&lt;/span&gt; --set ipython ipython27
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;tscholak@client ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ &lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/opt/local/bin:/opt/local/sbin:&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;tscholak@client ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ ipython notebook
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The last command starts an interactive Python shell and opens the &lt;a href=&quot;https://jupyter.org&quot;&gt;Jupyter web UI&lt;/a&gt; in the default web browser, e.g. in Safari.&lt;/p&gt;
+
+&lt;h3&gt;Hydrogen &amp;amp; Atom&lt;/h3&gt;
+
+&lt;p&gt;Jupyter notebooks are great for interactive exploratory analyses. They are convenient, flexible, and give you instant gratification. However, I find they are not the best choice for hacking together complex algorithms and batch jobs. That&amp;#39;s why I started using &lt;a href=&quot;https://atom.io/packages/hydrogen&quot;&gt;Hydrogen&lt;/a&gt;, a plugin for GitHub&amp;#39;s &lt;a href=&quot;https://atom.io&quot;&gt;Atom editor&lt;/a&gt;. The user experience is similar to what &lt;a href=&quot;http://lighttable.com&quot;&gt;Light Table&lt;/a&gt; and &lt;a href=&quot;http://junolab.org&quot;&gt;Juno&lt;/a&gt; offer for the &lt;a href=&quot;http://julialang.org&quot;&gt;Julia&lt;/a&gt; language. Hydrogen connects to the IPython Jupyter kernel to allow for executing and displaying output of any Python code directly within Atom. Since Jupyter is language agnostic, Hydrogen also works with other languages, e.g. R. The only inconvenience it has is that for it to work you have to start Atom from the command line, e.g. via&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;tscholak@client ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;＄ atom awesome_algorithm.py
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;#39;s quite annoying when you find out right after clicking on the Atom icon that you forgot about this... Again...&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;img src=&quot;/assets/images/hydrogen.png&quot; title=&quot;Hydrogen&quot;&gt;
+  &lt;/figure&gt;
+  &lt;figcaption&gt;Hydrogen runs your code directly in Atom using any Jupyter kernels you have installed. Output is displayed in a small overlay window, as can be seen here for a Pandas &lt;code&gt;DataFrame&lt;/code&gt; object formatted as a table.&lt;/figcaption&gt;
+&lt;/p&gt;
+
+&lt;h3&gt;MongoHub&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/jeromelebel/MongoHub-Mac&quot;&gt;MongoHub&lt;/a&gt; is a graphical front-end for MongoDB that runs natively on OS-X. It&amp;#39;s stable, capable, but not a revelation in user experience.&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;img src=&quot;/assets/images/mongohub.jpg&quot; title=&quot;MongoHub displays query results&quot;&gt;
+  &lt;/figure&gt;
+  &lt;figcaption&gt;MongoHub in action. Here I browse through some query results.&lt;/figcaption&gt;
+&lt;/p&gt;
+
+&lt;h3&gt;Monary&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://bitbucket.org/djcbeach/monary/wiki/Home&quot;&gt;Monary&lt;/a&gt; is an alternative MongoDB driver for Python that is slowly but steadily advancing. Whereas PyMongo is implemented in pure Python, Monary is a Python wrapper for the super-fast &lt;a href=&quot;http://hergert.me/blog/2014/04/07/mongo-c-driver-0-94-0.html&quot;&gt;MongoDB C driver&lt;/a&gt;. The biggest advantage of Monary is &lt;a href=&quot;https://www.youtube.com/watch?v=E70AO8r5sMs&quot;&gt;speed&lt;/a&gt;, its biggest disadvantage the yet incomplete feature set. For instance, it &lt;a href=&quot;https://monary.readthedocs.org/faq.html#can-monary-do-removes-updates-and-or-upserts&quot;&gt;doesn&amp;#39;t do any updates&lt;/a&gt;, and &lt;a href=&quot;https://bitbucket.org/djcbeach/monary/issues/14/passing-options-to-aggregate&quot;&gt;aggregation lacks support for certain keyword arguments&lt;/a&gt;. It&amp;#39;s also not as well tested as PyMongo. That being said, I use Monary quite often and haven&amp;#39;t observed any serious problems so far.&lt;/p&gt;
+
+&lt;p&gt;You can get Monary like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ sudo port install mercurial libbson mongo-c-driver
+＄ hg clone https://bitbucket.org/djcbeach/monary
+＄ &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;monary
+＄ python setup.py install
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h1&gt;What Would Be My Dream Setup?&lt;/h1&gt;
+
+&lt;p&gt;I think it qualifies as a self-evident truth that you can never have enough RAM. This may change one day with the arrival of HP&amp;#39;s &lt;a href=&quot;http://www.engadget.com/2015/06/05/hp-the-machine-no-memristors/&quot;&gt;&amp;quot;The Machine&amp;quot;&lt;/a&gt;. Until then, however, the more RAM the better. LGA 115x motherboards max out at $32 \mathrm{GB}$. That&amp;#39;s why both, my desktop and my server, will never run with more than that. If I had had the budget for it, I would have gone for an LGA 2011 board instead. They usually come with eight DIMM slots that each accept modules with as much as $64 \mathrm{GB}$, for a total of $512 \mathrm{GB}$ of RAM.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 13 Jul 2015 08:00:00 -0400</pubDate>
+        <link>http://tscholak.github.io//update/python/mongodb/docker/2015/07/13/the-setup.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//update/python/mongodb/docker/2015/07/13/the-setup.html</guid>
+        
+        
+        <category>update</category>
+        
+        <category>python</category>
+        
+        <category>mongodb</category>
+        
+        <category>docker</category>
+        
+      </item>
     
       <item>
         <title>Communities and Markets</title>
@@ -171,7 +648,7 @@
 \[
   W_{ij} = \sum_{k}&amp;#39; \frac{1}{\mathrm{deg}(v_k) - 1},
 \]
-where the sum runs over those publications $v_k$ in which $u_i$ and $u_j$ appeared as authors (indicated by the prime, ${}^{\prime}$). The thought leading to this formula was that, while working on a publication $v_k$, an author would have to divide her time between $\mathrm{deg}(v_k) - 1$ co-authors on average. This prescription was found to estimate the strength of the collaborative bonds adequately. From the weighted author graph, an unweighted graph can be obtained via thresholding as in rule 4 above. This threshold is arbitrary, however.&lt;/p&gt;
+where the sum runs over those publications $v_k$ in which $u_i$ and $u_j$ appeared as authors (indicated by the prime, ${}&lt;sup&gt;{\prime}$).&lt;/sup&gt; The thought leading to this formula was that, while working on a publication $v_k$, an author would have to divide her time between $\mathrm{deg}(v_k) - 1$ co-authors on average. This prescription was found to estimate the strength of the collaborative bonds adequately. From the weighted author graph, an unweighted graph can be obtained via thresholding as in rule 4 above. This threshold is arbitrary, however.&lt;/p&gt;
 
 &lt;p&gt;
   &lt;figure&gt;
@@ -222,11 +699,11 @@ where $k$ runs over all terms $t_k$ occurring in the corpus $D$. The larger $W_{
 
 &lt;p&gt;So let&amp;#39;s go, shall we? To make things more precise, first some definitions: Let $G = (U, V, E)$ denote the observed bipartite graph with the edges $E$ and the non-intersecting node sets $U = \left\{u_{1}, \ldots u_{m}\right\}$ and $V = \left\{v_{1}, \ldots v_{n}\right\}$, where $m = \left|U\right|$ and $n = \left|V\right|$. Following the graph of gulls and seals pictured above, I will refer to $U$ as the &lt;em&gt;top mode&lt;/em&gt; and to $V$ as the &lt;em&gt;bottom mode&lt;/em&gt;. Let $A$ be the adjacency matrix of $G$. The entries $A_{ik}$ of this $m \times n$ matrix are binary. $A_{ik}$ is $1$ if the nodes $u_i \in U$ and $v_k \in V$ are connected by an edge. Otherwise, $A_{ik} = 0$. Thus, top nodes are represented in $A$ as rows, whereas bottom nodes are represented as columns. From $A$ we can derive two matrices $T$ and $B$. They are called the top and the bottom &lt;em&gt;co-occurrence matrix&lt;/em&gt; and can be defined as &lt;a href=&quot;#Breiger1974The-duality-of-&quot;&gt;(Breiger 1974)&lt;/a&gt;
 \[
-  T = A A^{\mathrm{T}}
+  T = A A&lt;sup&gt;{\mathrm{T}}&lt;/sup&gt;
 \]
 and
 \[
-  B = A^{\mathrm{T}} A,
+  B = A&lt;sup&gt;{\mathrm{T}}&lt;/sup&gt; A,
 \]
 respectively. $T$ is an $m \times m$ matrix and $B$ an $n \times n$ matrix. As the name suggests, the entries $T_{ij}$ (or $B_{kl}$) of $T$ ($B$) are equal to the &lt;em&gt;co-occurrences&lt;/em&gt; of the nodes $u_i$, $u_j \in U$ ($v_k$, $v_l \in V$). The co-occurrence is the number of neighbors $v \in V$ ($u \in U$) common to both $u_i$ and $u_j$ ($v_k$ and $v_l$). It is also equal to the number of connecting length-2 walks. Thus, calculating $T$ (or $B$) is equivalent to applying rules 1-3 from earlier above!&lt;/p&gt;
 
@@ -277,7 +754,7 @@ while $k$ ≤ $N$ do
   $k$ ← $k + 1$
 end while
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;The algorithm produces $N$ samples from the population $\mathcal{G}$, one after the other. In the beginning, it uses $G$ as a template. Later, it uses the end result $G^{(k-1)}$ of the previous generation as the starting point of the next one. Each generation $k$ is the outcome of a Markovian random walk, and each walk has $T$ (time) steps, where $T$ is called the &lt;em&gt;mixing time&lt;/em&gt;. $T$ has to be chosen sufficiently large such that the random walk reaches its equilibrium. Only then the produced graph $G^{(k)}$ will be independent from its predecessor $G^{(k-1)}$. In each step $t$ of the walk, two non-adjacent edges $e = \{u, v\}$ and $e&amp;#39; = \{u&amp;#39;, v&amp;#39;\}$ are drawn randomly from a uniform distribution. Then the algorithm tries to exchange the bottom-mode vertices between the edges. This operation is called an &lt;em&gt;edge swap&lt;/em&gt;. It is designed to keep the degree sequences $\mathcal{D}\left(U^{(k)}\right)$ and $\mathcal{D}\left(V^{(k)}\right)$ the same. If the swapped edges are not already in the graph $G^{(k)}$, then they are added to it, after $e$ and $e&amp;#39;$ have been removed. Otherwise, the algorithm proceeds to the next step. Note that the edge swap can be implemented by performing a bitwise NOT operation on those four elements of the adjacency matrix of $G^{(k)}$ that corresponding to $e$, $\{u, v&amp;#39;\}$, $\{u&amp;#39;, v\}$, and $e&amp;#39;$.&lt;/p&gt;
+&lt;p&gt;The algorithm produces $N$ samples from the population $\mathcal{G}$, one after the other. In the beginning, it uses $G$ as a template. Later, it uses the end result $G&lt;sup&gt;{(k-1)}$&lt;/sup&gt; of the previous generation as the starting point of the next one. Each generation $k$ is the outcome of a Markovian random walk, and each walk has $T$ (time) steps, where $T$ is called the &lt;em&gt;mixing time&lt;/em&gt;. $T$ has to be chosen sufficiently large such that the random walk reaches its equilibrium. Only then the produced graph $G&lt;sup&gt;{(k)}$&lt;/sup&gt; will be independent from its predecessor $G&lt;sup&gt;{(k-1)}$.&lt;/sup&gt; In each step $t$ of the walk, two non-adjacent edges $e = \{u, v\}$ and $e&amp;#39; = \{u&amp;#39;, v&amp;#39;\}$ are drawn randomly from a uniform distribution. Then the algorithm tries to exchange the bottom-mode vertices between the edges. This operation is called an &lt;em&gt;edge swap&lt;/em&gt;. It is designed to keep the degree sequences $\mathcal{D}\left(U&lt;sup&gt;{(k)}\right)$&lt;/sup&gt; and $\mathcal{D}\left(V&lt;sup&gt;{(k)}\right)$&lt;/sup&gt; the same. If the swapped edges are not already in the graph $G&lt;sup&gt;{(k)}$,&lt;/sup&gt; then they are added to it, after $e$ and $e&amp;#39;$ have been removed. Otherwise, the algorithm proceeds to the next step. Note that the edge swap can be implemented by performing a bitwise NOT operation on those four elements of the adjacency matrix of $G&lt;sup&gt;{(k)}$&lt;/sup&gt; that corresponding to $e$, $\{u, v&amp;#39;\}$, $\{u&amp;#39;, v\}$, and $e&amp;#39;$.&lt;/p&gt;
 
 &lt;h3&gt;The benefits&lt;/h3&gt;
 
@@ -1505,10 +1982,10 @@ Since all these interactions have only one logical direction (e.g., an item cann
 &lt;p&gt;Like histogramr, unfoldr reads and writes &lt;a href=&quot;http://www.hdfgroup.org/HDF5/&quot;&gt;HDF5&lt;/a&gt; files. HDF5 files are organized in a hierarchical, file-system-like data structure. HDF5 is &lt;a href=&quot;https://www.hdfgroup.org/users.html&quot;&gt;commonly used in scientific environments&lt;/a&gt;. It is designed to handle big scientific data sets. Please see my &lt;a href=&quot;/code/big%20data/2015/03/07/histogramr.html&quot;&gt;earlier blog post&lt;/a&gt; for a description of HDF5 and how it is used.&lt;/p&gt;
 
 &lt;p&gt;unfoldr and histogramr are designed to work in tandem. Output from unfoldr can (but doesn&amp;#39;t have to) be processed by histogramr. unfoldr produces a HDF5 file that contains the level spacings in a single data set:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;unfoldr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;spectrum&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;eigval&amp;quot;&lt;/span&gt; -o nnls.h5 spectra.h5
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ unfoldr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;spectrum&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;eigval&amp;quot;&lt;/span&gt; -o nnls.h5 spectra.h5
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;And histogramr then creates a discretized probability density function from it:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;histogramr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;inf&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;spacing&amp;quot;&lt;/span&gt; -b .1 -l 0,10 -o nnlsd.h5 nnls.h5
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ histogramr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;inf&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;spacing&amp;quot;&lt;/span&gt; -b .1 -l 0,10 -o nnlsd.h5 nnls.h5
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Boom! You&amp;#39;ve got the nearest-neighbor level spacing distribution stored nicely in &lt;code&gt;nnlsd.h5&lt;/code&gt;. Then you can do this:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;numpy&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;np&lt;/span&gt;
@@ -1554,13 +2031,13 @@ Since all these interactions have only one logical direction (e.g., an item cann
 &lt;h1&gt;Get unfoldr today from GitHub!&lt;/h1&gt;
 
 &lt;p&gt;You can &lt;a href=&quot;https://github.com/tscholak/unfoldr&quot;&gt;download unfoldr from GitHub&lt;/a&gt;. In Linux or Mac OS X, open a terminal session and run:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git clone git@github.com:tscholak/unfoldr.git
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ git clone git@github.com:tscholak/unfoldr.git
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;(get Git &lt;a href=&quot;http://git-scm.com&quot;&gt;here&lt;/a&gt;). Since I released unfoldr under the GPLv3, you can use, study, share, and modify it for &lt;em&gt;free&lt;/em&gt; (as long as you retain these rights for others). unfoldr is written in &lt;a href=&quot;https://www.python.org&quot;&gt;Python&lt;/a&gt; and uses the &lt;a href=&quot;https://pypi.python.org/pypi/setuptools&quot;&gt;setuptools&lt;/a&gt;. From within the source code directory, run:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python setup.py install
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ python setup.py install
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Make sure your Python&amp;#39;s &lt;code&gt;bin&lt;/code&gt; directory is in your &lt;code&gt;$PATH&lt;/code&gt;. On Mac OS X, if you use Macports and haven&amp;#39;t done so already, add&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin:&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ &lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin:&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;to your &lt;code&gt;~/.bash_login&lt;/code&gt; or &lt;code&gt;~/.bash_profile&lt;/code&gt; file. Once done, you can call unfoldr from the command line by invoking &lt;code&gt;unfoldr&lt;/code&gt;. &lt;code&gt;unfoldr -h&lt;/code&gt; will show you the command line arguments.&lt;/p&gt;
 
@@ -1582,16 +2059,14 @@ Since all these interactions have only one logical direction (e.g., an item cann
 &lt;li&gt;the Gaussian symplectic ensemble (GSE).&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;As the names suggest, the densities $f_{M}$ of these ensembles respect the invariance with respect to orthogonal, unitary, or symplectic similarity transformations, respectively... ;) In other words, the core assumption for these ensembles is that all real (complex, quaternion) basis sets are equally well suited to describe the system. Furthermore, all matrix elements $M_{i j}$ are independent, and the joint probability densities $f_{M}$ decompose into products of their marginals, $f_{M} = f_{M_{1,1}} f_{M_{1,2}} \cdots f_{M_{N,N}}$. The marginals $f_{M_{i j}}$ are normally distributed with zero mean and fixed variance. For the GOE, they read&lt;/p&gt;
-
-&lt;p&gt;\[
+&lt;p&gt;As the names suggest, the densities $f_{M}$ of these ensembles respect the invariance with respect to orthogonal, unitary, or symplectic similarity transformations, respectively... ;) In other words, the core assumption for these ensembles is that all real (complex, quaternion) basis sets are equally well suited to describe the system. Furthermore, all matrix elements $M_{i j}$ are independent, and the joint probability densities $f_{M}$ decompose into products of their marginals, $f_{M} = f_{M_{1,1}} f_{M_{1,2}} \cdots f_{M_{N,N}}$. The marginals $f_{M_{i j}}$ are normally distributed with zero mean and fixed variance. For the GOE, they read
+\[
   \begin{align*}
-    f_{M_{i i}}(m) &amp;amp; = \frac{1}{\sqrt{2 \pi \sigma^2}} \, \mathrm{e}^{- \frac{m}{2 \sigma^2}}, \\
-    f_{M_{i j}}(m) &amp;amp; = \frac{1}{\sqrt{\pi \sigma^2}} \, \mathrm{e}^{- \frac{m}{\sigma^2}},
+    f_{M_{i i}}(m) &amp;amp; = \frac{1}{\sqrt{2 \pi \sigma&lt;sup&gt;2}}&lt;/sup&gt; \, \mathrm{e}&lt;sup&gt;{-&lt;/sup&gt; \frac{m}{2 \sigma&lt;sup&gt;2}},&lt;/sup&gt; \\
+    f_{M_{i j}}(m) &amp;amp; = \frac{1}{\sqrt{\pi \sigma&lt;sup&gt;2}}&lt;/sup&gt; \, \mathrm{e}&lt;sup&gt;{-&lt;/sup&gt; \frac{m}{\sigma&lt;sup&gt;2}},&lt;/sup&gt;
   \end{align*}
-\]&lt;/p&gt;
-
-&lt;p&gt;where $\sigma^2$ is the variance of the diagonal elements $M_{i i}$. &lt;/p&gt;
+\]
+where $\sigma&lt;sup&gt;2$&lt;/sup&gt; is the variance of the diagonal elements $M_{i i}$. &lt;/p&gt;
 
 &lt;p&gt;The three Gaussian random matrix ensembles have been studied ad nauseam. The eigenvalue density is known (it&amp;#39;s the &lt;a href=&quot;http://en.wikipedia.org/wiki/Wigner_semicircle_distribution&quot;&gt;Wigner semi-circle&lt;/a&gt;), the eigenstate localization properties are known (they are extended &lt;a href=&quot;#Erdos2007Semicircle-law-&quot;&gt;(Erdős, Schlein, and Yau 2007)&lt;/a&gt;, i.e. every eigenvector extends over a fraction of the system that scales as the system size $N$), the level-spacing distribution is known (it&amp;#39;s Wigner&amp;#39;s surmise, see &lt;a href=&quot;#Wigners-surmise&quot;&gt;below&lt;/a&gt;), etc. The importance of the Gaussian ensembles stems from the fact that they are &lt;em&gt;universal&lt;/em&gt;. If a closed system&amp;#39;s behavior is chaotic in the classical limit, then, statistically speaking, its corresponding wave or quantum behavior coincides with one of the Gaussian ensembles &lt;a href=&quot;#Mehta1991Random-matrices&quot;&gt;(Mehta 1991)&lt;/a&gt;. Integrable (non-chaotic) systems, on the other hand, have a completely different statistical fingerprint. If your complex system turns out to coincide with universal Gaussian statistics, then you are done. There is nothing left to solve or discover, because everything you possibly would like to know (and can be known) about your system has already been discovered. And if your complex system turns out to be different, then there is still a good chance that its statistics are described by one of the other important random matrix ensembles:&lt;/p&gt;
 
@@ -1609,114 +2084,90 @@ Since all these interactions have only one logical direction (e.g., an item cann
 
 &lt;p&gt;At this point, you may wonder: How can I find out about the statistics of my complex system? How do I get its statistical fingerprint? How can I compare my system with the random matrix ensembles? unfoldr helps you with that. It turns out you can learn a lot from the data:&lt;/p&gt;
 
-&lt;p&gt;One of the most useful statistical metrics for random matrix ensembles is the nearest-neighbor level spacing (NNLS) density, denoted here and in the following by $f_{S}$. What does $f_{S}$ tell you? Formally,&lt;/p&gt;
-
-&lt;p&gt;\[
+&lt;p&gt;One of the most useful statistical metrics for random matrix ensembles is the nearest-neighbor level spacing (NNLS) density, denoted here and in the following by $f_{S}$. What does $f_{S}$ tell you? Formally,
+\[
   f_{S}(s) \, \mathrm{d}s = \overline{\delta(s - S_{\nu})} \, \mathrm{d}s
-\]&lt;/p&gt;
-
-&lt;p&gt;states the ensemble averaged probability to sample two adjacent eigenvalues (also called eigenenergies) $\Lambda_{\nu}$, $\Lambda_{\nu+1}$ that are separated by an energy difference $S_{\nu} = \Lambda_{\nu+1} - \Lambda_{\nu}$ between $s$ and $s + \mathrm{d}s$. Defining this makes sense as long as you sort your eigenvalues $\Lambda_{\nu}$ in ascending order for each realization of $M$, that is $\Lambda_{1} \le \Lambda_{2} \le \ldots \le \Lambda_{N}$.&lt;/p&gt;
+\]
+states the ensemble averaged probability to sample two adjacent eigenvalues (also called eigenenergies) $\Lambda_{\nu}$, $\Lambda_{\nu+1}$ that are separated by an energy difference $S_{\nu} = \Lambda_{\nu+1} - \Lambda_{\nu}$ between $s$ and $s + \mathrm{d}s$. Defining this makes sense as long as you sort your eigenvalues $\Lambda_{\nu}$ in ascending order for each realization of $M$, that is $\Lambda_{1} \le \Lambda_{2} \le \ldots \le \Lambda_{N}$.&lt;/p&gt;
 
 &lt;p&gt;The NNLS density is important, because its shape depends on the correlations and interactions between &lt;em&gt;all&lt;/em&gt; eigenvalues of the random matrix. It is a fingerprint of the eigenvalue correlations. If you have the eigenvalues (or eigenenergies) of your system, unfoldr can compute the level spacings for you. Afterwards, you can use histogramr to get the NNLS density and thus the correlation fingerprint of &lt;em&gt;your&lt;/em&gt; system. That fingerprint can then be compared to the fingerprints of, e.g., the universal Gaussian matrices.&lt;/p&gt;
 
-&lt;p&gt;The eigenvalue correlations have a deterministic system-dependent part and a random universal part. It is important to note that only the latter part may be used for comparisons between different systems or matrix ensembles. To extract the universal part, the spectrum of your complex system must be &lt;em&gt;unfolded&lt;/em&gt;. Spectral unfolding is a transformation that maps the ensemble averaged level spacing,&lt;/p&gt;
+&lt;p&gt;The eigenvalue correlations have a deterministic system-dependent part and a random universal part. It is important to note that only the latter part may be used for comparisons between different systems or matrix ensembles. To extract the universal part, the spectrum of your complex system must be &lt;em&gt;unfolded&lt;/em&gt;. Spectral unfolding is a transformation that maps the ensemble averaged level spacing,
+\[
+  \overline{S} = \int_{0}&lt;sup&gt;{\infty}&lt;/sup&gt; s \, f_{S} (s) \, \mathrm{d}s,
+\]
+to a constant, i.e. $\overline{S} = 1$. unfoldr will do that for you (hence the name). So you don&amp;#39;t have to worry about it.&lt;/p&gt;
 
-&lt;p&gt;\[
-  \overline{S} = \int_{0}^{\infty} s \, f_{S} (s) \, \mathrm{d}s,
-\]&lt;/p&gt;
-
-&lt;p&gt;to a constant, i.e. $\overline{S} = 1$. unfoldr will do that for you (hence the name). So you don&amp;#39;t have to worry about it.&lt;/p&gt;
-
-&lt;p&gt;If there are no dependencies between the eigenvalues, all distances between them will be uncorrelated, and $f_{S}$ will thus be identical to the Poisson distribution,&lt;/p&gt;
-
-&lt;p&gt;\[
-  f^{\mathrm{P}}_{S} = \mathrm{e}^{-s}.
-\]&lt;/p&gt;
-
-&lt;p&gt;&lt;a name=&quot;Wigners-surmise&quot;&gt;&lt;/a&gt;By contrast, the spectra of the universal Gaussian ensembles (GOE, GUE, GSE) are correlated. Their level-spacing statistics are not described by $f^{\mathrm{P}}_{S}$. For instance, the NNLS statistics of the GOE are well described by Wigner&amp;#39;s surmise, i.e. by the Rayleigh distribution&lt;/p&gt;
-
-&lt;p&gt;\[
-  f^{\mathrm{GOE}}_{S}(s) = \frac{\pi}{2} \, s \, \mathrm{e}^{-\frac{\pi}{4} s^2}.
-\]&lt;/p&gt;
-
-&lt;p&gt;The densities of the GUE and GSE, on the other hand, follow&lt;/p&gt;
-
-&lt;p&gt;\[
+&lt;p&gt;If there are no dependencies between the eigenvalues, all distances between them will be uncorrelated, and $f_{S}$ will thus be identical to the Poisson distribution,
+\[
+  f&lt;sup&gt;{\mathrm{P}}_{S}&lt;/sup&gt; = \mathrm{e}&lt;sup&gt;{-s}.&lt;/sup&gt;
+\]
+&lt;a name=&quot;Wigners-surmise&quot;&gt;&lt;/a&gt;By contrast, the spectra of the universal Gaussian ensembles (GOE, GUE, GSE) are correlated. Their level-spacing statistics are not described by $f&lt;sup&gt;{\mathrm{P}}_{S}$.&lt;/sup&gt; For instance, the NNLS statistics of the GOE are well described by Wigner&amp;#39;s surmise, i.e. by the Rayleigh distribution
+\[
+  f&lt;sup&gt;{\mathrm{GOE}}_{S}(s)&lt;/sup&gt; = \frac{\pi}{2} \, s \, \mathrm{e}&lt;sup&gt;{-\frac{\pi}{4}&lt;/sup&gt; s&lt;sup&gt;2}.&lt;/sup&gt;
+\]
+The densities of the GUE and GSE, on the other hand, follow
+\[
   \begin{align*}
-    f^{\mathrm{GUE}}_{S}(s) &amp;amp; = \frac{32}{\pi^2} \, s^2 \, \mathrm{e}^{-\frac{4}{\pi} s^2}, \\
-    f^{\mathrm{GSE}}_{S}(s) &amp;amp; = \frac{2^{18}}{3^6 \pi^3} \, s^4 \, \mathrm{e}^{-\frac{64}{9 \pi} s^2},
+    f&lt;sup&gt;{\mathrm{GUE}}_{S}(s)&lt;/sup&gt; &amp;amp; = \frac{32}{\pi&lt;sup&gt;2}&lt;/sup&gt; \, s&lt;sup&gt;2&lt;/sup&gt; \, \mathrm{e}&lt;sup&gt;{-\frac{4}{\pi}&lt;/sup&gt; s&lt;sup&gt;2},&lt;/sup&gt; \\
+    f&lt;sup&gt;{\mathrm{GSE}}_{S}(s)&lt;/sup&gt; &amp;amp; = \frac{2&lt;sup&gt;{18}}{3&lt;sup&gt;6&lt;/sup&gt;&lt;/sup&gt; \pi&lt;sup&gt;3}&lt;/sup&gt; \, s&lt;sup&gt;4&lt;/sup&gt; \, \mathrm{e}&lt;sup&gt;{-\frac{64}{9&lt;/sup&gt; \pi} s&lt;sup&gt;2},&lt;/sup&gt;
   \end{align*}
-\]&lt;/p&gt;
-
-&lt;p&gt;respectively, to very good approximation (especially when $N$ is large). The correlations between the eigenvalues is manifested in the frequency of occurrence of small energy differences $s$. A negative deviation from the Poissonian statistics $f^{\mathrm{P}}_{S}$ signifies &lt;em&gt;level repulsion&lt;/em&gt; (which coincidentally indicates eigenvector delocalization &lt;a href=&quot;#Izrailev1990Simple-models-o&quot;&gt;(Izrailev 1990)&lt;/a&gt;). When we look at Wigner&amp;#39;s surmise $f^{\mathrm{GOE}}_{S}(s)$, we see that it increases linearly for small spacings $s$. In other words, the probability of sampling two neighboring eigenvalues that are separated by a small distance $S$ between $s$ and $s + \mathrm{d}s$ is &lt;em&gt;increasing&lt;/em&gt; with $s$. Not only do eigenvalues not cluster, they avoid each other! The repulsion is even stronger for the other universal ensembles, since $f^{\mathrm{GUE}}_{S}(s) \sim s^2$ and $f^{\mathrm{GSE}}_{S}(s) \sim s^4$ for small $s$.&lt;/p&gt;
+\]
+respectively, to very good approximation (especially when $N$ is large). The correlations between the eigenvalues is manifested in the frequency of occurrence of small energy differences $s$. A negative deviation from the Poissonian statistics $f&lt;sup&gt;{\mathrm{P}}_{S}$&lt;/sup&gt; signifies &lt;em&gt;level repulsion&lt;/em&gt; (which coincidentally indicates eigenvector delocalization &lt;a href=&quot;#Izrailev1990Simple-models-o&quot;&gt;(Izrailev 1990)&lt;/a&gt;). When we look at Wigner&amp;#39;s surmise $f&lt;sup&gt;{\mathrm{GOE}}_{S}(s)$,&lt;/sup&gt; we see that it increases linearly for small spacings $s$. In other words, the probability of sampling two neighboring eigenvalues that are separated by a small distance $S$ between $s$ and $s + \mathrm{d}s$ is &lt;em&gt;increasing&lt;/em&gt; with $s$. Not only do eigenvalues not cluster, they avoid each other! The repulsion is even stronger for the other universal ensembles, since $f&lt;sup&gt;{\mathrm{GUE}}_{S}(s)&lt;/sup&gt; \sim s&lt;sup&gt;2$&lt;/sup&gt; and $f&lt;sup&gt;{\mathrm{GSE}}_{S}(s)&lt;/sup&gt; \sim s&lt;sup&gt;4$&lt;/sup&gt; for small $s$.&lt;/p&gt;
 
 &lt;p&gt;Let&amp;#39;s assume now you have calculated the NNLS density using unfoldr and histogramr and you are staring at the result. What can you conclude?&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;If it looks like the Poisson distribution $f^{\mathrm{P}}_{S}$, then you know that your eigenvalues are uncorrelated. It is also quite likely that your eigenstates are localized, either strongly or weakly &lt;a href=&quot;#Izrailev1990Simple-models-o&quot;&gt;(Izrailev 1990)&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;If it looks like Wigner&amp;#39;s surmise, like $f^{\mathrm{GUE}}_{S}$, or like $f^{\mathrm{GSE}}_{S}$, then you know that your system agrees with universal Gaussian statistics. This is a big deal and can help you with a lot of things. (In physics, everything nice is Gaussian.) You also know now that your eigenvectors are delocalized.&lt;/li&gt;
-&lt;li&gt;If it looks like a mix between Poisson and universal Gaussian statistics, then you may have a blend between two or more statistically independent subspectra that correspond to either statistics. You can check that by estimating $\lim_{s \to 0} f_{S}(s)$. If this limit is finite, then this will be consistent with such a blend &lt;a href=&quot;#Berry1984Semiclassical-l&quot;&gt;(Berry and Robnik 1984)&lt;/a&gt;. However, if your $f_{S}(s) \sim s^\alpha$ for small $s$, then you have most likely interaction between the subspectra &lt;a href=&quot;#Backer2011Fractional-Powe&quot;&gt;(Bäcker et al. 2011)&lt;/a&gt;. In other words, your subspectra are not independent and their blend results in something that is different from either of them. You may have a localization transition in your system.&lt;/li&gt;
+&lt;li&gt;If it looks like the Poisson distribution $f&lt;sup&gt;{\mathrm{P}}_{S}$,&lt;/sup&gt; then you know that your eigenvalues are uncorrelated. It is also quite likely that your eigenstates are localized, either strongly or weakly &lt;a href=&quot;#Izrailev1990Simple-models-o&quot;&gt;(Izrailev 1990)&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;If it looks like Wigner&amp;#39;s surmise, like $f&lt;sup&gt;{\mathrm{GUE}}_{S}$,&lt;/sup&gt; or like $f&lt;sup&gt;{\mathrm{GSE}}_{S}$,&lt;/sup&gt; then you know that your system agrees with universal Gaussian statistics. This is a big deal and can help you with a lot of things. (In physics, everything nice is Gaussian.) You also know now that your eigenvectors are delocalized.&lt;/li&gt;
+&lt;li&gt;If it looks like a mix between Poisson and universal Gaussian statistics, then you may have a blend between two or more statistically independent subspectra that correspond to either statistics. You can check that by estimating $\lim_{s \to 0} f_{S}(s)$. If this limit is finite, then this will be consistent with such a blend &lt;a href=&quot;#Berry1984Semiclassical-l&quot;&gt;(Berry and Robnik 1984)&lt;/a&gt;. However, if your $f_{S}(s) \sim s&lt;sup&gt;\alpha$&lt;/sup&gt; for small $s$, then you have most likely interaction between the subspectra &lt;a href=&quot;#Backer2011Fractional-Powe&quot;&gt;(Bäcker et al. 2011)&lt;/a&gt;. In other words, your subspectra are not independent and their blend results in something that is different from either of them. You may have a localization transition in your system.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;If you think you have a localization transition in your system (or maybe just a transition between Poisson and Wigner-Dyson statistics under variation of the energy), you can get further insight into this by letting unfoldr calculate the NNLSs for individual slices through the spectral data. For instance,&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;unfoldr -d &amp;quot;spectrum&amp;quot; -m &amp;quot;eigval&amp;quot; -l -10,10 -b .5 -o nnls.h5 spectra.h5
-histogramr -d &amp;quot;-9.75&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0,10 -o nnlsd_-9.75.h5 nnls.h5
-histogramr -d &amp;quot;-9.25&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0,10 -o nnlsd_-9.25.h5 nnls.h5
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ unfoldr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;spectrum&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;eigval&amp;quot;&lt;/span&gt; -l -10,10 -b .5 -o nnls.h5 spectra.h5
+＄ histogramr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;-9.75&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;spacing&amp;quot;&lt;/span&gt; -b .1 -l 0,10 -o nnlsd_-9.75.h5 nnls.h5
+＄ histogramr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;-9.25&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;spacing&amp;quot;&lt;/span&gt; -b .1 -l 0,10 -o nnlsd_-9.25.h5 nnls.h5
 ...
-histogramr -d &amp;quot;9.75&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0,10 -o nnlsd_9.75.h5 nnls.h5
+＄ histogramr -d &lt;span class=&quot;s2&quot;&gt;&amp;quot;9.75&amp;quot;&lt;/span&gt; -m &lt;span class=&quot;s2&quot;&gt;&amp;quot;spacing&amp;quot;&lt;/span&gt; -b .1 -l 0,10 -o nnlsd_9.75.h5 nnls.h5
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;calculates not one, but twenty NNLS densities that are based exclusively on the spectral data in the intervals $[-10, -9.5)$, $[-9.5,-9)$, $\ldots$, $[9.5,10)$. With this data you can easily follow the change of the NNLS statistics with the energy &lt;a href=&quot;#scholak2014spectral&quot;&gt;(Scholak, Wellens, and Buchleitner 2014)&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h2&gt;Unfolding — theory and numerical implementation&lt;/h2&gt;
 
-&lt;p&gt;Below I first explain how unfolding works &lt;a href=&quot;#Guhr1998Random-matrix-t&quot;&gt;(Guhr, Müller–Groeling, and Weidenmüller 1998)&lt;/a&gt; and then how it is &lt;a href=&quot;#implementation&quot;&gt;implemented in unfoldr&lt;/a&gt;. As an auxiliary tool, I first define the spectral staircase function&lt;/p&gt;
-
-&lt;p&gt;\[
-  \mathcal{N}(\lambda) = \sum_{\nu = 1}^N \Theta\left(\lambda - \Lambda_{\nu}\right) = \#\left\{\nu \middle| \Lambda_{\nu} &amp;lt; \lambda\right\},
-\]&lt;/p&gt;
-
-&lt;p&gt;where $\Theta(\lambda) = \int_\infty^\lambda \delta(\lambda&amp;#39;) \, \mathrm{d}\lambda&amp;#39;$ is the Heaviside step function. $\mathcal{N}(\lambda)$ is the number of eigenvalues $\Lambda_{\nu}$ that are smaller than $\lambda$. We separate $\mathcal{N}(E)$ into a smooth part,&lt;/p&gt;
-
-&lt;p&gt;\[
-  \overline{\mathcal{N}}(\lambda) = N F_{\Lambda}(\lambda) = N \int_{-\infty}^{\lambda} f_{\Lambda}(\lambda&amp;#39;) \, \mathrm{d}\lambda&amp;#39;,
-\]&lt;/p&gt;
-
-&lt;p&gt;and a fluctuating part,&lt;/p&gt;
-
-&lt;p&gt;\[
+&lt;p&gt;Below I first explain how unfolding works &lt;a href=&quot;#Guhr1998Random-matrix-t&quot;&gt;(Guhr, Müller–Groeling, and Weidenmüller 1998)&lt;/a&gt; and then how it is &lt;a href=&quot;#implementation&quot;&gt;implemented in unfoldr&lt;/a&gt;. As an auxiliary tool, I first define the spectral staircase function
+\[
+  \mathcal{N}(\lambda) = \sum_{\nu = 1}&lt;sup&gt;N&lt;/sup&gt; \Theta\left(\lambda - \Lambda_{\nu}\right) = \#\left\{\nu \middle| \Lambda_{\nu} &amp;lt; \lambda\right\},
+\]
+where $\Theta(\lambda) = \int_\infty&lt;sup&gt;\lambda&lt;/sup&gt; \delta(\lambda&amp;#39;) \, \mathrm{d}\lambda&amp;#39;$ is the Heaviside step function. $\mathcal{N}(\lambda)$ is the number of eigenvalues $\Lambda_{\nu}$ that are smaller than $\lambda$. We separate $\mathcal{N}(E)$ into a smooth part,
+\[
+  \overline{\mathcal{N}}(\lambda) = N F_{\Lambda}(\lambda) = N \int_{-\infty}&lt;sup&gt;{\lambda}&lt;/sup&gt; f_{\Lambda}(\lambda&amp;#39;) \, \mathrm{d}\lambda&amp;#39;,
+\]
+and a fluctuating part,
+\[
   \mathcal{N}_{\mathrm{osc}} = \mathcal{N}(\lambda) - \overline{\mathcal{N}}(\lambda),
-\]&lt;/p&gt;
-
-&lt;p&gt;i.e. into the ensemble average given by the cumulative energy level distribution function $F_{\Lambda}$ and the difference between the realization&amp;#39;s value of $\mathcal{N}(\lambda)$ and the ensemble average, respectively. $f_{\Lambda}$ is the density of states, defined as&lt;/p&gt;
-
-&lt;p&gt;\[
+\]
+i.e. into the ensemble average given by the cumulative energy level distribution function $F_{\Lambda}$ and the difference between the realization&amp;#39;s value of $\mathcal{N}(\lambda)$ and the ensemble average, respectively. $f_{\Lambda}$ is the density of states, defined as
+\[
   f_{\Lambda}(\lambda) = \frac{1}{N} \, \overline{\operatorname{Tr} \delta \left(\lambda - M\right)}.
-\]&lt;/p&gt;
+\]
+$f_{\Lambda}(\lambda) \, \mathrm{d}\lambda$ is the ensemble averaged probability to find an eigenvalue $\Lambda$ of $M$ in the interval $\left[\lambda, \lambda + \mathrm{d}\lambda\right]$.&lt;/p&gt;
 
-&lt;p&gt;$f_{\Lambda}(\lambda) \, \mathrm{d}\lambda$ is the ensemble averaged probability to find an eigenvalue $\Lambda$ of $M$ in the interval $\left[\lambda, \lambda + \mathrm{d}\lambda\right]$.&lt;/p&gt;
-
-&lt;p&gt;Now, unfolding is defined as the mapping&lt;/p&gt;
-
-&lt;p&gt;\[
+&lt;p&gt;Now, unfolding is defined as the mapping
+\[
   \Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu} = \overline{\mathcal{N}}\left(\Lambda_{\nu}\right).
-\]&lt;/p&gt;
-
-&lt;p&gt;This is done for all eigenvalues ${\Lambda_{\nu}}$ of a given realization. Thus, by construction, the ensemble averaged spectral staircase function of the unfolded spectrum $\left\{\tilde{\Lambda}_{\nu}\right\}$ evaluated for the scaled energy $\lambda$ is equal to $\lambda$ itself,&lt;/p&gt;
-
-&lt;p&gt;\[
+\]
+This is done for all eigenvalues ${\Lambda_{\nu}}$ of a given realization. Thus, by construction, the ensemble averaged spectral staircase function of the unfolded spectrum $\left\{\tilde{\Lambda}_{\nu}\right\}$ evaluated for the scaled energy $\lambda$ is equal to $\lambda$ itself,
+\[
   \overline{\tilde{\mathcal{N}}}(\lambda) = \overline{\#\left\{\nu \middle| \tilde{\Lambda}_{\nu} &amp;lt; \lambda\right\}} = \lambda,
-\]&lt;/p&gt;
-
-&lt;p&gt;and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{S}} = 1$, such that the level spacing density $f_{\tilde{S}}$ of the unfolded eigenvalues is normalized with respect to&lt;/p&gt;
-
-&lt;p&gt;\[
+\]
+and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{S}} = 1$, such that the level spacing density $f_{\tilde{S}}$ of the unfolded eigenvalues is normalized with respect to
+\[
   \begin{align*}
-    \int_0^\infty f_{\tilde{S}}(s) \, \mathrm{d}s &amp;amp; = 1, \\
-    \int_0^\infty s \, f_{\tilde{S}}(s) \, \mathrm{d}s &amp;amp; = \overline{\tilde{S}} = 1.
+    \int_0&lt;sup&gt;\infty&lt;/sup&gt; f_{\tilde{S}}(s) \, \mathrm{d}s &amp;amp; = 1, \\
+    \int_0&lt;sup&gt;\infty&lt;/sup&gt; s \, f_{\tilde{S}}(s) \, \mathrm{d}s &amp;amp; = \overline{\tilde{S}} = 1.
   \end{align*}
-\]&lt;/p&gt;
-
-&lt;p&gt;&lt;a name=&quot;implementation&quot;&gt;&lt;/a&gt;How is unfolding done in unfoldr? When you load your spectral data with unfoldr, two-thirds of them are taken away to populate what I call the unfolding pool. The unfolding pool is a flat, sorted array of eigenvalues. I use it to estimate the ensemble averaged spectral staircase function $\overline{\mathcal{N}}$ and to do the transformation $\Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu}$. The following Python pseudo code shows how this is implemented:&lt;/p&gt;
+\]
+&lt;a name=&quot;implementation&quot;&gt;&lt;/a&gt;How is unfolding done in unfoldr? When you load your spectral data with unfoldr, two-thirds of them are taken away to populate what I call the unfolding pool. The unfolding pool is a flat, sorted array of eigenvalues. I use it to estimate the ensemble averaged spectral staircase function $\overline{\mathcal{N}}$ and to do the transformation $\Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu}$. The following Python pseudo code shows how this is implemented:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;eigenvalues&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
   &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unfolding_pool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;eigenvalue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
@@ -2372,40 +2823,40 @@ histogramr -d &amp;quot;9.75&amp;quot; -m &amp;quot;spacing&amp;quot; -b .1 -l 0
 &lt;h1&gt;histogramr is now on GitHub!&lt;/h1&gt;
 
 &lt;p&gt;Today I release histogramr under the GPLv3 &lt;a href=&quot;https://github.com/tscholak/histogramr&quot;&gt;on GitHub&lt;/a&gt;. You can download and use it for &lt;em&gt;free&lt;/em&gt;. The easiest way to do so is by using &lt;a href=&quot;http://git-scm.com&quot;&gt;Git&lt;/a&gt;. In Linux or Mac OS X, fire up a terminal and run:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ git clone git@github.com:tscholak/histogramr.git
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ git clone git@github.com:tscholak/histogramr.git
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;This downloads the most recent version of histogramr into the directory &lt;code&gt;histogramr&lt;/code&gt;. After that, &lt;code&gt;cd&lt;/code&gt; into that folder and run:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ ./autogen.sh
-$ ./configure
-$ make
-$ ln -sf &amp;quot;`pwd`/src/histogramr&amp;quot; ~/bin
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;＄ ./autogen.sh
+＄ ./configure
+＄ make
+＄ ln -sf &lt;span class=&quot;s2&quot;&gt;&amp;quot;`pwd`/src/histogramr&amp;quot;&lt;/span&gt; ~/bin
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;You can now &lt;a href=&quot;#usage&quot;&gt;use histogramr&lt;/a&gt; for your own data. Or, since you&amp;#39;ve got the source code, you can change histogramr or use pieces of it in new free software.&lt;/p&gt;
 
 &lt;h1&gt;&lt;a name=&quot;usage&quot;&gt;&lt;/a&gt;Usage&lt;/h1&gt;
 
 &lt;p&gt;histogramr reads in the input files one-by-one and commits the data to the histogram data structure. The output file is written multiple times, whenever a predetermined number of input files has been processed. Below the output of &lt;code&gt;histogramr --help&lt;/code&gt;:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;histogramr: create multivariate histograms of continuous data
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;histogramr: create multivariate histograms of continuous data
 
-Usage: histogramr -d &amp;lt;dsname1&amp;gt; -m &amp;lt;mname1[:mname2...]&amp;gt;
-  -b &amp;lt;size1[:size2...]&amp;gt; -l &amp;lt;range1[:range2...]&amp;gt;
-  [-L &amp;lt;boolean1[:boolean2...]&amp;gt;] [-d &amp;lt;dsname2&amp;gt; ...] [-e &amp;lt;number&amp;gt;]
-  -o &amp;lt;outfile&amp;gt; &amp;lt;infile1&amp;gt; [&amp;lt;infile2&amp;gt; ...]
+Usage: histogramr -d &amp;lt;dsname1&amp;gt; -m &amp;lt;mname1&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:mname2...&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&amp;gt;
+  -b &amp;lt;size1&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:size2...&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&amp;gt; -l &amp;lt;range1&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:range2...&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&amp;gt;
+  &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;-L &amp;lt;boolean1&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:boolean2...&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&amp;gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;-d &amp;lt;dsname2&amp;gt; ...&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;-e &amp;lt;number&amp;gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+  -o &amp;lt;outfile&amp;gt; &amp;lt;infile1&amp;gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&amp;lt;infile2&amp;gt; ...&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
 
 Mandatory options:
-  -d, --dataset &amp;lt;dsname&amp;gt;     data set(s) must be specified first
-  -m, --member &amp;lt;mname&amp;gt;       data set member(s)
-  -b, --binning &amp;lt;size&amp;gt;       histogram binning(s)
+  -d, --dataset &amp;lt;dsname&amp;gt;     data &lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; must be specified first
+  -m, --member &amp;lt;mname&amp;gt;       data &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;member&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+  -b, --binning &amp;lt;size&amp;gt;       histogram binning&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
   -l, --limit &amp;lt;range&amp;gt;        histogram limits
   -o, --output &amp;lt;outfile&amp;gt;     name the output file
 
 Optional options:
   -e, --save-every &amp;lt;number&amp;gt;  save every &amp;lt;number&amp;gt; of files
-                             (default: 1)
-  -L, --l10 &amp;lt;boolean&amp;gt;        logarithmic transform (default: false)
+                             &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;default: 1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+  -L, --l10 &amp;lt;boolean&amp;gt;        logarithmic transform &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;default: &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
 
 Other options:
-  -h, --help                 print this help message and quit
+  -h, --help                 print this &lt;span class=&quot;nb&quot;&gt;help &lt;/span&gt;message and quit
   -v, --version              print version information and quit
 
 Report bugs to: torsten.scholak+histogramr@googlemail.com
@@ -2841,9 +3292,9 @@ histogramr home page: &amp;lt;https://github.com/tscholak/histogramr&amp;gt;
 &lt;h2&gt;The basics&lt;/h2&gt;
 
 &lt;p&gt;The first step is to install Jekyll and Node.js on your computer. I am running Mac OS X and the &lt;a href=&quot;https://www.macports.org&quot;&gt;MacPorts&lt;/a&gt; package management system on mine. Although my notes address this particular environment, you should be able to make use of most of the instructions also on other platforms and with different package managers. To this end, you will need to work in the terminal. And, you will need root privileges.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:~ tscholak$ sudo port selfupdate
-lipbite:~ tscholak$ sudo port install py27-pygments nodejs npm
-lipbite:~ tscholak$ sudo gem install \
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite ~]＄ sudo port selfupdate
+[tscholak@lipbite ~]＄ sudo port install py27-pygments nodejs npm
+[tscholak@lipbite ~]＄ sudo gem install \
 &amp;gt;   github-pages \
 &amp;gt;   jekyll \
 &amp;gt;   jekyll-redirect-from \
@@ -2858,16 +3309,16 @@ lipbite:~ tscholak$ sudo gem install \
 &lt;p&gt;The &lt;a href=&quot;https://github.com/inukshuk/jekyll-scholar&quot;&gt;Jekyll-Scholar&lt;/a&gt; plugin is an awesome way to create bibliographies. I use it &lt;a href=&quot;/work.html#publications&quot;&gt;here&lt;/a&gt;. It is not available on GitHub Pages and may be reason enough for you to switch to local processing.&lt;/p&gt;
 
 &lt;p&gt;Let us now create a new, empty Jekyll instance somewhere in the home folder:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:~ tscholak$ jekyll new tscholak.github.io
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite ~]＄ jekyll new tscholak.github.io
 New jekyll site installed in /Users/tscholak/tscholak.github.io.
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;I chose the name &lt;code&gt;tscholak.github.io&lt;/code&gt; because it&amp;#39;s the address of my personal page (this page) and also the name of its GitHub repository. For you, it will be &lt;code&gt;[username].github.io&lt;/code&gt;, where &lt;code&gt;[username]&lt;/code&gt; is your GitHub user name. Next we create an empty git repository in that folder and add all existing files to it:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:~ tscholak$ cd tscholak.github.io
-lipbite:tscholak.github.io tscholak$ git init
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite ~]＄ cd tscholak.github.io
+[tscholak@lipbite tscholak.github.io]＄ git init
 Initialized empty Git repository in /Users/tscholak/tscholak.github.io /.git/
-lipbite:tscholak.github.io tscholak$ git add .
-lipbite:tscholak.github.io tscholak$ git commit -m &amp;quot;Generated by Jekyll&amp;quot;
-lipbite:tscholak.github.io tscholak$ git remote add origin git@github.com:tscholak/tscholak.github.io.git
+[tscholak@lipbite tscholak.github.io]＄ git add .
+[tscholak@lipbite tscholak.github.io]＄ git commit -m &amp;quot;Generated by Jekyll&amp;quot;
+[tscholak@lipbite tscholak.github.io]＄ git remote add origin git@github.com:tscholak/tscholak.github.io.git
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;The last line connects the local repository to a remote one. In this example, the remote is my GitHub Pages repository. It is given the label &lt;code&gt;origin&lt;/code&gt;.&lt;/p&gt;
 
@@ -2876,21 +3327,21 @@ lipbite:tscholak.github.io tscholak$ git remote add origin git@github.com:tschol
 &lt;h3&gt;Set up the &lt;code&gt;source&lt;/code&gt; branch&lt;/h3&gt;
 
 &lt;p&gt;First, we have to create the &lt;code&gt;source&lt;/code&gt; branch. We use the local copy of &lt;code&gt;master&lt;/code&gt; as a starting point:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git checkout -b source master
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ git checkout -b source master
 Switched to a new branch ‘source&amp;#39;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Calling &lt;code&gt;git checkout&lt;/code&gt; with the argument &lt;code&gt;-b&lt;/code&gt; first creates and then switches to the new branch. It is the same as first calling &lt;code&gt;git branch&lt;/code&gt; and then git-checking it out.&lt;/p&gt;
 
 &lt;p&gt;Now is a good time to make sure that your remote repository &lt;code&gt;[username].github.io&lt;/code&gt; actually exists on GitHub. If it does not, go to &lt;code&gt;https://github.com/[username]&lt;/code&gt; and &lt;a href=&quot;https://help.github.com/articles/creating-a-new-repository/&quot;&gt;create it&lt;/a&gt;. Furthermore, in order to establish a secure connection between your computer and GitHub, you have to &lt;a href=&quot;https://help.github.com/articles/keeping-your-ssh-keys-and-application-access-tokens-safe/&quot;&gt;review your SSH keys&lt;/a&gt; and, if necessary, &lt;a href=&quot;https://help.github.com/articles/generating-ssh-keys/&quot;&gt;add your local key to your GitHub account&lt;/a&gt;. You will also need to configure the &lt;code&gt;ssh-agent&lt;/code&gt; program:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ eval &amp;quot;$(ssh-agent -s)&amp;quot;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ eval &amp;quot;$(ssh-agent -s)&amp;quot;
 Agent pid 9829
-lipbite:tscholak.github.io tscholak$ ssh-add ~/.ssh/id_rsa
+[tscholak@lipbite tscholak.github.io]＄ ssh-add ~/.ssh/id_rsa
 Identity added: /Users/tscholak/.ssh/id_rsa (/Users/tscholak/.ssh/id_rsa)
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Ssh-agent&quot;&gt;ssh-agent&lt;/a&gt; is a secure key chain for your private SSH keys. It comes with your Mac. The last command adds the private RSA key in your home folder to the chain. You may be asked to enter its passphrase.&lt;/p&gt;
 
 &lt;p&gt;Let us now test the connection by pushing the &lt;code&gt;source&lt;/code&gt; branch to &lt;code&gt;origin&lt;/code&gt;:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git push -u origin source
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ git push -u origin source
 Counting objects: 23, done.
 Delta compression using up to 8 threads.
 Compressing objects: 100% (21/21), done.
@@ -2905,33 +3356,33 @@ Branch source set up to track remote branch source from origin.
 &lt;h3&gt;Set up the &lt;code&gt;master&lt;/code&gt; branch&lt;/h3&gt;
 
 &lt;p&gt;Next we need to wipe the &lt;code&gt;master&lt;/code&gt; branch. The most thorough way to do this is to first delete and then to recreate it. We couldn&amp;#39;t have done this before the &lt;code&gt;source&lt;/code&gt; branch was created because GitHub doesn&amp;#39;t allow you to delete the last remaining branch. We issue:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git branch -D master
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ git branch -D master
 Deleted branch master (was e161a95).
-lipbite:tscholak.github.io tscholak$ git push origin :master
+[tscholak@lipbite tscholak.github.io]＄ git push origin :master
 To git@github.com:tscholak/tscholak.github.io.git
  - [deleted]         master
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;That gets rid of &lt;code&gt;master&lt;/code&gt; both locally and remotely. Next we create a new, orphaned &lt;code&gt;master&lt;/code&gt; branch. In the git jargon, orphaned means not derived or inherited from anything else.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git checkout --orphan master
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ git checkout --orphan master
 Switched to a new branch &amp;#39;master&amp;#39;
-lipbite:tscholak.github.io tscholak$ git reset .
+[tscholak@lipbite tscholak.github.io]＄ git reset .
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;The latter command is the opposite of &lt;code&gt;git add .&lt;/code&gt; and can reverse its effect. Since &lt;code&gt;master&lt;/code&gt; is empty, it puts the index (the next proposed commit snapshot) into an equally empty state. It remains to clear the working directory:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ rm -r *
-lipbite:tscholak.github.io tscholak$ rm .gitignore
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ rm -r *
+[tscholak@lipbite tscholak.github.io]＄ rm .gitignore
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;&lt;code&gt;master&lt;/code&gt; is now a clean slate. Let us push it to GitHub:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git commit -m &amp;quot;clean slate&amp;quot;
-lipbite:tscholak.github.io tscholak$ git push -u origin master
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ git commit -m &amp;quot;clean slate&amp;quot;
+[tscholak@lipbite tscholak.github.io]＄ git push -u origin master
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;If you go now to GitHub, you will find that &lt;code&gt;master&lt;/code&gt; has been added, and, in contrast to &lt;code&gt;source&lt;/code&gt;, is completely empty. We are done here, we can switch back to the &lt;code&gt;source&lt;/code&gt; branch:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git checkout source
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ git checkout source
 Switched to branch &amp;#39;source&amp;#39;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;h3&gt;Checking out &lt;code&gt;master&lt;/code&gt; into &lt;code&gt;_site&lt;/code&gt;&lt;/h3&gt;
 
 &lt;p&gt;On GitHub we have separated the unprocessed web site source and the processed web site code into two different branches. Locally, we will also need to separate them somehow. There is an obvious way to do that. When you run &lt;code&gt;jekyll build&lt;/code&gt; on your Jekyll instance (from within your local &lt;code&gt;~/[username].github.io&lt;/code&gt; directory), the generated site is saved into the &lt;code&gt;~/[username].github.io/_site&lt;/code&gt; folder. This is were we will checkout the &lt;code&gt;master&lt;/code&gt; branch into:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git clone git@github.com:tscholak/tscholak.github.io.git -b master _site
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ git clone git@github.com:tscholak/tscholak.github.io.git -b master _site
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Next we want to let Jekyll build the web site. To this end, we need to update the &lt;code&gt;baseurl&lt;/code&gt; configuration option (learn about it &lt;a href=&quot;https://byparker.com/blog/2014/clearing-up-confusion-around-baseurl/&quot;&gt;here&lt;/a&gt;) in Jekyll&amp;#39;s &lt;code&gt;_config.yml&lt;/code&gt; file. It needs to read &lt;code&gt;/&lt;/code&gt; because we are deploying a GitHub User Page. On this occasion, we also might want to adjust the &lt;code&gt;url&lt;/code&gt; and the &lt;code&gt;domain_name&lt;/code&gt; variable:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;baseurl&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;/&lt;/span&gt;
@@ -2939,24 +3390,24 @@ Switched to branch &amp;#39;source&amp;#39;
 &lt;span class=&quot;l-Scalar-Plain&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;http://tscholak.github.io&amp;#39;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;We can now build the site:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ jekyll build
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ jekyll build
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;You should preview it in your browser using:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ jekyll serve
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ jekyll serve
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;If everything checks out, switch to the &lt;code&gt;_site&lt;/code&gt; folder and push the result to GitHub:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ cd _site
-lipbite:_site tscholak$ ls
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ cd _site
+[tscholak@lipbite _site]＄ ls
 about   css   feed.xml  index.html  jekyll
-lipbite:_site tscholak$ git add .
-lipbite:_site tscholak$ git commit -m &amp;quot;first build&amp;quot;
+[tscholak@lipbite _site]＄ git add .
+[tscholak@lipbite _site]＄ git commit -m &amp;quot;first build&amp;quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Now browse to &lt;code&gt;http://[username].github.io&lt;/code&gt;. Your web page should be displayed exactly as it has been from your local Jekyll server.&lt;/p&gt;
 
 &lt;h3&gt;Turning off Jekyll on GitHub&lt;/h3&gt;
 
 &lt;p&gt;Since our primary goal is to replace remote by local Jekyll processing, we need to disable the former. The people from GitHub explain how that can be achieved in a &lt;a href=&quot;https://help.github.com/articles/using-jekyll-with-pages/index.html#turning-jekyll-off&quot;&gt;short support article&lt;/a&gt;. Following this article, we first have to add an empty &lt;code&gt;.nojekyll&lt;/code&gt; file to the Jekyll instance:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ touch .nojekyll
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ touch .nojekyll
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Whenever we invoke &lt;code&gt;jekyll build&lt;/code&gt;, we need Jekyll to copy that file to the &lt;code&gt;_site&lt;/code&gt; folder. Thus, second, to make Jekyll aware of the file, we need to add&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;include&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
@@ -2982,10 +3433,10 @@ lipbite:_site tscholak$ git commit -m &amp;quot;first build&amp;quot;
 &lt;p&gt;Before I talk about Grunt, I want to introduce you to Bower, the packet manager. I use Bower to manage vendor provided software, in particular, jQuery. Setting up Bower before we turn to Grunt has the advantage to have Bower tied neatly into Grunt from the very beginning. Indeed, Bower and Grunt play very well together. Grunt is ideal for making sure that the Jekyll build is not polluted by dead weight coming with third-party software.&lt;/p&gt;
 
 &lt;p&gt;Bower is installed using npm:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:~ tscholak$ sudo npm install -g bower
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite ~]＄ sudo npm install -g bower
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;It is configured using the &lt;code&gt;bower init&lt;/code&gt; command:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ bower init
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ bower init
 ? name: tscholak.github.io
 ? version: 0.0.0
 ? description: Meticulous Disorder
@@ -3023,7 +3474,7 @@ lipbite:_site tscholak$ git commit -m &amp;quot;first build&amp;quot;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Keep it like that (or similar). With these settings in place, packages can be installed from within the &lt;code&gt;tscholak.github.io&lt;/code&gt; directory with &lt;code&gt;bower install&lt;/code&gt;. So far, on my page, I use &lt;a href=&quot;http://jquery.com&quot;&gt;jQuery&lt;/a&gt;, &lt;a href=&quot;http://jqueryui.com&quot;&gt;jQuery UI&lt;/a&gt;, &lt;a href=&quot;http://fitvidsjs.com&quot;&gt;FitVids.js&lt;/a&gt;, and &lt;a href=&quot;http://letteringjs.com&quot;&gt;Lettering.js&lt;/a&gt;. Let&amp;#39;s pretend you also have a need for these:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ bower install jquery jquery-ui fitvids letteringjs --save
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ bower install jquery jquery-ui fitvids letteringjs --save
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;The components (and their auxiliary payload) are installed into &lt;code&gt;./bower_components&lt;/code&gt;. Since the Bower components, including &lt;code&gt;bower.json&lt;/code&gt;, should not end up on-line on your web page, we need to exclude them from the Jekyll build. Edit &lt;code&gt;_config.yml&lt;/code&gt; and add:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;l-Scalar-Plain&quot;&gt;exclude&lt;/span&gt;&lt;span class=&quot;p-Indicator&quot;&gt;:&lt;/span&gt;
@@ -3036,7 +3487,7 @@ lipbite:_site tscholak$ git commit -m &amp;quot;first build&amp;quot;
 &lt;h2&gt;Set up npm&lt;/h2&gt;
 
 &lt;p&gt;npm, the package manager of the Node.js project, is needed for Grunt. Its configuration is similar to that of Bower. First we execute:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ npm init
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ npm init
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Like Bower, npm will ask you a couple of question. I answered them like this:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;name: (tscholak.github.io) 
@@ -3058,10 +3509,10 @@ license: (ISC) MIT
 &lt;h2&gt;Set up Grunt&lt;/h2&gt;
 
 &lt;p&gt;We are now finally ready to set up the Grunt build system. First, we install a system-wide &lt;a href=&quot;https://www.npmjs.com/package/grunt-cli#readme&quot;&gt;command line interface for grunt&lt;/a&gt;:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ sudo npm install -g grunt-cli
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ sudo npm install -g grunt-cli
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Then we install Grunt and a few of its plugins into our project folder:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ npm install \
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ npm install \
 &amp;gt;   grunt \
 &amp;gt;   grunt-bower-task \
 &amp;gt;   grunt-contrib-connect \
@@ -3206,16 +3657,16 @@ license: (ISC) MIT
 &lt;h2&gt;Test Grunt configuration&lt;/h2&gt;
 
 &lt;p&gt;If everything is according to plan, then Grunt should now be able build and deploy the Jekyll page. Let us test these functions. Run:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ grunt -v build
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ grunt -v build
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Have a look at the verbose output and look for errors. If everything checks out, try:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ grunt -v serve
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ grunt -v serve
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;and fire the page up in your browser. If you are satisfied with the result, abort the server and run the following:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;lipbite:tscholak.github.io tscholak$ git add -A 
-lipbite:tscholak.github.io tscholak$ git commit -m &amp;quot;[message]&amp;quot;
-lipbite:tscholak.github.io tscholak$ git push origin source
-lipbite:tscholak.github.io tscholak$ grunt -v deploy
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[tscholak@lipbite tscholak.github.io]＄ git add -A 
+[tscholak@lipbite tscholak.github.io]＄ git commit -m &amp;quot;[message]&amp;quot;
+[tscholak@lipbite tscholak.github.io]＄ git push origin source
+[tscholak@lipbite tscholak.github.io]＄ grunt -v deploy
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;And boom, your static page is on-line on GitHub Pages!&lt;/p&gt;
 
@@ -3250,11 +3701,11 @@ lipbite:tscholak.github.io tscholak$ grunt -v deploy
 &lt;p&gt;For the moment I settled on &lt;a href=&quot;http://typographica.org/typeface-reviews/fira-sans/&quot;&gt;Fira Sans&lt;/a&gt; for headlines, &lt;a href=&quot;http://practicaltypography.com/charter.html&quot;&gt;Charter&lt;/a&gt; for body text, and &lt;a href=&quot;https://github.com/adobe/source-code-pro&quot;&gt;Source Code Pro&lt;/a&gt; for code listings. These are the only free fonts recommended by &lt;a href=&quot;http://practicaltypography.com/bad-fonts.html&quot;&gt;Butterick&amp;#39;s Practical Typography&lt;/a&gt;. Charter is a serif typeface and was originally designed for late 1980s printers. It performs quite well on modern displays, retina and non-retina alike. I am indebted to Matthew Butterick for packaging Charter as a web font. Fira Sans was designed in 2013 by &lt;a href=&quot;https://www.youtube.com/watch?v=F691weEVpwc&quot;&gt;Erik Spiekermann&lt;/a&gt; et al. for Firefox OS. Source Code Pro is a community project initiated by Adobe. Fira Sans and Source Code Pro can be used through Google&amp;#39;s web font service free of charge (barring some &lt;a href=&quot;http://fontfeed.com/archives/google-webfonts-the-spy-inside/&quot;&gt;privacy concerns&lt;/a&gt;).&lt;/p&gt;
 
 &lt;p&gt;Incidentally, all three fonts can be used in a LaTeX document:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;\usepackage[T1]{fontenc}
-\usepackage{charter}
-\usepackage[charter]{mathdesign}
-\usepackage{sourcecodepro}
-\usepackage[lf]{FiraSans}
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-latex&quot; data-lang=&quot;latex&quot;&gt;&lt;span class=&quot;k&quot;&gt;\usepackage&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;[T1]&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;{&lt;/span&gt;fontenc&lt;span class=&quot;nb&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;\usepackage&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;{&lt;/span&gt;charter&lt;span class=&quot;nb&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;\usepackage&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;[charter]&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;{&lt;/span&gt;mathdesign&lt;span class=&quot;nb&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;\usepackage&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;{&lt;/span&gt;sourcecodepro&lt;span class=&quot;nb&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;\usepackage&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;[lf]&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;{&lt;/span&gt;FiraSans&lt;span class=&quot;nb&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
         <pubDate>Sun, 01 Mar 2015 19:00:00 -0500</pubDate>
         <link>http://tscholak.github.io//update/2015/03/01/finding-the-right-fonts.html</link>

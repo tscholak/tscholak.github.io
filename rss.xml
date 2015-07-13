@@ -8,7 +8,25 @@
     <title>Meticulous Disorder</title>
     <link>http://tscholak.github.io</link>
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
-    <pubDate>Tue, 07 Jul 2015 08:00:00 -0400</pubDate>
+    <pubDate>Mon, 13 Jul 2015 09:00:00 -0400</pubDate>
+    <item>
+      <title>Large-Data Work-Flow with MongoDB</title>
+      <link>http://tscholak.github.io/big%20data/python/mongodb/2015/07/13/.html</link>
+      <description>&lt;p&gt;On Containers, Databases, And ...
+programming languages
+developer tools&lt;/p&gt;
+</description>
+      <pubDate>Mon, 13 Jul 2015 09:00:00 -0400</pubDate>
+      <dc:date>2015-07-13T09:00:00-04:00</dc:date>
+    </item>
+    <item>
+      <title>The Setup</title>
+      <link>http://tscholak.github.io/update/python/mongodb/docker/2015/07/13/the-setup.html</link>
+      <description>&lt;p&gt;In the style of an interview on &lt;a href=&quot;https://usesthis.com&quot;&gt;usesthis.com&lt;/a&gt;, I want to give you some info about the hard- and software I&amp;#39;m currently using for my projects. I also tell you how to deploy some of that software. &lt;/p&gt;
+</description>
+      <pubDate>Mon, 13 Jul 2015 08:00:00 -0400</pubDate>
+      <dc:date>2015-07-13T08:00:00-04:00</dc:date>
+    </item>
     <item>
       <title>Communities and Markets</title>
       <link>http://tscholak.github.io/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html</link>
@@ -59,6 +77,6 @@
       <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-07-07T08:00:00-04:00</dc:date>
+    <dc:date>2015-07-13T09:00:00-04:00</dc:date>
   </channel>
 </rss>
