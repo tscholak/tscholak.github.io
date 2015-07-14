@@ -201,7 +201,7 @@
 </code></pre></div>
 <p>With this script, I can copy all data in <code>transactions.csv</code> to a MongoDB collection called <code>transactions</code> using the PyMongo driver. Any preexisting collection with that name is wiped. The script is divided into three major tasks:</p>
 
-<p>First, I use Pandas to parse the CSV file and to load its contents chunk by chunk into an ordered data structure, in this case, a Pandas <code>DataFrame</code>. To this end, Pandas first divides the file into read chunks of a $100000$ rows each. Pandas then returns an iterator on the chunks and only reads the data when requested. That reduces the memory consumption significantly, compared with reading the file as a whole. A <code>DataFrame</code> with all of the file&#39;s contents would barely fit in RAM.</p>
+<p>First, I use Pandas to parse the CSV file and to load its contents chunk by chunk into an ordered data structure, in this case, a Pandas <code>DataFrame</code>. To this end, Pandas first divides the file into read chunks of a $100,000$ rows each. Pandas then returns an iterator on the chunks and only reads the data when requested. That reduces the memory consumption significantly, compared with reading the file as a whole. A <code>DataFrame</code> with all of the file&#39;s contents would barely fit in RAM.</p>
 
 <p>Then, I pass the Pandas iterator to the <code>to_mongo</code> function. There, it is iterated over. PyMongo doesn&#39;t know what to do with a <code>DataFrame</code> object. It only understands Python&#39;s <code>dict</code> objects. To get around this limitation, I use Pandas&#39; <code>to_json</code> method to first convert the chunk to a JSON string and then <code>json.loads</code> to de-serialize that string to a <code>dict</code> object that PyMongo gladly accepts. <code>insert</code> inserts the chunk into the <code>transactions</code> collection.</p>
 
@@ -407,7 +407,7 @@
 <tr>
 <th style="text-align: right">field</th>
 <th style="text-align: left">description</th>
-<th style="text-align: left">role</th>
+<th style="text-align: left">representation</th>
 </tr>
 </thead><tbody>
 <tr>
@@ -461,7 +461,7 @@
 
 <p>The <code>graph</code> collection also stores the number of item returns and the total transaction count. Note that <code>transactioncount</code> is not just equal to the sum of <code>purchasecount</code> and <code>returncount</code> -- it is equal or less (it&#39;s the number of records in the <code>transactions</code> collection in which a consumer and an item occur together). Since the three counts are independent quantities, they do not give rise to the same, but to different edges with different integer-valued weights. These edges can be assigned to three different layers such that the consumer-item graph becomes a so-called <em>multiplex</em> or <em>multilayer graph</em>.</p>
 
-<p>With these additional conventions (summarized by the &quot;role&quot; column in the table of fields), the <code>graph</code> collection <em>becomes</em> the consumer-item graph. For now and in future posts, I am therefore identifying them with each other. Indeed, the difference between a graph and the storage structure that holds it is mostly one of semantics rather than substance.</p>
+<p>With these additional conventions (summarized by the &quot;representation&quot; column in the table of fields), the <code>graph</code> collection <em>becomes</em> the consumer-item graph. For now and in future posts, I am therefore identifying them with each other. Indeed, the difference between a graph and the storage structure that holds it is mostly one of semantics rather than substance.</p>
 
     </section>
 

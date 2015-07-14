@@ -5,8 +5,8 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 14 Jul 2015 02:04:39 -0400</pubDate>
-    <lastBuildDate>Tue, 14 Jul 2015 02:04:39 -0400</lastBuildDate>
+    <pubDate>Tue, 14 Jul 2015 02:10:02 -0400</pubDate>
+    <lastBuildDate>Tue, 14 Jul 2015 02:10:02 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
@@ -116,7 +116,7 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;With this script, I can copy all data in &lt;code&gt;transactions.csv&lt;/code&gt; to a MongoDB collection called &lt;code&gt;transactions&lt;/code&gt; using the PyMongo driver. Any preexisting collection with that name is wiped. The script is divided into three major tasks:&lt;/p&gt;
 
-&lt;p&gt;First, I use Pandas to parse the CSV file and to load its contents chunk by chunk into an ordered data structure, in this case, a Pandas &lt;code&gt;DataFrame&lt;/code&gt;. To this end, Pandas first divides the file into read chunks of a $100000$ rows each. Pandas then returns an iterator on the chunks and only reads the data when requested. That reduces the memory consumption significantly, compared with reading the file as a whole. A &lt;code&gt;DataFrame&lt;/code&gt; with all of the file&amp;#39;s contents would barely fit in RAM.&lt;/p&gt;
+&lt;p&gt;First, I use Pandas to parse the CSV file and to load its contents chunk by chunk into an ordered data structure, in this case, a Pandas &lt;code&gt;DataFrame&lt;/code&gt;. To this end, Pandas first divides the file into read chunks of a $100,000$ rows each. Pandas then returns an iterator on the chunks and only reads the data when requested. That reduces the memory consumption significantly, compared with reading the file as a whole. A &lt;code&gt;DataFrame&lt;/code&gt; with all of the file&amp;#39;s contents would barely fit in RAM.&lt;/p&gt;
 
 &lt;p&gt;Then, I pass the Pandas iterator to the &lt;code&gt;to_mongo&lt;/code&gt; function. There, it is iterated over. PyMongo doesn&amp;#39;t know what to do with a &lt;code&gt;DataFrame&lt;/code&gt; object. It only understands Python&amp;#39;s &lt;code&gt;dict&lt;/code&gt; objects. To get around this limitation, I use Pandas&amp;#39; &lt;code&gt;to_json&lt;/code&gt; method to first convert the chunk to a JSON string and then &lt;code&gt;json.loads&lt;/code&gt; to de-serialize that string to a &lt;code&gt;dict&lt;/code&gt; object that PyMongo gladly accepts. &lt;code&gt;insert&lt;/code&gt; inserts the chunk into the &lt;code&gt;transactions&lt;/code&gt; collection.&lt;/p&gt;
 
@@ -322,7 +322,7 @@
 &lt;tr&gt;
 &lt;th style=&quot;text-align: right&quot;&gt;field&lt;/th&gt;
 &lt;th style=&quot;text-align: left&quot;&gt;description&lt;/th&gt;
-&lt;th style=&quot;text-align: left&quot;&gt;role&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;representation&lt;/th&gt;
 &lt;/tr&gt;
 &lt;/thead&gt;&lt;tbody&gt;
 &lt;tr&gt;
@@ -376,7 +376,7 @@
 
 &lt;p&gt;The &lt;code&gt;graph&lt;/code&gt; collection also stores the number of item returns and the total transaction count. Note that &lt;code&gt;transactioncount&lt;/code&gt; is not just equal to the sum of &lt;code&gt;purchasecount&lt;/code&gt; and &lt;code&gt;returncount&lt;/code&gt; -- it is equal or less (it&amp;#39;s the number of records in the &lt;code&gt;transactions&lt;/code&gt; collection in which a consumer and an item occur together). Since the three counts are independent quantities, they do not give rise to the same, but to different edges with different integer-valued weights. These edges can be assigned to three different layers such that the consumer-item graph becomes a so-called &lt;em&gt;multiplex&lt;/em&gt; or &lt;em&gt;multilayer graph&lt;/em&gt;.&lt;/p&gt;
 
-&lt;p&gt;With these additional conventions (summarized by the &amp;quot;role&amp;quot; column in the table of fields), the &lt;code&gt;graph&lt;/code&gt; collection &lt;em&gt;becomes&lt;/em&gt; the consumer-item graph. For now and in future posts, I am therefore identifying them with each other. Indeed, the difference between a graph and the storage structure that holds it is mostly one of semantics rather than substance.&lt;/p&gt;
+&lt;p&gt;With these additional conventions (summarized by the &amp;quot;representation&amp;quot; column in the table of fields), the &lt;code&gt;graph&lt;/code&gt; collection &lt;em&gt;becomes&lt;/em&gt; the consumer-item graph. For now and in future posts, I am therefore identifying them with each other. Indeed, the difference between a graph and the storage structure that holds it is mostly one of semantics rather than substance.&lt;/p&gt;
 </description>
         <pubDate>Tue, 14 Jul 2015 02:00:00 -0400</pubDate>
         <link>http://tscholak.github.io//big%20data/python/mongodb/2015/07/14/MongoDB-workflow.html</link>
