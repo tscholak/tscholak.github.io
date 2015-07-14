@@ -258,21 +258,21 @@ There is a bit of logic involved in the detection of purchases and returns that 
 
 ###### Using only `purchasequantity`
 
-Naive as I was, I first said that a transaction had to be a return if `purchasequantity` was negative. If this were correct, then, in these cases, one would expect `purchaseamount` also to be negative, because the price of an item should always be positive. I found that this can be observed for $3677$ transactions. However, there are some transaction ($15$ to be exact), for which `purchasequantity` $< 0$ and `purchaseamount` $> 0$. There are also $7$ cases where `purchaseamount` is zero. I therefore had to accept that the sign of `purchasequantity` is not a good indicator for when an item is being returned.
+Naive as I was, I first said that a transaction had to be a return if `purchasequantity` was negative. If this were correct, then, in these cases, one would expect `purchaseamount` also to be negative, because the price of an item should always be positive. I found that this can be observed for $267,968$ transactions. However, there are some transaction ($5,080$ to be exact), for which `purchasequantity` $< 0$ and `purchaseamount` $> 0$. There are also $800$ cases where `purchaseamount` is zero. I therefore had to accept that the sign of `purchasequantity` is not a good indicator for when an item is being returned.
 
 ###### Using only `purchaseamount`
 
-I then studied the `purchaseamount` field. Could it be a better indicator? Unfortunately, it's not good either, it's actually worse. I found $1353$ cases for which `purchaseamount` $< 0$ and `purchasequantity` $= 0$. And, there are $35018$ cases where `purchaseamount` $< 0$ and `purchasequantity` $> 0$. If one were to take this literally, it means that someone bought an item and was *paid* the item's price by the store. These must be errors. Maybe it was a return and `purchasequantity` was meant to be negative as well, but for some reason was not. We'll never know.
+I then studied the `purchaseamount` field. Could it be a better indicator? Unfortunately, it's not good either, it's actually worse. I found $35,886$ cases for which `purchaseamount` $< 0$ and `purchasequantity` $= 0$. And, there are $7,811,148$ cases where `purchaseamount` $< 0$ and `purchasequantity` $> 0$. If one were to take this literally, it means that someone bought an item and was *paid* the item's price by the store. These must be errors. Maybe it was a return and `purchasequantity` was meant to be negative as well, but for some reason was not. We'll never know.
 
 ###### Using both `purchasequantity` and `purchaseamount`
 
 I concluded that the best criterion for when it was a return is to look for instances in which `purchasequantity` $< 0$ *or* `purchaseamount` $< 0$ (a nonexclusive or). In the MongoDB console, this could look like: 
 
 ```javascript
-db.transactions.find ( { $or: [ { purchasequantity: { $lt: 0 } }, { purchaseamount: { $lt: 0 } } ] } )
+db.transactions.find( { $or: [ { purchasequantity: { $lt: 0 } }, { purchaseamount: { $lt: 0 } } ] } )
 ```
 
-That command returns $40070$ transactions. As you can see from the code above, this filter is what I ended up using.
+That command returns $8,120,882$ transactions. As you can see from the code above, this filter is what I ended up using.
 
 Now back to the code, particularly, the line in which `pipeline` is passed to PyMongo's `aggregate` method. `aggregate` returns a database cursor that iterates over the results of the query. For each record provided by the cursor, the script looks up the item id associated with values of the record's `brand`, `company`, and `category` fields. This is what the `items` object was for. The retrieved id is added to the record; this updated record is then inserted into the `graph` collection.
 
