@@ -300,7 +300,7 @@ An immediate question is how large $N$ and $T$ have to be in practice. Zweig and
 
 Beware, there are also a few limitations. For instance, the extraction method itself can be computationally expensive. Another issue is that, so far, it works for data only that can be represented as unweighted simple bipartite graph. This is probably the biggest complaint I have, see below.
 
-# Market Segmentation And Recommendation Systems
+# <a name="MarketSegmentationAndRecommendationSystems"></a> Market Segmentation And Recommendation Systems
 
 After talking about all that fascinating theory, it is now time to put it all together and to experiment with it. For a market with a large number of consumers and purchase items, I am addressing the following two questions:
 
