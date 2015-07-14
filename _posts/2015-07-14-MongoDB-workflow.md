@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
 With this script, I can copy all data in `transactions.csv` to a MongoDB collection called `transactions` using the PyMongo driver. Any preexisting collection with that name is wiped. The script is divided into three major tasks:
 
-First, I use Pandas to parse the CSV file and to load its contents chunk by chunk into an ordered data structure, in this case, a Pandas `DataFrame`. To this end, Pandas first divides the file into read chunks of a $100000$ rows each. Pandas then returns an iterator on the chunks and only reads the data when requested. That reduces the memory consumption significantly, compared with reading the file as a whole. A `DataFrame` with all of the file's contents would barely fit in RAM.
+First, I use Pandas to parse the CSV file and to load its contents chunk by chunk into an ordered data structure, in this case, a Pandas `DataFrame`. To this end, Pandas first divides the file into read chunks of a $100,000$ rows each. Pandas then returns an iterator on the chunks and only reads the data when requested. That reduces the memory consumption significantly, compared with reading the file as a whole. A `DataFrame` with all of the file's contents would barely fit in RAM.
 
 Then, I pass the Pandas iterator to the `to_mongo` function. There, it is iterated over. PyMongo doesn't know what to do with a `DataFrame` object. It only understands Python's `dict` objects. To get around this limitation, I use Pandas' `to_json` method to first convert the chunk to a JSON string and then `json.loads` to de-serialize that string to a `dict` object that PyMongo gladly accepts. `insert` inserts the chunk into the `transactions` collection.
 
@@ -282,20 +282,20 @@ Once the `for` loop is finished looping through the records, a couple of indexes
 
 Let me conclude with a comment regarding the role of the `graph` collection in [my current project](/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html). Please have a look at the following table:
 
-| field            | description                            | role   |
-| ----------------:|:-------------------------------------- |:------ |
-| consumer         | unique id representing a consumer      | vertex |
-| item             | unique id representing an item         | vertex |
-| dept             | aggregate groupings of item categories | label  |
-| category         | id of the item's category              | label  |
-| company          | id of the company selling the item     | label  |
-| brand            | id of the brand the item belongs to    | label  |
-| transactioncount | total number of transactions           | edge   |
-| purchasecount    | total number of purchases              | edge   |
-| returncount      | total number of returns                | edge   |
+| field            | description                            | representation |
+| ----------------:|:-------------------------------------- |:-------------- |
+| consumer         | unique id representing a consumer      | vertex         |
+| item             | unique id representing an item         | vertex         |
+| dept             | aggregate groupings of item categories | label          |
+| category         | id of the item's category              | label          |
+| company          | id of the company selling the item     | label          |
+| brand            | id of the brand the item belongs to    | label          |
+| transactioncount | total number of transactions           | edge           |
+| purchasecount    | total number of purchases              | edge           |
+| returncount      | total number of returns                | edge           |
 
 This is a list of the fields in the `graph` collection as created by my script. Recall that, in [my original post](/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html#MarketSegmentationAndRecommendationSystems), I defined the *consumer-item graph* as the bipartite graph in which the consumers and the items appear as vertices and in which the purchases are represented by integer-weighted edges. From a look at the table of fields, it is apparent that the `graph` collection stores not only the full consumer-item graph, it also has information about the department, the category, the company, and the brand of each item. In the graph, this information can be represented as labels of the item vertices.
 
 The `graph` collection also stores the number of item returns and the total transaction count. Note that `transactioncount` is not just equal to the sum of `purchasecount` and `returncount` -- it is equal or less (it's the number of records in the `transactions` collection in which a consumer and an item occur together). Since the three counts are independent quantities, they do not give rise to the same, but to different edges with different integer-valued weights. These edges can be assigned to three different layers such that the consumer-item graph becomes a so-called *multiplex* or *multilayer graph*.
 
-With these additional conventions (summarized by the "role" column in the table of fields), the `graph` collection *becomes* the consumer-item graph. For now and in future posts, I am therefore identifying them with each other. Indeed, the difference between a graph and the storage structure that holds it is mostly one of semantics rather than substance.
+With these additional conventions (summarized by the "representation" column in the table of fields), the `graph` collection *becomes* the consumer-item graph. For now and in future posts, I am therefore identifying them with each other. Indeed, the difference between a graph and the storage structure that holds it is mostly one of semantics rather than substance.
