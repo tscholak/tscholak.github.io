@@ -5,9 +5,391 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 14 Jul 2015 02:03:15 -0400</pubDate>
-    <lastBuildDate>Tue, 14 Jul 2015 02:03:15 -0400</lastBuildDate>
+    <pubDate>Tue, 14 Jul 2015 02:04:39 -0400</pubDate>
+    <lastBuildDate>Tue, 14 Jul 2015 02:04:39 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
+    
+      <item>
+        <title>Big-Data Work-Flow with MongoDB</title>
+        <description>&lt;p&gt;For &lt;a href=&quot;/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html&quot;&gt;my current project&lt;/a&gt;, I need to be able to routinely handle tens of gigabytes of data. After a failed attempt to create a convenient work-flow with &lt;a href=&quot;https://www.hdfgroup.org/HDF5/&quot;&gt;HDF5&lt;/a&gt; on a single machine, I decided to store everything in a MongoDB database on my server and to have my desktop retrieving only the data that I need. I&amp;#39;m happy to report that I have finally concocted a system that works. &lt;span class=&quot;more&quot;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;Let me demonstrate with an example. Currently, I am working with the &lt;a href=&quot;https://www.kaggle.com/c/acquire-valued-shoppers-challenge&quot;&gt;Acquire Valued Shoppers Challenge&lt;/a&gt; data from Kaggle. This data comes in five gzipped CSV files, the interesting one being &lt;code&gt;transactions.csv&lt;/code&gt;. This file contains one year of purchase transaction history for $311,452$ different consumers. It is over $20 \mathrm{GB}$ in size. Each transaction record consists of eleven fields listed in the following table:&lt;/p&gt;
+
+&lt;table&gt;&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&quot;text-align: right&quot;&gt;field&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;description&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;id&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;unique id representing a consumer&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;chain&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;integer representing a store chain&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;dept&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;aggregate groupings of item categories&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;category&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the item&amp;#39;s category&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;company&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the company selling the item&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;brand&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the brand the item belongs to&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;date&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;purchase date&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;productsize&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;amount of the item purchase&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;productmeasure&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;unit the amount is measured in&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;purchasequantity&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;number of units purchased&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;purchaseamount&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;dollar amount of the purchase&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;h2&gt;Copying to MongoDB&lt;/h2&gt;
+
+&lt;p&gt;My first task was to load that file and store its contents in MongoDB. I wrote a little Python script that does exactly that. It is shown below.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note that this and all following code examples have been edited for length and clarity. There is no error handling, no logging, and no user feedback.&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pandas&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pd&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;json&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pymongo&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MongoClient&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_host&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;server.local&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_db_name&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;mydb&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_port&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27017&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;chunk_size&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;drop_collections_on_load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_source_csv_gz&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions.csv.gz&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;to_mongo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idxs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;drop_collections_on_load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;drop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chunk&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;insert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;loads&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;chunk&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;to_json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;orient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;records&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idxs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ensure_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# establish connection:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MongoClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_host&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                               &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_port&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_db_name&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# load data:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;transactions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;read_csv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_source_csv_gz&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;parse_dates&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;date&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;compression&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;gzip&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;chunksize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;chunk_size&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# insert data:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;to_mongo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]],&lt;/span&gt;
+             &lt;span class=&quot;n&quot;&gt;transactions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;brand&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;company&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;date&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# close connection:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With this script, I can copy all data in &lt;code&gt;transactions.csv&lt;/code&gt; to a MongoDB collection called &lt;code&gt;transactions&lt;/code&gt; using the PyMongo driver. Any preexisting collection with that name is wiped. The script is divided into three major tasks:&lt;/p&gt;
+
+&lt;p&gt;First, I use Pandas to parse the CSV file and to load its contents chunk by chunk into an ordered data structure, in this case, a Pandas &lt;code&gt;DataFrame&lt;/code&gt;. To this end, Pandas first divides the file into read chunks of a $100000$ rows each. Pandas then returns an iterator on the chunks and only reads the data when requested. That reduces the memory consumption significantly, compared with reading the file as a whole. A &lt;code&gt;DataFrame&lt;/code&gt; with all of the file&amp;#39;s contents would barely fit in RAM.&lt;/p&gt;
+
+&lt;p&gt;Then, I pass the Pandas iterator to the &lt;code&gt;to_mongo&lt;/code&gt; function. There, it is iterated over. PyMongo doesn&amp;#39;t know what to do with a &lt;code&gt;DataFrame&lt;/code&gt; object. It only understands Python&amp;#39;s &lt;code&gt;dict&lt;/code&gt; objects. To get around this limitation, I use Pandas&amp;#39; &lt;code&gt;to_json&lt;/code&gt; method to first convert the chunk to a JSON string and then &lt;code&gt;json.loads&lt;/code&gt; to de-serialize that string to a &lt;code&gt;dict&lt;/code&gt; object that PyMongo gladly accepts. &lt;code&gt;insert&lt;/code&gt; inserts the chunk into the &lt;code&gt;transactions&lt;/code&gt; collection.&lt;/p&gt;
+
+&lt;p&gt;Finally, after all data has been copied, I create several single field indexes in the &lt;code&gt;transactions&lt;/code&gt; collection, specifically, for the fields &lt;code&gt;id&lt;/code&gt;, &lt;code&gt;brand&lt;/code&gt;, &lt;code&gt;category&lt;/code&gt;, &lt;code&gt;company&lt;/code&gt;, and &lt;code&gt;date&lt;/code&gt;. The script exits after closing the connection to the database.&lt;/p&gt;
+
+&lt;h2&gt;Creating specialized data collections&lt;/h2&gt;
+
+&lt;p&gt;The &lt;code&gt;transactions&lt;/code&gt; collection contains a lot of information, not all of which is constantly in need. Since every bit of additional information equals more waiting, it makes sense to create a couple of thinned out collections that are tailored to specific use cases. I have picked one of my use cases to illustrate this process.&lt;/p&gt;
+
+&lt;p&gt;Currently, &lt;a href=&quot;/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html#MarketSegmentationAndRecommendationSystems&quot;&gt;I am studying graphs&lt;/a&gt; that represent the relationship between the consumers and the items in the dataset. These relationships are solely inferred from aggregated transaction data. Since the original &lt;code&gt;transactions&lt;/code&gt; collection contains atomic transaction data, I decided to create another collection, &lt;code&gt;graph&lt;/code&gt;, populated just with aggregated data. For that purpose, I wrote the following Python script:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pandas&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pd&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pymongo&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MongoClient&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_host&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;server.local&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_db_name&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;mydb&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_port&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27017&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;drop_collections_on_load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;transactions&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;graph_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;graph&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# establish connection:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MongoClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_host&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+                               &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_port&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;mongo_db_name&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# get collections:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;transactions_collection&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;transactions_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mongo_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;graph_collection&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;drop_collections_on_load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;drop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# query items:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pipeline&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$group&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$category&amp;quot;&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}},&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$project&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.category&amp;quot;&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transactions_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;aggregate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pipeline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                               &lt;span class=&quot;n&quot;&gt;allowDiskUse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;item&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reset_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;level&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;set_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;brand&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                             &lt;span class=&quot;s&quot;&gt;&amp;#39;company&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                             &lt;span class=&quot;s&quot;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# for each consumer and item, aggregate purchases and returns:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pipeline&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$group&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;consumer&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$category&amp;quot;&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;dept&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$first&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$dept&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;transactioncount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$sum&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;purchasecount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$sum&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;$cond&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$and&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$gt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$gt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchaseamount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                        &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                        &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                    &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;}},&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;returncount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$sum&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                    &lt;span class=&quot;s&quot;&gt;&amp;quot;$cond&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$or&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$lt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$lt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchaseamount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$cond&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$lt&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$subtract&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                                &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;
+                            &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                            &lt;span class=&quot;s&quot;&gt;&amp;quot;$purchasequantity&amp;quot;&lt;/span&gt;
+                        &lt;span class=&quot;p&quot;&gt;]},&lt;/span&gt;
+                        &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+                    &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;}}&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}},&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;$project&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;consumer&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.consumer&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.brand&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;$_id.category&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;dept&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;transactioncount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;purchasecount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;&amp;quot;returncount&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transactions_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;aggregate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pipeline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                               &lt;span class=&quot;n&quot;&gt;allowDiskUse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# process records:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;item&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;loc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;brand&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+             &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;company&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+             &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]),&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;&amp;#39;item&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;c&quot;&gt;# insert data:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;insert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# create indexes:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;consumer&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;item&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;graph_collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create_index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;brand&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;company&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pymongo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ASCENDING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;c&quot;&gt;# close connection&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mongo_client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here is how it works:&lt;/p&gt;
+
+&lt;p&gt;After opening a connection to the database, the script starts to query all individual items that occur in the &lt;code&gt;transactions&lt;/code&gt; collection. In particular, it first retrieves all items from MongoDB, then counts, and eventually stores them in a &lt;code&gt;MultiIndex&lt;/code&gt;-ed Pandas &lt;code&gt;DataFrame&lt;/code&gt; called &lt;code&gt;items&lt;/code&gt;. The count plays the role of an item id. Later, this id is added as a field to the &lt;code&gt;graph&lt;/code&gt; collection.&lt;/p&gt;
+
+&lt;p&gt;This sounds strange, but there is a reason for it. As apparent from the table above, the original dataset does not feature anything resembling an &amp;quot;item&amp;quot; field. That means that there is no data that directly identifies the items that have been purchased by the consumers -- we only know that each row in the dataset is associated with the purchase of one particular item (or multiples thereof), but not of which one. Yet, we have information that is almost as good as an &amp;quot;item&amp;quot; field. We have the ids of the purchased item&amp;#39;s brand, its manufacturer, and its category within the store. I define an item as a unique combination of those fields, i.e. of the values of &lt;code&gt;brand&lt;/code&gt;, &lt;code&gt;company&lt;/code&gt;, and &lt;code&gt;category&lt;/code&gt;. Of course, with this I turned a blind eye to the fact that the very same item can come in different sizes, flavors, and with different traits. Information about flavors and traits is not available, but, in principle, size information could have been extracted from the &lt;code&gt;productsize&lt;/code&gt; and &lt;code&gt;productmeasure&lt;/code&gt; fields. I decided against using that data. &lt;/p&gt;
+
+&lt;p&gt;
+  &lt;figure&gt;
+    &lt;img src=&quot;/assets/images/hydrogen.png&quot; title=&quot;Hydrogen&quot;&gt;
+  &lt;/figure&gt;
+  &lt;figcaption&gt;Output of the above script as it appears in the Atom editor. The small overlay window shows a dump of the &lt;code&gt;items&lt;/code&gt; object formatted as a table.&lt;/figcaption&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Next in the script is the aggregation job. The data processing pipeline for the aggregation is long, but quite straight-forward (it&amp;#39;s the second list of dictionaries assigned to the &lt;code&gt;pipeline&lt;/code&gt; variable). Let me go through it step by step. First I group all documents by the fields &lt;code&gt;id&lt;/code&gt;, &lt;code&gt;brand&lt;/code&gt;, &lt;code&gt;company&lt;/code&gt;, and &lt;code&gt;category&lt;/code&gt; (as specified by the &lt;code&gt;_id&lt;/code&gt; field). For each group, MongoDB sums up&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;the total number of transactions,&lt;/li&gt;
+&lt;li&gt;the total number of purchases, and&lt;/li&gt;
+&lt;li&gt;the absolute total number returns (some counts are negative as explained below).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;MongoDB also collects the &lt;code&gt;dept&lt;/code&gt; field, whose values are nothing but coarse-grained versions of the &lt;code&gt;category&lt;/code&gt; taxonomy (see the table above). The last step, the projection step, is a decision between which fields to return and which to dismiss.&lt;/p&gt;
+
+&lt;p&gt;There is a bit of logic involved in the detection of purchases and returns that begs an explanation. In the script, a transaction becomes a purchase if the values of both the &lt;code&gt;purchasequantity&lt;/code&gt; and the &lt;code&gt;purchaseamount&lt;/code&gt; fields are positive. It becomes a return if either value is negative. I made this distinction a little fuzzy because I found that returns are marked &lt;em&gt;inconsistently&lt;/em&gt; in the original dataset. I found out about this when I iterated whether &lt;code&gt;purchasequantity&lt;/code&gt; or &lt;code&gt;purchaseamount&lt;/code&gt; on their own could be used to identify an item return. This is what happened:&lt;/p&gt;
+
+&lt;h6&gt;Using only &lt;code&gt;purchasequantity&lt;/code&gt;&lt;/h6&gt;
+
+&lt;p&gt;Naive as I was, I first said that a transaction had to be a return if &lt;code&gt;purchasequantity&lt;/code&gt; was negative. If this were correct, then, in these cases, one would expect &lt;code&gt;purchaseamount&lt;/code&gt; also to be negative, because the price of an item should always be positive. I found that this can be observed for $3677$ transactions. However, there are some transaction ($15$ to be exact), for which &lt;code&gt;purchasequantity&lt;/code&gt; $&amp;lt; 0$ and &lt;code&gt;purchaseamount&lt;/code&gt; $&amp;gt; 0$. There are also $7$ cases where &lt;code&gt;purchaseamount&lt;/code&gt; is zero. I therefore had to accept that the sign of &lt;code&gt;purchasequantity&lt;/code&gt; is not a good indicator for when an item is being returned.&lt;/p&gt;
+
+&lt;h6&gt;Using only &lt;code&gt;purchaseamount&lt;/code&gt;&lt;/h6&gt;
+
+&lt;p&gt;I then studied the &lt;code&gt;purchaseamount&lt;/code&gt; field. Could it be a better indicator? Unfortunately, it&amp;#39;s not good either, it&amp;#39;s actually worse. I found $1353$ cases for which &lt;code&gt;purchaseamount&lt;/code&gt; $&amp;lt; 0$ and &lt;code&gt;purchasequantity&lt;/code&gt; $= 0$. And, there are $35018$ cases where &lt;code&gt;purchaseamount&lt;/code&gt; $&amp;lt; 0$ and &lt;code&gt;purchasequantity&lt;/code&gt; $&amp;gt; 0$. If one were to take this literally, it means that someone bought an item and was &lt;em&gt;paid&lt;/em&gt; the item&amp;#39;s price by the store. These must be errors. Maybe it was a return and &lt;code&gt;purchasequantity&lt;/code&gt; was meant to be negative as well, but for some reason was not. We&amp;#39;ll never know.&lt;/p&gt;
+
+&lt;h6&gt;Using both &lt;code&gt;purchasequantity&lt;/code&gt; and &lt;code&gt;purchaseamount&lt;/code&gt;&lt;/h6&gt;
+
+&lt;p&gt;I concluded that the best criterion for when it was a return is to look for instances in which &lt;code&gt;purchasequantity&lt;/code&gt; $&amp;lt; 0$ &lt;em&gt;or&lt;/em&gt; &lt;code&gt;purchaseamount&lt;/code&gt; $&amp;lt; 0$ (a nonexclusive or). In the MongoDB console, this could look like: &lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;transactions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;find&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$or&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;purchasequantity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$lt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;purchaseamount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$lt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That command returns $40070$ transactions. As you can see from the code above, this filter is what I ended up using.&lt;/p&gt;
+
+&lt;p&gt;Now back to the code, particularly, the line in which &lt;code&gt;pipeline&lt;/code&gt; is passed to PyMongo&amp;#39;s &lt;code&gt;aggregate&lt;/code&gt; method. &lt;code&gt;aggregate&lt;/code&gt; returns a database cursor that iterates over the results of the query. For each record provided by the cursor, the script looks up the item id associated with values of the record&amp;#39;s &lt;code&gt;brand&lt;/code&gt;, &lt;code&gt;company&lt;/code&gt;, and &lt;code&gt;category&lt;/code&gt; fields. This is what the &lt;code&gt;items&lt;/code&gt; object was for. The retrieved id is added to the record; this updated record is then inserted into the &lt;code&gt;graph&lt;/code&gt; collection.&lt;/p&gt;
+
+&lt;p&gt;Once the &lt;code&gt;for&lt;/code&gt; loop is finished looping through the records, a couple of indexes are created. Here, I let PyMongo create two single-field indexes, one for &lt;code&gt;consumer&lt;/code&gt; and one for &lt;code&gt;item&lt;/code&gt;, and one compound compound index. This compound index holds references to the fields &lt;code&gt;brand&lt;/code&gt;, &lt;code&gt;company&lt;/code&gt;, and &lt;code&gt;category&lt;/code&gt;. Once index build has been initiated, the script closes the connection and exits.&lt;/p&gt;
+
+&lt;h2&gt;A final word&lt;/h2&gt;
+
+&lt;p&gt;Let me conclude with a comment regarding the role of the &lt;code&gt;graph&lt;/code&gt; collection in &lt;a href=&quot;/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html&quot;&gt;my current project&lt;/a&gt;. Please have a look at the following table:&lt;/p&gt;
+
+&lt;table&gt;&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&quot;text-align: right&quot;&gt;field&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;description&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;role&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;consumer&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;unique id representing a consumer&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;vertex&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;item&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;unique id representing an item&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;vertex&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;dept&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;aggregate groupings of item categories&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;label&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;category&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the item&amp;#39;s category&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;label&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;company&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the company selling the item&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;label&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;brand&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;id of the brand the item belongs to&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;label&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;transactioncount&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;total number of transactions&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;edge&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;purchasecount&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;total number of purchases&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;edge&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: right&quot;&gt;returncount&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;total number of returns&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;edge&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;This is a list of the fields in the &lt;code&gt;graph&lt;/code&gt; collection as created by my script. Recall that, in &lt;a href=&quot;/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html#MarketSegmentationAndRecommendationSystems&quot;&gt;my original post&lt;/a&gt;, I defined the &lt;em&gt;consumer-item graph&lt;/em&gt; as the bipartite graph in which the consumers and the items appear as vertices and in which the purchases are represented by integer-weighted edges. From a look at the table of fields, it is apparent that the &lt;code&gt;graph&lt;/code&gt; collection stores not only the full consumer-item graph, it also has information about the department, the category, the company, and the brand of each item. In the graph, this information can be represented as labels of the item vertices.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;graph&lt;/code&gt; collection also stores the number of item returns and the total transaction count. Note that &lt;code&gt;transactioncount&lt;/code&gt; is not just equal to the sum of &lt;code&gt;purchasecount&lt;/code&gt; and &lt;code&gt;returncount&lt;/code&gt; -- it is equal or less (it&amp;#39;s the number of records in the &lt;code&gt;transactions&lt;/code&gt; collection in which a consumer and an item occur together). Since the three counts are independent quantities, they do not give rise to the same, but to different edges with different integer-valued weights. These edges can be assigned to three different layers such that the consumer-item graph becomes a so-called &lt;em&gt;multiplex&lt;/em&gt; or &lt;em&gt;multilayer graph&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;With these additional conventions (summarized by the &amp;quot;role&amp;quot; column in the table of fields), the &lt;code&gt;graph&lt;/code&gt; collection &lt;em&gt;becomes&lt;/em&gt; the consumer-item graph. For now and in future posts, I am therefore identifying them with each other. Indeed, the difference between a graph and the storage structure that holds it is mostly one of semantics rather than substance.&lt;/p&gt;
+</description>
+        <pubDate>Tue, 14 Jul 2015 02:00:00 -0400</pubDate>
+        <link>http://tscholak.github.io//big%20data/python/mongodb/2015/07/14/MongoDB-workflow.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//big%20data/python/mongodb/2015/07/14/MongoDB-workflow.html</guid>
+        
+        
+        <category>big data</category>
+        
+        <category>python</category>
+        
+        <category>mongodb</category>
+        
+      </item>
     
       <item>
         <title>The Setup</title>
