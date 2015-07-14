@@ -96,7 +96,7 @@
     <!-- <h1 class="post-title">The Setup</h1> -->
 
     <section class="post-content">
-      <p>In the style of an interview on <a href="https://usesthis.com">usesthis.com</a>, I want to give you some info about the hard- and software I&#39;m currently using for my projects. I also tell you how to deploy some of that software. <span class="more"></span></p>
+      <p>In the style of an interview on <a href="https://usesthis.com">usesthis.com</a>, I want to give you some info about the hard- and software I&#39;m currently using for my projects. I&#39;ll also tell you how to deploy some of that software. <span class="more"></span></p>
 
 <h2>What hardware do I use?</h2>
 
@@ -111,7 +111,7 @@
 
 <h2>And what software?</h2>
 
-<p>Most of the software I use is open-source. The server runs <a href="https://getfedora.org/en/server/">Fedora 22</a>, the desktop Mac OS X. One thing I particularly like about Mac OS is the built-in <a href="https://www.apple.com/ca/osx/advanced-technologies/">transparent memory compression technology</a>. It comes in quite handy at times, even with 32GB of RAM. Fedora, on the other hand, has a convenient web UI called <a href="http://cockpit-project.org">Cockpit</a> that gives me a lot of control over <a href="http://www.freedesktop.org/software/systemd/man/systemd.service.html">system services</a> and Docker containers.</p>
+<p>Most of the software I use is open-source. The server runs <a href="https://getfedora.org/en/server/">Fedora 22</a>, the desktop Mac OS X (which, notably, is not open source). One thing I particularly like about Mac OS is the built-in <a href="https://www.apple.com/ca/osx/advanced-technologies/">transparent memory compression technology</a>. It comes in quite handy at times, even with 32GB of RAM. Fedora, on the other hand, has a convenient web UI called <a href="http://cockpit-project.org">Cockpit</a> that gives me a lot of control over <a href="http://www.freedesktop.org/software/systemd/man/systemd.service.html">system services</a> and Docker containers.</p>
 
 <p>Oh yeah, did I mention that I use <a href="http://docker.com">Docker</a>? Docker is a virtualization solution that comes with thousands of pre-packaged applications for easy deployment. It&#39;s a neat and fun way to check out new (and potentially unstable) software plus their dependencies without messing up your base OS installation.</p>
 
@@ -119,18 +119,18 @@
   <figure>
     <img src="/assets/images/cockpit.png" title="Cockpit containers view">
   </figure>
-  <figcaption>Cockpit shows me which Docker containers are running and what ressources they are consuming.</figcaption>
+  <figcaption>Cockpit shows me which Docker containers are running and what resources they are consuming.</figcaption>
 </p>
 
 <h3>MongoDB</h3>
 
-<p>For my current project I rely on <a href="https://www.mongodb.com/what-is-mongodb">MongoDB</a> as my data warehouse. MongoDB is a NoSQL database, and, unlike relational databases, it is built around the philosophy of dynamic schemas that allows me to make up and change the way I store data along as I go. It couldn&#39;t be any other way, though, because MongoDB has a serious restriction in that it <a href="http://docs.mongodb.org/manual/faq/fundamentals/#what-kind-of-database-is-mongodb">doesn&#39;t support joins</a>.</p>
+<p>For my current project, I rely on <a href="https://www.mongodb.com/what-is-mongodb">MongoDB</a> as my data warehouse. MongoDB is a NoSQL database, and, unlike relational databases, it is built around the philosophy of dynamic schemas that allows me to make up and change the way I store data along as I go. It couldn&#39;t be any other way, though, because MongoDB has a serious restriction in that it <a href="http://docs.mongodb.org/manual/faq/fundamentals/#what-kind-of-database-is-mongodb">doesn&#39;t support joins</a>.</p>
 
 <p>Let me tell you quickly how I deployed a MongoDB 3.0 instance on my server. I followed the <a href="http://s3.amazonaws.com/info-mongodb-com/MongoDB-Performance-Best-Practices.pdf">Performance Best Practices for MongoDB</a> white paper where I could. My setup is simple and doesn&#39;t make use of <a href="http://docs.mongodb.org/manual/replication/">replication</a> or <a href="http://docs.mongodb.org/manual/sharding/">sharding</a>.</p>
 
 <h6>Step 1: Prepare the server.</h6>
 
-<p>Luckily, most of my working datasets (and their indexes) fit in RAM. However, since I wanted to cut down the latency associated with some of my more write-heavy operations, I decided to put everything on SSDs. So the first step is to figure out the partitioning and the file system. I use XFS, mounted in <code>/srv/docker/mongodb</code>.</p>
+<p>Luckily, most of my working datasets (and their indexes) fit in RAM. However, since I wanted to cut down the latency associated with some of my more write-heavy operations, I decided to put everything on SSDs. (Note that, even though SSDs alleviate the I/O bottleneck of spinning hard drives, they remain vastly inferior to RAM.) So the first step is to figure out the partitioning and the file system. I use the mature and I/O-optimized <a href="https://en.wikipedia.org/wiki/XFS">XFS</a>, mounted in <code>/srv/docker/mongodb</code>.</p>
 
 <p>MongoDB works best with <a href="https://www.kernel.org/doc/Documentation/vm/transhuge.txt">transparent hugepages</a> turned off. The default for Fedora is to have them enabled. To disable them permanently, I created two files: the script <code>/usr/lib/systemd/scripts/transparent-hugepages.sh</code> and the service file <code>/usr/lib/systemd/system/transparent-hugepages.service</code>. Their contents, respectively, are:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="c">#!/bin/sh</span>
@@ -227,7 +227,7 @@
 
 <h3>Hydrogen &amp; Atom</h3>
 
-<p>Jupyter notebooks are great for interactive exploratory analyses. They are convenient, flexible, and give you instant gratification. However, I find they are not the best choice for hacking together complex algorithms and batch jobs. That&#39;s why I started using <a href="https://atom.io/packages/hydrogen">Hydrogen</a>, a plugin for GitHub&#39;s <a href="https://atom.io">Atom editor</a>. The user experience is similar to what <a href="http://lighttable.com">Light Table</a> and <a href="http://junolab.org">Juno</a> offer for the <a href="http://julialang.org">Julia</a> language. Hydrogen connects to the IPython Jupyter kernel to allow for executing and displaying output of any Python code directly within Atom. Since Jupyter is language agnostic, Hydrogen also works with other languages, e.g. R. The only inconvenience it has is that for it to work you have to start Atom from the command line, e.g. via</p>
+<p>Jupyter notebooks are great for interactive exploratory analyses. They are convenient, flexible, and give you instant gratification. However, I find they are not the best choice for hacking together complex algorithms and batch jobs. That&#39;s why I started using <a href="https://atom.io/packages/hydrogen">Hydrogen</a>, a plugin for GitHub&#39;s <a href="https://atom.io">Atom editor</a>. The user experience is similar to what <a href="http://lighttable.com">Light Table</a> and <a href="http://junolab.org">Juno</a> offer for the <a href="http://julialang.org">Julia</a> language. Hydrogen connects to the IPython Jupyter kernel to allow for executing and displaying output of any Python code directly within Atom. Since Jupyter is language agnostic, Hydrogen also works with other languages, e.g. R. The only inconvenience it has is that, for it to work, you have to start Atom from the command line, e.g. via</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ atom awesome_algorithm.py
 </code></pre></div>
 <p>It&#39;s quite annoying when you find out right after clicking on the Atom icon that you forgot about this... Again...</p>
@@ -241,7 +241,7 @@
 
 <h3>MongoHub</h3>
 
-<p><a href="https://github.com/jeromelebel/MongoHub-Mac">MongoHub</a> is a graphical front-end for MongoDB that runs natively on OS-X. It&#39;s stable, capable, but not a revelation in user experience.</p>
+<p><a href="https://github.com/jeromelebel/MongoHub-Mac">MongoHub</a> is a graphical front-end for MongoDB that runs natively on OS X. It&#39;s stable, capable, but not a revelation in user experience.</p>
 
 <p>
   <figure>
