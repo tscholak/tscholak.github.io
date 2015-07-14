@@ -6,7 +6,7 @@ author-image-alt: "that's me"
 author-bio: "Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics"
 email: 'torsten.scholak@googlemail.com'
 description: 'Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.'
-meta_description: "a hodgepodge of theoretical quantum physics, computing, and typophilia, buried under a thick layer of forgettable kerfuffle"
+meta_description: "theoretical quantum physics, data science, and typography"
 baseurl: /
 domain_name: 'http://tscholak.github.io'
 url: 'http://tscholak.github.io'
@@ -42,7 +42,7 @@ gems:
   - jekyll-pseudo
 
 redcarpet:
-  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "strikethrough", "superscript"]
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "strikethrough", "superscript", "with_toc_data"]
 
 scholar:
   style: assets/bibliography/tscholak.csl

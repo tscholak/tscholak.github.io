@@ -31,6 +31,8 @@ My first task was to load that file and store its contents in MongoDB. I wrote a
 *Note that this and all following code examples have been edited for length and clarity. There is no error handling, no logging, and no user feedback.*
 
 ```python
+# -*- coding: utf-8 -*-
+
 import pandas as pd
 import json
 from pymongo import MongoClient
@@ -89,6 +91,8 @@ The `transactions` collection contains a lot of information, not all of which is
 Currently, [I am studying graphs](/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html#MarketSegmentationAndRecommendationSystems) that represent the relationship between the consumers and the items in the dataset. These relationships are solely inferred from aggregated transaction data. Since the original `transactions` collection contains atomic transaction data, I decided to create another collection, `graph`, populated just with aggregated data. For that purpose, I wrote the following Python script:
 
 ```python
+# -*- coding: utf-8 -*-
+
 import pandas as pd
 from pymongo import MongoClient
 

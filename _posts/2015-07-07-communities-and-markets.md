@@ -169,7 +169,7 @@ While working on scientific collaboration networks, Newman {% cite Newman2001aSc
 \\[
   W\_{ij} = \sum\_{k}' \frac{1}{\mathrm{deg}(v\_k) - 1},
 \\]
-where the sum runs over those publications $v\_k$ in which $u\_i$ and $u\_j$ appeared as authors (indicated by the prime, ${}^{\prime}$). The thought leading to this formula was that, while working on a publication $v\_k$, an author would have to divide her time between $\mathrm{deg}(v\_k) - 1$ co-authors on average. This prescription was found to estimate the strength of the collaborative bonds adequately. From the weighted author graph, an unweighted graph can be obtained via thresholding as in rule 4 above. This threshold is arbitrary, however.
+where the sum runs over those publications $v\_k$ in which $u\_i$ and $u\_j$ appeared as authors (indicated by the prime, ${}\^{\prime}$). The thought leading to this formula was that, while working on a publication $v\_k$, an author would have to divide her time between $\mathrm{deg}(v\_k) - 1$ co-authors on average. This prescription was found to estimate the strength of the collaborative bonds adequately. From the weighted author graph, an unweighted graph can be obtained via thresholding as in rule 4 above. This threshold is arbitrary, however.
 
 <p>
   <figure>
@@ -220,11 +220,11 @@ Recently, there has been increased interest in solving this problem {% cite Zwei
 
 So let's go, shall we? To make things more precise, first some definitions: Let $G = (U, V, E)$ denote the observed bipartite graph with the edges $E$ and the non-intersecting node sets $U = \left\\{u\_{1}, \ldots u\_{m}\right\\}$ and $V = \left\\{v\_{1}, \ldots v\_{n}\right\\}$, where $m = \left|U\right|$ and $n = \left|V\right|$. Following the graph of gulls and seals pictured above, I will refer to $U$ as the *top mode* and to $V$ as the *bottom mode*. Let $A$ be the adjacency matrix of $G$. The entries $A\_{ik}$ of this $m \times n$ matrix are binary. $A\_{ik}$ is $1$ if the nodes $u\_i \in U$ and $v\_k \in V$ are connected by an edge. Otherwise, $A\_{ik} = 0$. Thus, top nodes are represented in $A$ as rows, whereas bottom nodes are represented as columns. From $A$ we can derive two matrices $T$ and $B$. They are called the top and the bottom *co-occurrence matrix* and can be defined as {% cite Breiger1974The-duality-of- --file 2015-07-07-communities-and-markets %}
 \\[
-  T = A A^{\mathrm{T}}
+  T = A A\^{\mathrm{T}}
 \\]
 and
 \\[
-  B = A^{\mathrm{T}} A,
+  B = A\^{\mathrm{T}} A,
 \\]
 respectively. $T$ is an $m \times m$ matrix and $B$ an $n \times n$ matrix. As the name suggests, the entries $T\_{ij}$ (or $B\_{kl}$) of $T$ ($B$) are equal to the *co-occurrences* of the nodes $u\_i$, $u\_j \in U$ ($v\_k$, $v\_l \in V$). The co-occurrence is the number of neighbors $v \in V$ ($u \in U$) common to both $u\_i$ and $u\_j$ ($v\_k$ and $v\_l$). It is also equal to the number of connecting length-2 walks. Thus, calculating $T$ (or $B$) is equivalent to applying rules 1-3 from earlier above!
 
@@ -278,7 +278,7 @@ while $k$ ≤ $N$ do
 end while
 ```
 
-The algorithm produces $N$ samples from the population $\mathcal{G}$, one after the other. In the beginning, it uses $G$ as a template. Later, it uses the end result $G^{(k-1)}$ of the previous generation as the starting point of the next one. Each generation $k$ is the outcome of a Markovian random walk, and each walk has $T$ (time) steps, where $T$ is called the *mixing time*. $T$ has to be chosen sufficiently large such that the random walk reaches its equilibrium. Only then the produced graph $G^{(k)}$ will be independent from its predecessor $G^{(k-1)}$. In each step $t$ of the walk, two non-adjacent edges $e = \\{u, v\\}$ and $e' = \\{u', v'\\}$ are drawn randomly from a uniform distribution. Then the algorithm tries to exchange the bottom-mode vertices between the edges. This operation is called an *edge swap*. It is designed to keep the degree sequences $\mathcal{D}\left(U^{(k)}\right)$ and $\mathcal{D}\left(V^{(k)}\right)$ the same. If the swapped edges are not already in the graph $G^{(k)}$, then they are added to it, after $e$ and $e'$ have been removed. Otherwise, the algorithm proceeds to the next step. Note that the edge swap can be implemented by performing a bitwise NOT operation on those four elements of the adjacency matrix of $G^{(k)}$ that corresponding to $e$, $\\{u, v'\\}$, $\\{u', v\\}$, and $e'$.
+The algorithm produces $N$ samples from the population $\mathcal{G}$, one after the other. In the beginning, it uses $G$ as a template. Later, it uses the end result $G\^{(k-1)}$ of the previous generation as the starting point of the next one. Each generation $k$ is the outcome of a Markovian random walk, and each walk has $T$ (time) steps, where $T$ is called the *mixing time*. $T$ has to be chosen sufficiently large such that the random walk reaches its equilibrium. Only then the produced graph $G\^{(k)}$ will be independent from its predecessor $G\^{(k-1)}$. In each step $t$ of the walk, two non-adjacent edges $e = \\{u, v\\}$ and $e' = \\{u', v'\\}$ are drawn randomly from a uniform distribution. Then the algorithm tries to exchange the bottom-mode vertices between the edges. This operation is called an *edge swap*. It is designed to keep the degree sequences $\mathcal{D}\left(U\^{(k)}\right)$ and $\mathcal{D}\left(V\^{(k)}\right)$ the same. If the swapped edges are not already in the graph $G\^{(k)}$, then they are added to it, after $e$ and $e'$ have been removed. Otherwise, the algorithm proceeds to the next step. Note that the edge swap can be implemented by performing a bitwise NOT operation on those four elements of the adjacency matrix of $G\^{(k)}$ that corresponding to $e$, $\\{u, v'\\}$, $\\{u', v\\}$, and $e'$.
 
 ### The benefits
 
