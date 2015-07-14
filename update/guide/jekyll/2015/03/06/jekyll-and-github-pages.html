@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
     <title>Meticulous Disorder by Torsten Scholak</title>
-    <meta name="description" content="a hodgepodge of theoretical quantum physics, computing, and typophilia, buried under a thick layer of forgettable kerfuffle" />
+    <meta name="description" content="theoretical quantum physics, data science, and typography" />
 
     <meta name="HandheldFriendly" content="True" />
     <meta name="MobileOptimized" content="320" />
@@ -30,6 +30,7 @@
           skipTags: ["script", "noscript", "style", "textarea"]
         },
         "HTML-CSS": {
+          scale: 95,
           mtextFontInherit: true
         },
         "SVG": {
@@ -108,7 +109,7 @@
 
 <hr>
 
-<h1>Unsupported Jekyll plugins</h1>
+<h1 id="unsupported-jekyll-plugins">Unsupported Jekyll plugins</h1>
 
 <p>So, how exactly can you use custom Jekyll plugins on GitHub Pages?</p>
 
@@ -116,7 +117,7 @@
 
 <p>At the heart of the solution is <em>local</em> Jekyll processing. Yes, we are going to opt out of the awesome Jekyll processing on GitHub. We do this despite the fact that local Jekyll processing is, done wrong, unbearably tedious. The good news is that there exist sophisticated automation tools that will help to keep us calm.</p>
 
-<h2>Bower and Grunt to the rescue</h2>
+<h2 id="bower-and-grunt-to-the-rescue">Bower and Grunt to the rescue</h2>
 
 <p>Below, we discuss two automation tools, a build tool called Grunt and a package manager called Bower.</p>
 
@@ -126,7 +127,7 @@
 
 <p>Bower and Grunt are part of the illustrious <a href="http://yeoman.io">Yeoman work-flow</a> that also includes a CLI tool called <a href="https://github.com/yeoman/yo">yo</a>. We won&#39;t be needing yo in the following, though.</p>
 
-<h2>The basics</h2>
+<h2 id="the-basics">The basics</h2>
 
 <p>The first step is to install Jekyll and Node.js on your computer. I am running Mac OS X and the <a href="https://www.macports.org">MacPorts</a> package management system on mine. Although my notes address this particular environment, you should be able to make use of most of the instructions also on other platforms and with different package managers. To this end, you will need to work in the terminal. And, you will need root privileges.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite ~]＄ sudo port selfupdate
@@ -161,7 +162,7 @@ Initialized empty Git repository in /Users/tscholak/tscholak.github.io /.git/
 
 <p>GitHub expects to find the processed, static HTML code in the <code>master</code> branch of the repository. That means whatever is in <code>master</code> will be displayed at <code>http://tscholak.github.io</code>. All other branches are ignored. We can thus use another branch, say, <code>source</code>, to store the source code of the page. This is the subject of the next section.</p>
 
-<h3>Set up the <code>source</code> branch</h3>
+<h3 id="set-up-the-source-branch">Set up the <code>source</code> branch</h3>
 
 <p>First, we have to create the <code>source</code> branch. We use the local copy of <code>master</code> as a starting point:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite tscholak.github.io]＄ git checkout -b source master
@@ -190,7 +191,7 @@ Branch source set up to track remote branch source from origin.
 </code></pre></div>
 <p>Your output should look like this or similar. Now go to GitHub and verify that your Jekyll instance has found its way to the server. Since you are there, I recommend making the <code>source</code> branch the default on GitHub. Consult <a href="https://help.github.com/articles/setting-the-default-branch/">this link</a> for instructions.</p>
 
-<h3>Set up the <code>master</code> branch</h3>
+<h3 id="set-up-the-master-branch">Set up the <code>master</code> branch</h3>
 
 <p>Next we need to wipe the <code>master</code> branch. The most thorough way to do this is to first delete and then to recreate it. We couldn&#39;t have done this before the <code>source</code> branch was created because GitHub doesn&#39;t allow you to delete the last remaining branch. We issue:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite tscholak.github.io]＄ git branch -D master
@@ -216,7 +217,7 @@ Switched to a new branch &#39;master&#39;
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite tscholak.github.io]＄ git checkout source
 Switched to branch &#39;source&#39;
 </code></pre></div>
-<h3>Checking out <code>master</code> into <code>_site</code></h3>
+<h3 id="checking-out-master-into-_site">Checking out <code>master</code> into <code>_site</code></h3>
 
 <p>On GitHub we have separated the unprocessed web site source and the processed web site code into two different branches. Locally, we will also need to separate them somehow. There is an obvious way to do that. When you run <code>jekyll build</code> on your Jekyll instance (from within your local <code>~/[username].github.io</code> directory), the generated site is saved into the <code>~/[username].github.io/_site</code> folder. This is were we will checkout the <code>master</code> branch into:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite tscholak.github.io]＄ git clone git@github.com:tscholak/tscholak.github.io.git -b master _site
@@ -241,7 +242,7 @@ about   css   feed.xml  index.html  jekyll
 </code></pre></div>
 <p>Now browse to <code>http://[username].github.io</code>. Your web page should be displayed exactly as it has been from your local Jekyll server.</p>
 
-<h3>Turning off Jekyll on GitHub</h3>
+<h3 id="turning-off-jekyll-on-github">Turning off Jekyll on GitHub</h3>
 
 <p>Since our primary goal is to replace remote by local Jekyll processing, we need to disable the former. The people from GitHub explain how that can be achieved in a <a href="https://help.github.com/articles/using-jekyll-with-pages/index.html#turning-jekyll-off">short support article</a>. Following this article, we first have to add an empty <code>.nojekyll</code> file to the Jekyll instance:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite tscholak.github.io]＄ touch .nojekyll
@@ -265,7 +266,7 @@ about   css   feed.xml  index.html  jekyll
 
 <p>Having to complete four steps every time you make a change may be a nuisance to you. It certainly is for me. With automation, we can replace the steps 2 to 4 by a single command: <code>grunt deploy</code>.</p>
 
-<h2>Set up Bower</h2>
+<h2 id="set-up-bower">Set up Bower</h2>
 
 <p>Before I talk about Grunt, I want to introduce you to Bower, the packet manager. I use Bower to manage vendor provided software, in particular, jQuery. Setting up Bower before we turn to Grunt has the advantage to have Bower tied neatly into Grunt from the very beginning. Indeed, Bower and Grunt play very well together. Grunt is ideal for making sure that the Jekyll build is not polluted by dead weight coming with third-party software.</p>
 
@@ -321,7 +322,7 @@ about   css   feed.xml  index.html  jekyll
 <p>Git should also be unaware of Bower. We can make it ignore the Bower components by adding the following line to the <code>.gitignore</code> file:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">/bower_components/
 </code></pre></div>
-<h2>Set up npm</h2>
+<h2 id="set-up-npm">Set up npm</h2>
 
 <p>npm, the package manager of the Node.js project, is needed for Grunt. Its configuration is similar to that of Bower. First we execute:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite tscholak.github.io]＄ npm init
@@ -343,7 +344,7 @@ license: (ISC) MIT
 </code></pre></div>
 <p>to the <code>exclude</code> section of your <code>_config.yml</code> file. Furthermore, Git will ignore the Node.js files only if you add <code>/node_modules/</code> to <code>.gitignore</code>.</p>
 
-<h2>Set up Grunt</h2>
+<h2 id="set-up-grunt">Set up Grunt</h2>
 
 <p>We are now finally ready to set up the Grunt build system. First, we install a system-wide <a href="https://www.npmjs.com/package/grunt-cli#readme">command line interface for grunt</a>:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite tscholak.github.io]＄ sudo npm install -g grunt-cli
@@ -491,7 +492,7 @@ license: (ISC) MIT
 
 <p>The last couple of lines register new aliases for a task or a list of tasks that are executed in the order of their appearance.</p>
 
-<h2>Test Grunt configuration</h2>
+<h2 id="test-grunt-configuration">Test Grunt configuration</h2>
 
 <p>If everything is according to plan, then Grunt should now be able build and deploy the Jekyll page. Let us test these functions. Run:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@lipbite tscholak.github.io]＄ grunt -v build
@@ -511,7 +512,7 @@ license: (ISC) MIT
 
 <hr>
 
-<h1>Further Remark(s)</h1>
+<h1 id="further-remark-s">Further Remark(s)</h1>
 
 <ul>
 <li>If you are working in Sublime Text like me, you may want to install <a href="https://github.com/tvooo/sublime-grunt">sublime-grunt</a>, available via Package Control.</li>

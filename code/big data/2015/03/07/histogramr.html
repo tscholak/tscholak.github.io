@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
     <title>Meticulous Disorder by Torsten Scholak</title>
-    <meta name="description" content="a hodgepodge of theoretical quantum physics, computing, and typophilia, buried under a thick layer of forgettable kerfuffle" />
+    <meta name="description" content="theoretical quantum physics, data science, and typography" />
 
     <meta name="HandheldFriendly" content="True" />
     <meta name="MobileOptimized" content="320" />
@@ -30,6 +30,7 @@
           skipTags: ["script", "noscript", "style", "textarea"]
         },
         "HTML-CSS": {
+          scale: 95,
           mtextFontInherit: true
         },
         "SVG": {
@@ -100,7 +101,7 @@
 
 <p>histogramr reads and writes <a href="http://www.hdfgroup.org/HDF5/">HDF5</a> files. An HDF5 file is a hierarchical, file-system-like data structure arranged in groups of groups or data sets. Groups are like folders of a file system, and data sets are like files containing one- or multidimensional arrays of a single data type. The elements of a simple data set are just numbers, characters, or small arrays thereof, whereas the elements of more complex data sets have compounded types. HDF5 compounds are similar to <a href="http://en.wikipedia.org/wiki/Struct_(C_programming_language)">C structs</a>. Like them, they are composed of other data types. The elements of a compound type are called members, and they must be given unique names. histogramr works on compound member data only. The data can be from a single or a number of data sets in the file. From this data, the software generates a multivariate histogram, i.e. an approximate multivariate probability density function (PDF) discretized on a multidimensional rectangular regular grid of predefined shape. Each dimension of that grid corresponds to one compound member. histogramr offers control over the histogram limits, the binning (i.e. the grid spacing), and whether or not the input data is log-transformed prior to processing. histogramr stores the PDF in a simple data set of an HDF5 output file.</p>
 
-<h1>histogramr is now on GitHub!</h1>
+<h1 id="histogramr-is-now-on-github">histogramr is now on GitHub!</h1>
 
 <p>Today I release histogramr under the GPLv3 <a href="https://github.com/tscholak/histogramr">on GitHub</a>. You can download and use it for <em>free</em>. The easiest way to do so is by using <a href="http://git-scm.com">Git</a>. In Linux or Mac OS X, fire up a terminal and run:</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ git clone git@github.com:tscholak/histogramr.git
@@ -113,7 +114,7 @@
 </code></pre></div>
 <p>You can now <a href="#usage">use histogramr</a> for your own data. Or, since you&#39;ve got the source code, you can change histogramr or use pieces of it in new free software.</p>
 
-<h1><a name="usage"></a>Usage</h1>
+<h1 id="usage"><a name="usage"></a>Usage</h1>
 
 <p>histogramr reads in the input files one-by-one and commits the data to the histogram data structure. The output file is written multiple times, whenever a predetermined number of input files has been processed. Below the output of <code>histogramr --help</code>:</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash">histogramr: create multivariate histograms of continuous data
@@ -144,7 +145,7 @@ histogramr home page: &lt;https://github.com/tscholak/histogramr&gt;
 </code></pre></div>
 <p>I will provide real-life examples of big-data work-flows with histogramr in another blog post.</p>
 
-<h1>Impact</h1>
+<h1 id="impact">Impact</h1>
 
 <p>So far, histogramr has processed data for the following publications:</p>
 

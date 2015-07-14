@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
     <title>Meticulous Disorder by Torsten Scholak</title>
-    <meta name="description" content="a hodgepodge of theoretical quantum physics, computing, and typophilia, buried under a thick layer of forgettable kerfuffle" />
+    <meta name="description" content="theoretical quantum physics, data science, and typography" />
 
     <meta name="HandheldFriendly" content="True" />
     <meta name="MobileOptimized" content="320" />
@@ -30,6 +30,7 @@
           skipTags: ["script", "noscript", "style", "textarea"]
         },
         "HTML-CSS": {
+          scale: 95,
           mtextFontInherit: true
         },
         "SVG": {
@@ -98,7 +99,7 @@
     <section class="post-content">
       <p>In the style of an interview on <a href="https://usesthis.com">usesthis.com</a>, I want to give you some info about the hard- and software I&#39;m currently using for my projects. I&#39;ll also tell you how to deploy some of that software. <span class="more"></span></p>
 
-<h2>What hardware do I use?</h2>
+<h2 id="what-hardware-do-i-use">What hardware do I use?</h2>
 
 <p>I have two machines, a desktop and a server, connected via Gigabit Ethernet. Each machine is dedicated to a very particular set of tasks, tasks that I have selected based on the systems&#39; configuration. The server is optimized for stability and runs database services 24/7, while the desktop is used for data analysis and manipulation. The server sports a &quot;Haswell&quot; Xeon E3 v3 processor and has 32GB of ECC RAM. OS, apps, and fresh data are kept on SSDs. In addition, I maintain a large <a href="https://en.wikipedia.org/wiki/ZFS#Software_RAID_using_ZFS">RAID-Z2 array</a> for archival purposes. The desktop is a Hackintosh and built around an &quot;Ivy Bridge&quot; quad-Core i7. It also has 32GB of RAM, non-ECC though.</p>
 
@@ -109,7 +110,7 @@
   <figcaption>The desktop rig from the inside.</figcaption>
 </p>
 
-<h2>And what software?</h2>
+<h2 id="and-what-software">And what software?</h2>
 
 <p>Most of the software I use is open-source. The server runs <a href="https://getfedora.org/en/server/">Fedora 22</a>, the desktop Mac OS X (which, notably, is not open source). One thing I particularly like about Mac OS is the built-in <a href="https://www.apple.com/ca/osx/advanced-technologies/">transparent memory compression technology</a>. It comes in quite handy at times, even with 32GB of RAM. Fedora, on the other hand, has a convenient web UI called <a href="http://cockpit-project.org">Cockpit</a> that gives me a lot of control over <a href="http://www.freedesktop.org/software/systemd/man/systemd.service.html">system services</a> and Docker containers.</p>
 
@@ -122,13 +123,13 @@
   <figcaption>Cockpit shows me which Docker containers are running and what resources they are consuming.</figcaption>
 </p>
 
-<h3>MongoDB</h3>
+<h3 id="mongodb">MongoDB</h3>
 
 <p>For my current project, I rely on <a href="https://www.mongodb.com/what-is-mongodb">MongoDB</a> as my data warehouse. MongoDB is a NoSQL database, and, unlike relational databases, it is built around the philosophy of dynamic schemas that allows me to make up and change the way I store data along as I go. It couldn&#39;t be any other way, though, because MongoDB has a serious restriction in that it <a href="http://docs.mongodb.org/manual/faq/fundamentals/#what-kind-of-database-is-mongodb">doesn&#39;t support joins</a>.</p>
 
 <p>Let me tell you quickly how I deployed a MongoDB 3.0 instance on my server. I followed the <a href="http://s3.amazonaws.com/info-mongodb-com/MongoDB-Performance-Best-Practices.pdf">Performance Best Practices for MongoDB</a> white paper where I could. My setup is simple and doesn&#39;t make use of <a href="http://docs.mongodb.org/manual/replication/">replication</a> or <a href="http://docs.mongodb.org/manual/sharding/">sharding</a>.</p>
 
-<h6>Step 1: Prepare the server.</h6>
+<h6 id="step-1-prepare-the-server">Step 1: Prepare the server.</h6>
 
 <p>Luckily, most of my working datasets (and their indexes) fit in RAM. However, since I wanted to cut down the latency associated with some of my more write-heavy operations, I decided to put everything on SSDs. (Note that, even though SSDs alleviate the I/O bottleneck of spinning hard drives, they remain vastly inferior to RAM.) So the first step is to figure out the partitioning and the file system. I use the mature and I/O-optimized <a href="https://en.wikipedia.org/wiki/XFS">XFS</a>, mounted in <code>/srv/docker/mongodb</code>.</p>
 
@@ -179,14 +180,14 @@
 </code></pre></div>
 <p>That is all in terms of preparations.</p>
 
-<h6>Step 2: Get the Docker image.</h6>
+<h6 id="step-2-get-the-docker-image">Step 2: Get the Docker image.</h6>
 
 <p>There&#39;s a popular and well-maintained Docker image with MongoDB 3.0. I got it with:</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ docker pull docker.io/mongo:latest
 </code></pre></div>
 <p>You can find more information about the <code>mongo</code> repository <a href="https://registry.hub.docker.com/_/mongo/">here</a>. It is based on the <a href="https://registry.hub.docker.com/_/debian/">Debian Wheezy image</a>.</p>
 
-<h6>Step 3: Create and start a Docker container over the MongoDB image.</h6>
+<h6 id="step-3-create-and-start-a-docker-container-over-the-mongodb-image">Step 3: Create and start a Docker container over the MongoDB image.</h6>
 
 <p>Then, I ran:</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ docker run -d <span class="se">\</span>
@@ -212,7 +213,7 @@
 
 <p>However, I did not configure any security measures within the container -- no <a href="http://docs.mongodb.org/manual/tutorial/manage-users-and-roles/">database users</a>, no <a href="http://docs.mongodb.org/manual/tutorial/generate-key-file/">SSL certificates</a>, nothing. Of course, you may find this outrageously unsafe, but it&#39;s deployed on a private network, after all.</p>
 
-<h3>Python, Pandas, and PyMongo</h3>
+<h3 id="python-pandas-and-pymongo">Python, Pandas, and PyMongo</h3>
 
 <p>Now for the desktop. At its core, my data science software stack consists of <a href="https://www.python.org">Python</a>, <a href="http://ipython.org/notebook.html">IPython Notebook</a>, <a href="http://www.numpy.org">Numpy</a>, <a href="http://matplotlib.org">Matplotlib</a>, <a href="http://www.scipy.org">SciPy</a>, <a href="">Pandas</a>, and the <a href="https://github.com/mongodb/mongo-python-driver">PyMongo</a> MongoDB driver. With the <a href="https://www.macports.org">MacPorts</a> package management system, I got these up and running with</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo xcode-select --install
@@ -225,7 +226,7 @@
 </code></pre></div>
 <p>The last command starts an interactive Python shell and opens the <a href="https://jupyter.org">Jupyter web UI</a> in the default web browser, e.g. in Safari.</p>
 
-<h3>Hydrogen &amp; Atom</h3>
+<h3 id="hydrogen-amp-atom">Hydrogen &amp; Atom</h3>
 
 <p>Jupyter notebooks are great for interactive exploratory analyses. They are convenient, flexible, and give you instant gratification. However, I find they are not the best choice for hacking together complex algorithms and batch jobs. That&#39;s why I started using <a href="https://atom.io/packages/hydrogen">Hydrogen</a>, a plugin for GitHub&#39;s <a href="https://atom.io">Atom editor</a>. The user experience is similar to what <a href="http://lighttable.com">Light Table</a> and <a href="http://junolab.org">Juno</a> offer for the <a href="http://julialang.org">Julia</a> language. Hydrogen connects to the IPython Jupyter kernel to allow for executing and displaying output of any Python code directly within Atom. Since Jupyter is language agnostic, Hydrogen also works with other languages, e.g. R. The only inconvenience it has is that, for it to work, you have to start Atom from the command line, e.g. via</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ atom awesome_algorithm.py
@@ -239,7 +240,7 @@
   <figcaption>Hydrogen runs your code directly in Atom using any Jupyter kernels you have installed. Output is displayed in a small overlay window, as can be seen above for a Pandas <code>DataFrame</code> object formatted as a table.</figcaption>
 </p>
 
-<h3>MongoHub</h3>
+<h3 id="mongohub">MongoHub</h3>
 
 <p><a href="https://github.com/jeromelebel/MongoHub-Mac">MongoHub</a> is a graphical front-end for MongoDB that runs natively on OS X. It&#39;s stable, capable, but not a revelation in user experience.</p>
 
@@ -250,7 +251,7 @@
   <figcaption>MongoHub in action. Here I browse through some query results.</figcaption>
 </p>
 
-<h3>Monary</h3>
+<h3 id="monary">Monary</h3>
 
 <p><a href="https://bitbucket.org/djcbeach/monary/wiki/Home">Monary</a> is an alternative MongoDB driver for Python that is slowly but steadily advancing. Whereas PyMongo is implemented in pure Python, Monary is a Python wrapper for the super-fast <a href="http://hergert.me/blog/2014/04/07/mongo-c-driver-0-94-0.html">MongoDB C driver</a>. The biggest advantage of Monary is <a href="https://www.youtube.com/watch?v=E70AO8r5sMs">speed</a>, its biggest disadvantage the yet incomplete feature set. For instance, it <a href="https://monary.readthedocs.org/faq.html#can-monary-do-removes-updates-and-or-upserts">doesn&#39;t do any updates</a>, and <a href="https://bitbucket.org/djcbeach/monary/issues/14/passing-options-to-aggregate">aggregation lacks support for certain keyword arguments</a>. It&#39;s also not as well tested as PyMongo. That being said, I use Monary quite often and haven&#39;t observed any serious problems so far.</p>
 
@@ -260,7 +261,7 @@
 ＄ <span class="nb">cd </span>monary
 ＄ python setup.py install
 </code></pre></div>
-<h1>What Would Be My Dream Setup?</h1>
+<h1 id="what-would-be-my-dream-setup">What Would Be My Dream Setup?</h1>
 
 <p>I think it qualifies as a self-evident truth that you can never have enough RAM. This may change one day with the arrival of HP&#39;s <a href="http://www.engadget.com/2015/06/05/hp-the-machine-no-memristors/">&quot;The Machine&quot;</a>. Until then, however, the more RAM the better. LGA 115x motherboards max out at $32 \mathrm{GB}$. That&#39;s why both, my desktop and my server, will never run with more than that. If I had had the budget for it, I would have gone for an LGA 2011 board instead. They usually come with eight DIMM slots that each accept modules with as much as $64 \mathrm{GB}$, for a total of $512 \mathrm{GB}$ of RAM.</p>
 
