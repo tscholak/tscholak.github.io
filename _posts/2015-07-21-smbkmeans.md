@@ -457,7 +457,7 @@ The scripted finished by closing the connection to the database:
     mongo_client.close()
 ```
 
-## Clustering with spherical mini-batch $k$-means
+## <a name="ClusteringWithSphericalMiniBatchKMeans"></a> Clustering with spherical mini-batch $k$-means
 
 In the introduction of this article, I already mentioned $k$-means. $k$-means is the [Helvetica](https://youtu.be/McZSUjP1AcE?t=2m15s) of clustering algorithms: it solves an old and important question, and, while many better alternatives exist nowadays, it remains ubiquitous due to its simplicity and effectiveness.
 
@@ -648,13 +648,13 @@ Instead of the Euclidean distance, the convergence criterion was based on the co
 \\[
     Q\left(\left\\{\boldsymbol{c}\_j\right\\}, \left\\{\pi\_j\right\\}\right) = \sum\_{j=1}\^k \sum\_{\hat{\boldsymbol{x}} \in \pi\_j} \left(1 - \hat{\boldsymbol{x}}\^{\mathrm{T}} \boldsymbol{c}\_j\right).
 \\]
-This function is decreasing and bounded during iterations. As in scikit-learn, the value of $Q$ is assigned to the variable `inertia`.
+This function is decreasing and bounded during iterations. As in scikit-learn, the value of $Q$ was assigned to a variable called `inertia`.
 
-The stopping logic was implemented in the function `_convergence`. It was not based on the simple $\varepsilon$-criterion of the pseudo-code. Instead, it made use of an exponentially weighted average to smooth out some of the noise that was introduced by the variations between the mini-batches. Nevertheless, this improved stopping logic cannot change the fact that the algorithm converges to a local solution of the partition problem.
+The stopping logic was implemented in the function `_convergence`. It was not based on the simple $\varepsilon$-criterion of the pseudo-code. Instead, it made use of an exponentially weighted average to smooth out some of the noise that was introduced by the variations between the mini-batches. Nevertheless, this improved stopping logic could not change the fact that the algorithm converged to a local solution of the partition problem.
 
 ## Deploying spherical mini-batch $k$-means on consumer-item data
 
-At this point, I had tf-idf-weighted consumer-item data and an implementation of spherical mini-batch $k$-means that was capable of handling the data. It was time to bring the two together and to crunch some numbers. Below I have reproduced the finished number crunching code. Check it out:
+At this point, I had tf-idf-weighted consumer-item data and an implementation of spherical mini-batch $k$-means that was capable of handling it. It was time to bring the two together and to crunch some numbers. Below I have reproduced the finished number crunching code. Check it out:
 
 ```python
 # -*- coding: utf-8 -*-
