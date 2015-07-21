@@ -32,7 +32,6 @@ My first task was to load that file and store its contents in MongoDB. I wrote a
 
 ```python
 # -*- coding: utf-8 -*-
-
 import pandas as pd
 import json
 from pymongo import MongoClient
@@ -84,7 +83,7 @@ Then, I pass the Pandas iterator to the `to_mongo` function. There, it is iterat
 
 Finally, after all data has been copied, I create several single field indexes in the `transactions` collection, specifically, for the fields `id`, `brand`, `category`, `company`, and `date`. The script exits after closing the connection to the database.
 
-## Creating specialized data collections
+## <a name="CreatingSpecializedDataCollections"></a> Creating specialized data collections
 
 The `transactions` collection contains a lot of information, not all of which is constantly in need. Since every bit of additional information equals more waiting, it makes sense to create a couple of thinned out collections that are tailored to specific use cases. I have picked one of my use cases to illustrate this process.
 
@@ -92,9 +91,8 @@ Currently, [I am studying graphs](/big%20data/graphs/community%20detection/marke
 
 ```python
 # -*- coding: utf-8 -*-
-
 import pandas as pd
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING
 
 settings = {
         'mongo_host': 'server.local',
@@ -222,15 +220,15 @@ if __name__ == "__main__":
 
     # create indexes:
     graph_collection.create_index(
-        [('consumer', pymongo.ASCENDING)],
+        [('consumer', ASCENDING)],
         background=True)
     graph_collection.create_index(
-        [('item', pymongo.ASCENDING)],
+        [('item', ASCENDING)],
         background=True)
     graph_collection.create_index(
-        [('brand', pymongo.ASCENDING),
-         ('company', pymongo.ASCENDING),
-         ('category', pymongo.ASCENDING)],
+        [('brand', ASCENDING),
+         ('company', ASCENDING),
+         ('category', ASCENDING)],
         background=True)
 
     # close connection
