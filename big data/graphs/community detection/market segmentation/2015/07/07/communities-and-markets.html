@@ -36,6 +36,9 @@
         "SVG": {
           mtextFontInherit: true
         },
+        TeX: {
+          extensions: ["autobold.js"]
+        },
       });
     </script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
@@ -266,7 +269,7 @@ where the sum runs over those publications $v_k$ in which $u_i$ and $u_j$ appear
   </figure>
 </p>
 
-<h3 id="weights-for-document-word-networks">Weights for document-word networks</h3>
+<h3 id="weights-for-document-word-networks"><a name="WeightsForDocumentWordNetworks"></a> Weights for document-word networks</h3>
 
 <p>Another interesting application of weights is the work of Srivastava et al. <a href="#Srivastava2013Text-Clustering">(“Text Clustering Using One-Mode Projection of Document-Word Bipartite Graphs” 2013)</a>, who obtained document clusterings from bipartite graphs representing document-word relationships. They did so by first creating weighted document-document similarity graphs and then running community detection algorithms on them. This procedure was found to outperform conventional document clustering techniques by a large margin, in particular, those based on the popular k-means algorithm <a href="#Sculley2010Web-scale-k-mea">(Sculley 2010; Abu-Mostafa, Magdon-Ismail, and Lin 2012)</a>. The weights were derived from a degree-conditional measure called the <em>term-frequency inverse-document-frequency statistic</em> (tf-idf) that is the de-facto standard in the field of textual data mining <a href="#Manning2008Introduction-to">(Manning et al. 2008)</a>.</p>
 

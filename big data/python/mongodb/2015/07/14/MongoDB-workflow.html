@@ -36,6 +36,9 @@
         "SVG": {
           mtextFontInherit: true
         },
+        TeX: {
+          extensions: ["autobold.js"]
+        },
       });
     </script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
@@ -159,7 +162,6 @@
 
 <p><em>Note that this and all following code examples have been edited for length and clarity. There is no error handling, no logging, and no user feedback.</em></p>
 <div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
-
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span>
@@ -210,15 +212,14 @@
 
 <p>Finally, after all data has been copied, I create several single field indexes in the <code>transactions</code> collection, specifically, for the fields <code>id</code>, <code>brand</code>, <code>category</code>, <code>company</code>, and <code>date</code>. The script exits after closing the connection to the database.</p>
 
-<h2 id="creating-specialized-data-collections">Creating specialized data collections</h2>
+<h2 id="creating-specialized-data-collections"><a name="CreatingSpecializedDataCollections"></a> Creating specialized data collections</h2>
 
 <p>The <code>transactions</code> collection contains a lot of information, not all of which is constantly in need. Since every bit of additional information equals more waiting, it makes sense to create a couple of thinned out collections that are tailored to specific use cases. I have picked one of my use cases to illustrate this process.</p>
 
 <p>Currently, <a href="/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html#MarketSegmentationAndRecommendationSystems">I am studying graphs</a> that represent the relationship between the consumers and the items in the dataset. These relationships are solely inferred from aggregated transaction data. Since the original <code>transactions</code> collection contains atomic transaction data, I decided to create another collection, <code>graph</code>, populated just with aggregated data. For that purpose, I wrote the following Python script:</p>
 <div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
-
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span>
+<span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span><span class="p">,</span> <span class="n">ASCENDING</span>
 
 <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s">&#39;server.local&#39;</span><span class="p">,</span>
@@ -346,15 +347,15 @@
 
     <span class="c"># create indexes:</span>
     <span class="n">graph_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;consumer&#39;</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s">&#39;consumer&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">graph_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;item&#39;</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s">&#39;item&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">graph_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;brand&#39;</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">ASCENDING</span><span class="p">),</span>
-         <span class="p">(</span><span class="s">&#39;company&#39;</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">ASCENDING</span><span class="p">),</span>
-         <span class="p">(</span><span class="s">&#39;category&#39;</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s">&#39;brand&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
+         <span class="p">(</span><span class="s">&#39;company&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
+         <span class="p">(</span><span class="s">&#39;category&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
     <span class="c"># close connection</span>

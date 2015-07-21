@@ -36,6 +36,9 @@
         "SVG": {
           mtextFontInherit: true
         },
+        TeX: {
+          extensions: ["autobold.js"]
+        },
       });
     </script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
@@ -123,7 +126,7 @@
   <figcaption>Cockpit shows me which Docker containers are running and what resources they are consuming.</figcaption>
 </p>
 
-<h3 id="mongodb">MongoDB</h3>
+<h3 id="mongodb"><a name="MongoDB"></a> MongoDB</h3>
 
 <p>For my current project, I rely on <a href="https://www.mongodb.com/what-is-mongodb">MongoDB</a> as my data warehouse. MongoDB is a NoSQL database, and, unlike relational databases, it is built around the philosophy of dynamic schemas that allows me to make up and change the way I store data along as I go. It couldn&#39;t be any other way, though, because MongoDB has a serious restriction in that it <a href="http://docs.mongodb.org/manual/faq/fundamentals/#what-kind-of-database-is-mongodb">doesn&#39;t support joins</a>.</p>
 
@@ -160,9 +163,9 @@
 <span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
 </code></pre></div>
 <p>As root, I then typed</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ chown <span class="m">755</span> /usr/lib/systemd/scripts/transparent-hugepages.sh
-<span class="o">[</span>root@server ~<span class="o">]</span>＄ systemctl <span class="nb">enable </span>transparent-hugepages
-<span class="o">[</span>root@server ~<span class="o">]</span>＄ systemctl start transparent-hugepages
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># chown 755 /usr/lib/systemd/scripts/transparent-hugepages.sh</span>
+<span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># systemctl enable transparent-hugepages</span>
+<span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># systemctl start transparent-hugepages</span>
 </code></pre></div>
 <p>to start the service.</p>
 
@@ -175,22 +178,22 @@
 <span class="nt">&lt;/service&gt;</span>
 </code></pre></div>
 <p>I then added the rule to the active zone and reloaded the firewall:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ firewall-cmd --permanent --zone<span class="o">=</span>FedoraServer --add-service<span class="o">=</span>mongodb
-<span class="o">[</span>root@server ~<span class="o">]</span>＄ firewall-cmd --reload
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># firewall-cmd --permanent --zone=FedoraServer --add-service=mongodb</span>
+<span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># firewall-cmd --reload</span>
 </code></pre></div>
 <p>That is all in terms of preparations.</p>
 
 <h6 id="step-2-get-the-docker-image">Step 2: Get the Docker image.</h6>
 
 <p>There&#39;s a popular and well-maintained Docker image with MongoDB 3.0. I got it with:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ docker pull docker.io/mongo:latest
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># docker pull docker.io/mongo:latest</span>
 </code></pre></div>
 <p>You can find more information about the <code>mongo</code> repository <a href="https://registry.hub.docker.com/_/mongo/">here</a>. It is based on the <a href="https://registry.hub.docker.com/_/debian/">Debian Wheezy image</a>.</p>
 
 <h6 id="step-3-create-and-start-a-docker-container-over-the-mongodb-image">Step 3: Create and start a Docker container over the MongoDB image.</h6>
 
 <p>Then, I ran:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span>＄ docker run -d <span class="se">\</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># docker run -d \</span>
   --name mongodb_acquire_valued_shoppers_challenge <span class="se">\</span>
   --net<span class="o">=</span>host <span class="se">\</span>
   -p 27017:27017 <span class="se">\</span>
@@ -251,7 +254,7 @@
   <figcaption>MongoHub in action. Here I browse through some query results.</figcaption>
 </p>
 
-<h3 id="monary">Monary</h3>
+<h3 id="monary"><a name="Monary"></a> Monary</h3>
 
 <p><a href="https://bitbucket.org/djcbeach/monary/wiki/Home">Monary</a> is an alternative MongoDB driver for Python that is slowly but steadily advancing. Whereas PyMongo is implemented in pure Python, Monary is a Python wrapper for the super-fast <a href="http://hergert.me/blog/2014/04/07/mongo-c-driver-0-94-0.html">MongoDB C driver</a>. The biggest advantage of Monary is <a href="https://www.youtube.com/watch?v=E70AO8r5sMs">speed</a>, its biggest disadvantage the yet incomplete feature set. For instance, it <a href="https://monary.readthedocs.org/faq.html#can-monary-do-removes-updates-and-or-upserts">doesn&#39;t do any updates</a>, and <a href="https://bitbucket.org/djcbeach/monary/issues/14/passing-options-to-aggregate">aggregation lacks support for certain keyword arguments</a>. It&#39;s also not as well tested as PyMongo. That being said, I use Monary quite often and haven&#39;t observed any serious problems so far.</p>
 
@@ -261,7 +264,7 @@
 ＄ <span class="nb">cd </span>monary
 ＄ python setup.py install
 </code></pre></div>
-<h1 id="what-would-be-my-dream-setup">What Would Be My Dream Setup?</h1>
+<h2 id="what-would-be-my-dream-setup">What Would Be My Dream Setup?</h2>
 
 <p>I think it qualifies as a self-evident truth that you can never have enough RAM. This may change one day with the arrival of HP&#39;s <a href="http://www.engadget.com/2015/06/05/hp-the-machine-no-memristors/">&quot;The Machine&quot;</a>. Until then, however, the more RAM the better. LGA 115x motherboards max out at $32 \mathrm{GB}$. That&#39;s why both, my desktop and my server, will never run with more than that. If I had had the budget for it, I would have gone for an LGA 2011 board instead. They usually come with eight DIMM slots that each accept modules with as much as $64 \mathrm{GB}$, for a total of $512 \mathrm{GB}$ of RAM.</p>
 
