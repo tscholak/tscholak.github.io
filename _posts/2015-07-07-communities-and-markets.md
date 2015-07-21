@@ -178,7 +178,7 @@ where the sum runs over those publications $v\_k$ in which $u\_i$ and $u\_j$ app
   </figure>
 </p>
 
-### Weights for document-word networks
+### <a name="WeightsForDocumentWordNetworks"></a> Weights for document-word networks
 
 Another interesting application of weights is the work of Srivastava et al. {% cite Srivastava2013Text-Clustering -A --file 2015-07-07-communities-and-markets %}, who obtained document clusterings from bipartite graphs representing document-word relationships. They did so by first creating weighted document-document similarity graphs and then running community detection algorithms on them. This procedure was found to outperform conventional document clustering techniques by a large margin, in particular, those based on the popular k-means algorithm {% cite Sculley2010Web-scale-k-mea Abu-Mostafa2012Learning-from-D --file 2015-07-07-communities-and-markets %}. The weights were derived from a degree-conditional measure called the *term-frequency inverse-document-frequency statistic* (tf-idf) that is the de-facto standard in the field of textual data mining {% cite Manning2008Introduction-to --file 2015-07-07-communities-and-markets %}.
 
