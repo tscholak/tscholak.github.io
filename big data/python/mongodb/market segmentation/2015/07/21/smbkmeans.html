@@ -506,7 +506,7 @@ switched to db admin
 <div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># close connection to MongoDB</span>
     <span class="n">mongo_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
-<h2 id="clustering-with-spherical-mini-batch-k-means">Clustering with spherical mini-batch $k$-means</h2>
+<h2 id="clustering-with-spherical-mini-batch-k-means"><a name="ClusteringWithSphericalMiniBatchKMeans"></a> Clustering with spherical mini-batch $k$-means</h2>
 
 <p>In the introduction of this article, I already mentioned $k$-means. $k$-means is the <a href="https://youtu.be/McZSUjP1AcE?t=2m15s">Helvetica</a> of clustering algorithms: it solves an old and important question, and, while many better alternatives exist nowadays, it remains ubiquitous due to its simplicity and effectiveness.</p>
 
@@ -689,13 +689,13 @@ Evidently, if $\boldsymbol{x}$ and $\boldsymbol{y}$ both have unit length, then 
 \[
     Q\left(\left\{\boldsymbol{c}_j\right\}, \left\{\pi_j\right\}\right) = \sum_{j=1}^k \sum_{\hat{\boldsymbol{x}} \in \pi_j} \left(1 - \hat{\boldsymbol{x}}^{\mathrm{T}} \boldsymbol{c}_j\right).
 \]
-This function is decreasing and bounded during iterations. As in scikit-learn, the value of $Q$ is assigned to the variable <code>inertia</code>.</p>
+This function is decreasing and bounded during iterations. As in scikit-learn, the value of $Q$ was assigned to a variable called <code>inertia</code>.</p>
 
-<p>The stopping logic was implemented in the function <code>_convergence</code>. It was not based on the simple $\varepsilon$-criterion of the pseudo-code. Instead, it made use of an exponentially weighted average to smooth out some of the noise that was introduced by the variations between the mini-batches. Nevertheless, this improved stopping logic cannot change the fact that the algorithm converges to a local solution of the partition problem.</p>
+<p>The stopping logic was implemented in the function <code>_convergence</code>. It was not based on the simple $\varepsilon$-criterion of the pseudo-code. Instead, it made use of an exponentially weighted average to smooth out some of the noise that was introduced by the variations between the mini-batches. Nevertheless, this improved stopping logic could not change the fact that the algorithm converged to a local solution of the partition problem.</p>
 
 <h2 id="deploying-spherical-mini-batch-k-means-on-consumer-item-data">Deploying spherical mini-batch $k$-means on consumer-item data</h2>
 
-<p>At this point, I had tf-idf-weighted consumer-item data and an implementation of spherical mini-batch $k$-means that was capable of handling the data. It was time to bring the two together and to crunch some numbers. Below I have reproduced the finished number crunching code. Check it out:</p>
+<p>At this point, I had tf-idf-weighted consumer-item data and an implementation of spherical mini-batch $k$-means that was capable of handling it. It was time to bring the two together and to crunch some numbers. Below I have reproduced the finished number crunching code. Check it out:</p>
 <div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
