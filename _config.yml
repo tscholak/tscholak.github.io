@@ -37,6 +37,7 @@ exclude:
   - "package.json"
   - "Gruntfile.js"
   - "scratch"
+  - "attic"
 
 gems:
   - jekyll/scholar
