@@ -8,7 +8,15 @@
     <title>Meticulous Disorder</title>
     <link>http://tscholak.github.io</link>
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
-    <pubDate>Tue, 21 Jul 2015 02:30:00 -0400</pubDate>
+    <pubDate>Sun, 13 Sep 2015 02:30:00 -0400</pubDate>
+    <item>
+      <title>A Dockerized Login Server for Docker Services</title>
+      <link>http://tscholak.github.io/docker/mongodb/freeipa/2015/09/13/freeipa-client-ssh-server.html</link>
+      <description>&lt;p&gt;I needed a way to &lt;a href=&quot;http://www.information-age.com/technology/security/123459001/major-security-alert-40000-mongodb-databases-left-unsecured-internet&quot;&gt;&lt;strong&gt;&lt;em&gt;securely&lt;/em&gt;&lt;/strong&gt;&lt;/a&gt; access my MongoDB instance running in one of my Docker containers from the stupendous wilds of the Internet. This had to overcome the fact that the server with the MongoDB instance is behind a firewall with NAT. &lt;/p&gt;
+</description>
+      <pubDate>Sun, 13 Sep 2015 02:30:00 -0400</pubDate>
+      <dc:date>2015-09-13T02:30:00-04:00</dc:date>
+    </item>
     <item>
       <title>A $K$-Means Odyssey</title>
       <link>http://tscholak.github.io/big%20data/python/mongodb/market%20segmentation/2015/07/21/smbkmeans.html</link>
@@ -93,6 +101,6 @@
       <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-07-21T02:30:00-04:00</dc:date>
+    <dc:date>2015-09-13T02:30:00-04:00</dc:date>
   </channel>
 </rss>
