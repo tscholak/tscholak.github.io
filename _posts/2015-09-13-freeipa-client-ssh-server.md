@@ -17,7 +17,7 @@ In order to get the routable IP, I had to mess with bridged networking. My deali
 
 ## The Docker image
 
-I created a Docker image, `dockerfiles-freeipa-client-ssh-server`, that you can find on [Docker Hub](https://hub.docker.com/u/tscholak/). The sources are in a [repository on GitHub](https://github.com/tscholak/dockerfiles/tree/master/freeipa-client-ssh-server).
+I created a Docker image, `tscholak/freeipa-client-ssh-server`, that you can find on [Docker Hub](https://hub.docker.com/u/tscholak/). The sources are in a [repository on GitHub](https://github.com/tscholak/dockerfiles/tree/master/freeipa-client-ssh-server).
 
 The image is based on the official [Fedora 22 image](https://hub.docker.com/_/fedora/) and also incorporates some pieces from [here](http://developerblog.redhat.com/2014/05/05/running-systemd-within-docker-container/), [there](https://vpavlin.eu/2015/02/fedora-docker-and-systemd/), and [elsewhere](https://github.com/fedora-cloud/Fedora-Dockerfiles/tree/master/systemd/systemd) to get systemd to run inside a Docker container.
 
@@ -79,7 +79,7 @@ Name=em1
 Bridge=br0
 ```
 
-That let's systemd assign the physical network interface `em1` to the bridge device `br0`. In a sense, `br0` will replace `em1`. Therefore, you will need to assign assign an IP to it. If your physical interface used to have the IP `10.0.0.2/24` with a default gateway at `10.0.0.1` and two DNS servers, at `10.0.0.2` and at `8.8.8.8`, then `br0` would need to be configured in the exact same way. Create the file `/etc/systemd/network/br0.network` and fill it with:
+That lets systemd assign the physical network interface `em1` to the bridge device `br0`. In a sense, `br0` will replace `em1`. Therefore, you will need to assign assign an IP to it. If your physical interface used to have the IP `10.0.0.2/24` with a default gateway at `10.0.0.1` and two DNS servers, e.g. at `10.0.0.2` and at `8.8.8.8`, then `br0` would need to be configured in the exact same way. Create the file `/etc/systemd/network/br0.network` and fill it with:
 
 ```
 [Match]
@@ -128,6 +128,8 @@ hosts: files resolve myhostname mymachines
 ```
 
 ### Check the basic network configuration
+
+Try running
 
 ```
 ＄ networkctl 
