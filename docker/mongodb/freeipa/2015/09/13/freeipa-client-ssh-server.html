@@ -114,7 +114,7 @@
 
 <h2 id="the-docker-image">The Docker image</h2>
 
-<p>I created a Docker image, <code>dockerfiles-freeipa-client-ssh-server</code>, that you can find on <a href="https://hub.docker.com/u/tscholak/">Docker Hub</a>. The sources are in a <a href="https://github.com/tscholak/dockerfiles/tree/master/freeipa-client-ssh-server">repository on GitHub</a>.</p>
+<p>I created a Docker image, <code>tscholak/freeipa-client-ssh-server</code>, that you can find on <a href="https://hub.docker.com/u/tscholak/">Docker Hub</a>. The sources are in a <a href="https://github.com/tscholak/dockerfiles/tree/master/freeipa-client-ssh-server">repository on GitHub</a>.</p>
 
 <p>The image is based on the official <a href="https://hub.docker.com/_/fedora/">Fedora 22 image</a> and also incorporates some pieces from <a href="http://developerblog.redhat.com/2014/05/05/running-systemd-within-docker-container/">here</a>, <a href="https://vpavlin.eu/2015/02/fedora-docker-and-systemd/">there</a>, and <a href="https://github.com/fedora-cloud/Fedora-Dockerfiles/tree/master/systemd/systemd">elsewhere</a> to get systemd to run inside a Docker container.</p>
 
@@ -158,7 +158,7 @@ Name=em1
 [Network]
 Bridge=br0
 </code></pre></div>
-<p>That let&#39;s systemd assign the physical network interface <code>em1</code> to the bridge device <code>br0</code>. In a sense, <code>br0</code> will replace <code>em1</code>. Therefore, you will need to assign assign an IP to it. If your physical interface used to have the IP <code>10.0.0.2/24</code> with a default gateway at <code>10.0.0.1</code> and two DNS servers, at <code>10.0.0.2</code> and at <code>8.8.8.8</code>, then <code>br0</code> would need to be configured in the exact same way. Create the file <code>/etc/systemd/network/br0.network</code> and fill it with:</p>
+<p>That lets systemd assign the physical network interface <code>em1</code> to the bridge device <code>br0</code>. In a sense, <code>br0</code> will replace <code>em1</code>. Therefore, you will need to assign assign an IP to it. If your physical interface used to have the IP <code>10.0.0.2/24</code> with a default gateway at <code>10.0.0.1</code> and two DNS servers, e.g. at <code>10.0.0.2</code> and at <code>8.8.8.8</code>, then <code>br0</code> would need to be configured in the exact same way. Create the file <code>/etc/systemd/network/br0.network</code> and fill it with:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[Match]
 Name=br0
 
@@ -195,6 +195,8 @@ Domains=[YOUR IPA DOMAIN]
 <div class="highlight"><pre><code class="language-text" data-lang="text">hosts: files resolve myhostname mymachines
 </code></pre></div>
 <h3 id="check-the-basic-network-configuration">Check the basic network configuration</h3>
+
+<p>Try running</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">＄ networkctl 
 IDX LINK             TYPE               OPERATIONAL SETUP     
   1 lo               loopback           carrier     unmanaged 
