@@ -8,7 +8,15 @@
     <title>Meticulous Disorder</title>
     <link>http://tscholak.github.io</link>
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
-    <pubDate>Sun, 13 Sep 2015 02:30:00 -0400</pubDate>
+    <pubDate>Wed, 14 Oct 2015 02:30:00 -0400</pubDate>
+    <item>
+      <title>Chipgate</title>
+      <link>http://tscholak.github.io/bayesianism/apple/chipgate/2015/10/14/chipgate.html</link>
+      <description>&lt;p&gt;If you read this, you probably heard the claim that the battery performance of the new iPhones is markedly different, depending on whether its system on chip (SoC) is manufactured by TSMC or by Samsung. Early reports indicated that the TSMC chip allows for a dramatically better battery lifetime than its Samsung counterpart. Supposedly, this is due to TSMC&amp;#39;s slight advantage in the semiconductor device fabrication process, which gives the TSMC chip a competitive edge -- although both iPhone chips are based on the same Apple A9 design.&lt;/p&gt;
+</description>
+      <pubDate>Wed, 14 Oct 2015 02:30:00 -0400</pubDate>
+      <dc:date>2015-10-14T02:30:00-04:00</dc:date>
+    </item>
     <item>
       <title>A Dockerized Login Server for Docker Services</title>
       <link>http://tscholak.github.io/docker/mongodb/freeipa/2015/09/13/freeipa-client-ssh-server.html</link>
@@ -101,6 +109,6 @@
       <pubDate>Sat, 28 Feb 2015 19:00:00 -0500</pubDate>
       <dc:date>2015-02-28T19:00:00-05:00</dc:date>
     </item>
-    <dc:date>2015-09-13T02:30:00-04:00</dc:date>
+    <dc:date>2015-10-14T02:30:00-04:00</dc:date>
   </channel>
 </rss>

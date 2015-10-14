@@ -158,7 +158,7 @@ Name=em1
 [Network]
 Bridge=br0
 </code></pre></div>
-<p>That lets systemd assign the physical network interface <code>em1</code> to the bridge device <code>br0</code>. In a sense, <code>br0</code> will replace <code>em1</code>. Therefore, you will need to assign assign an IP to it. If your physical interface used to have the IP <code>10.0.0.2/24</code> with a default gateway at <code>10.0.0.1</code> and two DNS servers, e.g. at <code>10.0.0.2</code> and at <code>8.8.8.8</code>, then <code>br0</code> would need to be configured in the exact same way. Create the file <code>/etc/systemd/network/br0.network</code> and fill it with:</p>
+<p>That lets systemd attach the physical network interface <code>em1</code> to the bridge device <code>br0</code>. In a sense, <code>br0</code> will replace <code>em1</code>. Therefore, you will need to assign an IP to it. If your physical interface used to have the IP <code>10.0.0.2/24</code> with a default gateway at <code>10.0.0.1</code> and two DNS servers, e.g. at <code>10.0.0.2</code> and at <code>8.8.8.8</code>, then <code>br0</code> would need to be configured in the exact same way. Create the file <code>/etc/systemd/network/br0.network</code> and fill it with:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">[Match]
 Name=br0
 
@@ -252,7 +252,7 @@ MASQUERADE  all  --  10.0.0.0/24          anywhere
 <div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo brctl addif br0 fcss-veth0
 </code></pre></div>
 <p>For the next steps, you will need to know the PID of the container <code>fcss</code>. You can get it with:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo docker inspect --format &#39;&#39; fcss
+<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo docker inspect --format &#39;\{\{.State.Pid\}\}&#39; fcss
 31058
 </code></pre></div>
 <p>In this example, the PID is <code>31058</code> (since yours will be most certainly different, don&#39;t forget to make the necessary changes below). Now, move the <code>veth0</code> interface into the container&#39;s name space:</p>
@@ -283,7 +283,7 @@ MASQUERADE  all  --  10.0.0.0/24          anywhere
 <p>where <code>[YOUR IPA REALM]</code>, <code>[YOUR IPA SERVER]</code> (e.g., <code>10.0.0.2</code>), and <code>[YOUR IPA ADMIN PASSWORD]</code> need to be replaced by your FreeIPA realm, the IP address of (one of) your FreeIPA directory server(s), and the password to your FreeIPA admin account, respectively.</p>
 
 <p>That&#39;s it. You should now be able to ssh into the container from anywhere in your local network with:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ ssh [FREEIPA USER]@fcss.[YOUR IPA REALM]
+<div class="highlight"><pre><code class="language-text" data-lang="text">＄ ssh [IPA USERNAME]@fcss.[YOUR IPA DOMAIN]
 </code></pre></div>
 <p>If it doesn&#39;t work, and if you see</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">System is booting up. See pam_nologin(8)
@@ -302,7 +302,7 @@ Connection closed by 10.0.0.101
 ＄ mongo localhost:27017
 MongoDB shell version: 3.0.6
 connecting to: localhost:27017/[YOUR DB]
-&gt; quit()
+&gt; exit
 </code></pre></div>
 <p>Fertig.</p>
 
