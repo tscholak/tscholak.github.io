@@ -79,7 +79,7 @@ Name=em1
 Bridge=br0
 ```
 
-That lets systemd assign the physical network interface `em1` to the bridge device `br0`. In a sense, `br0` will replace `em1`. Therefore, you will need to assign assign an IP to it. If your physical interface used to have the IP `10.0.0.2/24` with a default gateway at `10.0.0.1` and two DNS servers, e.g. at `10.0.0.2` and at `8.8.8.8`, then `br0` would need to be configured in the exact same way. Create the file `/etc/systemd/network/br0.network` and fill it with:
+That lets systemd attach the physical network interface `em1` to the bridge device `br0`. In a sense, `br0` will replace `em1`. Therefore, you will need to assign an IP to it. If your physical interface used to have the IP `10.0.0.2/24` with a default gateway at `10.0.0.1` and two DNS servers, e.g. at `10.0.0.2` and at `8.8.8.8`, then `br0` would need to be configured in the exact same way. Create the file `/etc/systemd/network/br0.network` and fill it with:
 
 ```
 [Match]
@@ -217,7 +217,7 @@ Now add the interface to the bridge `br0`:
 For the next steps, you will need to know the PID of the container `fcss`. You can get it with:
 
 ```
-＄ sudo docker inspect --format '{{.State.Pid}}' fcss
+＄ sudo docker inspect --format '\{\{.State.Pid\}\}' fcss
 31058
 ```
 
@@ -266,7 +266,7 @@ where `[YOUR IPA REALM]`, `[YOUR IPA SERVER]` (e.g., `10.0.0.2`), and `[YOUR IPA
 That's it. You should now be able to ssh into the container from anywhere in your local network with:
 
 ```
-＄ ssh [FREEIPA USER]@fcss.[YOUR IPA REALM]
+＄ ssh [IPA USERNAME]@fcss.[YOUR IPA DOMAIN]
 ```
 
 If it doesn't work, and if you see
@@ -297,7 +297,7 @@ This establishes a persistent SSH tunnel. You need to configure your router/fire
 ＄ mongo localhost:27017
 MongoDB shell version: 3.0.6
 connecting to: localhost:27017/[YOUR DB]
-> quit()
+> exit
 ```
 
 Fertig.
