@@ -5,8 +5,8 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Wed, 14 Oct 2015 03:13:26 -0400</pubDate>
-    <lastBuildDate>Wed, 14 Oct 2015 03:13:26 -0400</lastBuildDate>
+    <pubDate>Wed, 14 Oct 2015 10:56:22 -0400</pubDate>
+    <lastBuildDate>Wed, 14 Oct 2015 10:56:22 -0400</lastBuildDate>
     <generator>Jekyll v2.5.3</generator>
     
       <item>
@@ -15,7 +15,7 @@
           <dc:creator>Torsten Scholak</dc:creator>
         
         
-          <description>&lt;p&gt;If you read this, you probably heard the claim that the battery performance of the new iPhones is markedly different, depending on whether its system on chip (SoC) is manufactured by TSMC or by Samsung. Early reports indicated that the TSMC chip allows for a dramatically better battery lifetime than its Samsung counterpart. Supposedly, this is due to TSMC&amp;#39;s slight advantage in the semiconductor device fabrication process, which gives the TSMC chip a competitive edge -- although both iPhone chips are based on the same Apple A9 design.&lt;/p&gt;
+          <description>&lt;p&gt;If you read this, you probably heard the claim that the battery performance of the new iPhones is markedly different, depending on whether its system on chip (SoC) is manufactured by TSMC or by Samsung. &lt;a href=&quot;http://www.macrumors.com/2015/10/07/tsmc-samsung-a9-battery-tests/&quot;&gt;Early reports&lt;/a&gt; indicated that the TSMC chip allows for a dramatically better battery lifetime than its Samsung counterpart. Supposedly, this is due to TSMC&amp;#39;s slight advantage in the semiconductor device fabrication process, which gives the TSMC chip a competitive edge -- although both iPhone chips are based on the same Apple A9 design.&lt;/p&gt;
 </description>
         
         <pubDate>Wed, 14 Oct 2015 02:30:00 -0400</pubDate>
