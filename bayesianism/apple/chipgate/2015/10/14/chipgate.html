@@ -104,11 +104,11 @@
 
 <p><span class="more"></span></p>
 
-<p>Whatever the technical explanations are for the discrepancy, I was more concerned with the statistical significance of the findings. The amount of reliable measurement data seemed to be far too small. In other words, I was not convinced that the alleged superiority of the TSMC chip over the Samsung chip was not just the result of pure chance. Moreover, I speculated that -- after the news had spread and people began to obsess over this issue -- some people secretly wanted there to be a difference, and newer test results were thus most likely filtered and biased.</p>
+<p>Whatever the technical explanations are for the discrepancy, when I first heard about this, I was more concerned with the statistical significance of the findings. The amount of reliable measurement data seemed to be far too small. In other words, I was not convinced that the alleged superiority of the TSMC chip over the Samsung chip was not just the result of pure chance. Moreover, I speculated that -- after the news had spread and people began to obsess over this issue -- some people secretly wanted there to be a difference, and newer test results were thus most likely filtered and biased.</p>
 
 <h2 id="stats-to-the-rescue">Stats to The Rescue!</h2>
 
-<p>In order to put the claims on sound statistical footing, someone had to gather a lot of annotated battery performance data (i.e. reproducable battery benchmark data labelled by chip type) and use proper statistical tools to calculate the odds that the TSMC chip is indeed better than the Samsung one. I was determined to do exactly that, yet I found myself without access to such data. I resigned and turned to twitter to <a href="https://twitter.com/tscholak/status/652464956168871936">proclaim my bitterness</a> loudly to the world.</p>
+<p>In order to put the claims on sound statistical footing, someone had to gather a lot of annotated battery performance data (i.e. reproducible battery benchmark data labelled by chip type) and use proper statistical tools to calculate the odds that the TSMC chip is indeed better than the Samsung one. I was determined to do exactly that, yet I found myself without access to such data. I resigned and turned to twitter to <a href="https://twitter.com/tscholak/status/652464956168871936">proclaim my bitterness</a> loudly to the world.</p>
 
 <p>To my astonishment, <a href="https://twitter.com/jfpoole">John Poole</a> from Primate Labs <a href="https://twitter.com/jfpoole/status/652566289945337856">answered my call</a> and provided some Geekbench battery data for the iPhone 6S. That was Friday. That first batch of data was not separated by chip type, unfortunately. At that point in time, Geekbench did not collect that information. However, on the same day, John pushed an update for Geekbench that would remedy that issue. On Monday, he sent me another dataset with new data, this time labelled by chip type. A huge thanks to him!</p>
 
@@ -130,7 +130,7 @@
 <p>
   <figure>
     <img src="/assets/images/iPhone_violinplot.png" title="violin plot">
-    <figcaption>The image shows violin plots for the location of the Gaussians (in Geekbench's proprietory battery score units).</figcaption>
+    <figcaption>The image shows violin plots for the location of the Gaussians (in Geekbench's proprietary battery score units).</figcaption>
   </figure>
 </p>
 
@@ -219,9 +219,9 @@ generated quantities {
 </code></pre></div>
 <p>Note that the model is defined such that it can be used in cases with more than one feature, but only if the naive independence assumption between the features applies.</p>
 
-<p>The above implementation allows me to use both labelled and unlabelled data for the parameter inference. To this end, I assume that the labels of the unlabelled dataset are missing completely at random. A conceptually very similar implementation is described in section 13.3 of version 2.8.0 of the Stan manual <a href="#2015StanReferenceManual">(<i>Stan Modeling Language Users Guide And Reference Manual, Version 2.8.0</i> 2015)</a>. The nice thing about this idea is that all data -- not only the labelled, but also the unlabelled data -- contributes to the parameter inference. Since I had only 29 labelled datapoints to work with, this really helped to improve the results.</p>
+<p>The above implementation allows me to use both labelled and unlabelled data for the parameter inference. To this end, I assume that the labels of the unlabelled dataset are missing completely at random. A conceptually very similar implementation is described in section 13.3 of version 2.8.0 of the Stan manual <a href="#2015StanReferenceManual">(<i>Stan Modeling Language Users Guide And Reference Manual, Version 2.8.0</i> 2015)</a>. The nice thing about this idea is that all data -- not only the labelled, but also the unlabelled data -- contributes to the parameter inference. Since I had only 29 labelled data points to work with, this really helped to improve the results.</p>
 
-<p>In the end, I added the <code>generated quantities</code> block in order to draw values for the missing labels <code>yp</code>. In other words, I can predict the manufacturer of an iPhone&#39;s SoC based on its battery test score. What I created can perhaps be described as a semisupervised version of the common naive Bayes classifier.</p>
+<p>In the end, I added the <code>generated quantities</code> block in order to draw values for the missing labels <code>yp</code>. In other words, I can predict the manufacturer of an iPhone&#39;s SoC based on its battery test score. What I created can perhaps be described as a semi-supervised version of the common naive Bayes classifier.</p>
 
 <h2 id="acknowledgements">Acknowledgements</h2>
 
