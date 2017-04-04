@@ -59,12 +59,12 @@
     </script>
   </head>
 
-  <body class="post-template">
+  <body class="home-template">
 
     <header class="main-header post-head no-cover">
   <nav class="main-nav  clearfix">
     <a class="back-button icon-arrow-left" href="/">Home</a>
-    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
   </nav>
 </header>
 
@@ -74,10 +74,10 @@
 
     <header class="post-header">
       <h1 class="post-title">Unfold with unfoldr</h1>
-      <section class="post-meta">                
+      <section class="post-meta">
         <time class="post-date" datetime="2015-05-05">05 May 2015</time>
-         
-          on code and physics 
+        
+          on code and physics
         
       </section>
     </header>
@@ -86,14 +86,14 @@
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">Meticulous Disorder</span>
-         
+        
       </a>
     </header> -->
-    
+
     <!-- <span class="post-meta">
       <time datetime="2015-05-05">05 May 2015</time>
-       
-        on code and physics 
+      
+        on code and physics
       
     </span> -->
 
@@ -105,13 +105,13 @@
 <p>Like histogramr, unfoldr reads and writes <a href="http://www.hdfgroup.org/HDF5/">HDF5</a> files. HDF5 files are organized in a hierarchical, file-system-like data structure. HDF5 is <a href="https://www.hdfgroup.org/users.html">commonly used in scientific environments</a>. It is designed to handle big scientific data sets. Please see my <a href="/code/big%20data/2015/03/07/histogramr.html">earlier blog post</a> for a description of HDF5 and how it is used.</p>
 
 <p>unfoldr and histogramr are designed to work in tandem. Output from unfoldr can (but doesn&#39;t have to) be processed by histogramr. unfoldr produces a HDF5 file that contains the level spacings in a single data set:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ unfoldr -d <span class="s2">&quot;spectrum&quot;</span> -m <span class="s2">&quot;eigval&quot;</span> -o nnls.h5 spectra.h5
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ unfoldr -d <span class="s2">&quot;spectrum&quot;</span> -m <span class="s2">&quot;eigval&quot;</span> -o nnls.h5 spectra.h5
 </code></pre></div>
 <p>And histogramr then creates a discretized probability density function from it:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ histogramr -d <span class="s2">&quot;inf&quot;</span> -m <span class="s2">&quot;spacing&quot;</span> -b .1 -l 0,10 -o nnlsd.h5 nnls.h5
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ histogramr -d <span class="s2">&quot;inf&quot;</span> -m <span class="s2">&quot;spacing&quot;</span> -b .1 -l <span class="m">0</span>,10 -o nnlsd.h5 nnls.h5
 </code></pre></div>
 <p>Boom! You&#39;ve got the nearest-neighbor level spacing distribution stored nicely in <code>nnlsd.h5</code>. Then you can do this:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">plotly.plotly</span> <span class="kn">as</span> <span class="nn">py</span>
 <span class="kn">from</span> <span class="nn">plotly.graph_objs</span> <span class="kn">import</span> <span class="o">*</span>
@@ -119,28 +119,28 @@
 <span class="n">fS_Poisson</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)])(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">100</span><span class="p">)))</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
 <span class="n">fS_GOE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mf">2.</span><span class="o">/</span><span class="mf">4.</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">])(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">100</span><span class="p">)))</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
 
-<span class="n">h5file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s">&#39;nnlsd.h5&#39;</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
-<span class="n">fS_unfoldr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">h5file</span><span class="p">[</span><span class="s">&#39;probability density&#39;</span><span class="p">])</span>
+<span class="n">h5file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s1">&#39;nnlsd.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">fS_unfoldr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">h5file</span><span class="p">[</span><span class="s1">&#39;probability density&#39;</span><span class="p">])</span>
 <span class="n">h5file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 <span class="n">trace_Poisson</span> <span class="o">=</span> <span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">fS_Poisson</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span>
                         <span class="n">y</span><span class="o">=</span><span class="n">fS_Poisson</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span>
-                        <span class="n">mode</span><span class="o">=</span><span class="s">&#39;lines&#39;</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s">u&quot;Poisson distribution&quot;</span><span class="p">)</span>
+                        <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">u</span><span class="s2">&quot;Poisson distribution&quot;</span><span class="p">)</span>
 <span class="n">trace_GOE</span> <span class="o">=</span> <span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">fS_GOE</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span>
                     <span class="n">y</span><span class="o">=</span><span class="n">fS_GOE</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="n">mode</span><span class="o">=</span><span class="s">&#39;lines&#39;</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s">u&quot;Wigner&#39;s surmise&quot;</span><span class="p">)</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">u</span><span class="s2">&quot;Wigner&#39;s surmise&quot;</span><span class="p">)</span>
 <span class="n">trace_unfoldr</span> <span class="o">=</span> <span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">fS_unfoldr</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span>
                         <span class="n">y</span><span class="o">=</span><span class="n">fS_unfoldr</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span>
-                        <span class="n">mode</span><span class="o">=</span><span class="s">&#39;markers&#39;</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s">u&#39;unfoldr data&#39;</span><span class="p">,</span>
-                        <span class="n">marker</span><span class="o">=</span><span class="n">Marker</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s">&#39;square&#39;</span><span class="p">))</span>
+                        <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;markers&#39;</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">u</span><span class="s1">&#39;unfoldr data&#39;</span><span class="p">,</span>
+                        <span class="n">marker</span><span class="o">=</span><span class="n">Marker</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;square&#39;</span><span class="p">))</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">([</span><span class="n">trace_Poisson</span><span class="p">,</span> <span class="n">trace_GOE</span><span class="p">,</span> <span class="n">trace_unfoldr</span><span class="p">])</span>
-<span class="n">layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s">u&#39;Nearest-neighbor level spacing distribution&#39;</span><span class="p">)</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="sa">u</span><span class="s1">&#39;Nearest-neighbor level spacing distribution&#39;</span><span class="p">)</span>
 <span class="n">fig</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
 
-<span class="n">py</span><span class="o">.</span><span class="n">iplot</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&quot;unfoldr-demonstration&quot;</span><span class="p">)</span>
+<span class="n">py</span><span class="o">.</span><span class="n">iplot</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;unfoldr-demonstration&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>The output is:</p>
 
@@ -154,13 +154,13 @@
 <h1 id="get-unfoldr-today-from-github">Get unfoldr today from GitHub!</h1>
 
 <p>You can <a href="https://github.com/tscholak/unfoldr">download unfoldr from GitHub</a>. In Linux or Mac OS X, open a terminal session and run:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ git clone git@github.com:tscholak/unfoldr.git
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ git clone git@github.com:tscholak/unfoldr.git
 </code></pre></div>
 <p>(get Git <a href="http://git-scm.com">here</a>). Since I released unfoldr under the GPLv3, you can use, study, share, and modify it for <em>free</em> (as long as you retain these rights for others). unfoldr is written in <a href="https://www.python.org">Python</a> and uses the <a href="https://pypi.python.org/pypi/setuptools">setuptools</a>. From within the source code directory, run:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ python setup.py install
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ python setup.py install
 </code></pre></div>
 <p>Make sure your Python&#39;s <code>bin</code> directory is in your <code>$PATH</code>. On Mac OS X, if you use Macports and haven&#39;t done so already, add</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ <span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span>/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin:<span class="nv">$PATH</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ <span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span>/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin:<span class="nv">$PATH</span>
 </code></pre></div>
 <p>to your <code>~/.bash_login</code> or <code>~/.bash_profile</code> file. Once done, you can call unfoldr from the command line by invoking <code>unfoldr</code>. <code>unfoldr -h</code> will show you the command line arguments.</p>
 
@@ -247,15 +247,15 @@ respectively, to very good approximation (especially when $N$ is large). The cor
 </ul>
 
 <p>If you think you have a localization transition in your system (or maybe just a transition between Poisson and Wigner-Dyson statistics under variation of the energy), you can get further insight into this by letting unfoldr calculate the NNLSs for individual slices through the spectral data. For instance,</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ unfoldr -d <span class="s2">&quot;spectrum&quot;</span> -m <span class="s2">&quot;eigval&quot;</span> -l -10,10 -b .5 -o nnls.h5 spectra.h5
-＄ histogramr -d <span class="s2">&quot;-9.75&quot;</span> -m <span class="s2">&quot;spacing&quot;</span> -b .1 -l 0,10 -o nnlsd_-9.75.h5 nnls.h5
-＄ histogramr -d <span class="s2">&quot;-9.25&quot;</span> -m <span class="s2">&quot;spacing&quot;</span> -b .1 -l 0,10 -o nnlsd_-9.25.h5 nnls.h5
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ unfoldr -d <span class="s2">&quot;spectrum&quot;</span> -m <span class="s2">&quot;eigval&quot;</span> -l -10,10 -b .5 -o nnls.h5 spectra.h5
+＄ histogramr -d <span class="s2">&quot;-9.75&quot;</span> -m <span class="s2">&quot;spacing&quot;</span> -b .1 -l <span class="m">0</span>,10 -o nnlsd_-9.75.h5 nnls.h5
+＄ histogramr -d <span class="s2">&quot;-9.25&quot;</span> -m <span class="s2">&quot;spacing&quot;</span> -b .1 -l <span class="m">0</span>,10 -o nnlsd_-9.25.h5 nnls.h5
 ...
-＄ histogramr -d <span class="s2">&quot;9.75&quot;</span> -m <span class="s2">&quot;spacing&quot;</span> -b .1 -l 0,10 -o nnlsd_9.75.h5 nnls.h5
+＄ histogramr -d <span class="s2">&quot;9.75&quot;</span> -m <span class="s2">&quot;spacing&quot;</span> -b .1 -l <span class="m">0</span>,10 -o nnlsd_9.75.h5 nnls.h5
 </code></pre></div>
 <p>calculates not one, but twenty NNLS densities that are based exclusively on the spectral data in the intervals $[-10, -9.5)$, $[-9.5,-9)$, $\ldots$, $[9.5,10)$. With this data you can easily follow the change of the NNLS statistics with the energy <a href="#scholak2014spectral">(Scholak, Wellens, and Buchleitner 2014)</a>.</p>
 
-<h2 id="unfolding-—-theory-and-numerical-implementation">Unfolding — theory and numerical implementation</h2>
+<h2 id="unfolding-theory-and-numerical-implementation">Unfolding — theory and numerical implementation</h2>
 
 <p>Below I first explain how unfolding works <a href="#Guhr1998Random-matrix-t">(Guhr, Müller–Groeling, and Weidenmüller 1998)</a> and then how it is <a href="#implementation">implemented in unfoldr</a>. As an auxiliary tool, I first define the spectral staircase function
 \[
@@ -291,7 +291,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
   \end{align*}
 \]
 <a name="implementation"></a>How is unfolding done in unfoldr? When you load your spectral data with unfoldr, two-thirds of them are taken away to populate what I call the unfolding pool. The unfolding pool is a flat, sorted array of eigenvalues. I use it to estimate the ensemble averaged spectral staircase function $\overline{\mathcal{N}}$ and to do the transformation $\Lambda_{\nu} \mapsto \tilde{\Lambda}_{\nu}$. The following Python pseudo code shows how this is implemented:</p>
-<div class="highlight"><pre><code class="language-c" data-lang="c"><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<div class="highlight"><pre><code class="language-c" data-lang="c"><span></span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">j</span> <span class="n">in</span> <span class="n">range</span><span class="p">(</span><span class="n">number</span> <span class="n">of</span> <span class="n">eigenvalues</span><span class="p">)</span><span class="o">:</span>
   <span class="k">while</span> <span class="n">unfolding_pool</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">eigenvalue</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">:</span>
     <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -364,7 +364,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     });
   });
 </script></li>
-<li><span id="Walschaers2014A-Statistical-B">Walschaers, M., J. Kuipers, J.-D. Urbina, K. Mayer, M. C. Tichy, K. Richter, and A. Buchleitner, 2014, “A Statistical Benchmark For BosonSampling,” ArXiv e-prints.</span>
+<li><span id="Walschaers2014A-Statistical-B">Walschaers, M., J. Kuipers, J.-D. Urbina, K. Mayer, M. C. Tichy, K. Richter, and A. Buchleitner, 2014, “A Statistical Benchmark for BosonSampling,” ArXiv e-prints.</span>
 
 <div id="Walschaers2014A-Statistical-B-tabs">
   View
@@ -434,7 +434,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     });
   });
 </script></li>
-<li><span id="Tao2012Topics-in-Rando">Tao, T., 2012, <i>Topics In Random Matrix Theory</i>. Graduate Studies in Mathematics (American Mathematical Society).</span>
+<li><span id="Tao2012Topics-in-Rando">Tao, T., 2012, <i>Topics in Random Matrix Theory</i>. Graduate Studies in Mathematics (American Mathematical Society).</span>
 
 <div id="Tao2012Topics-in-Rando-tabs">
   View
@@ -469,7 +469,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     });
   });
 </script></li>
-<li><span id="Backer2011Fractional-Powe">Bäcker, Arnd, Roland Ketzmerick, Steffen Löck, and Normann Mertig, 2011, “Fractional-Power-Law Level Statistics Due To Dynamical Tunneling,” Phys. Rev. Lett. <b>106</b>, 024101. doi:10.1103/PhysRevLett.106.024101.</span>
+<li><span id="Backer2011Fractional-Powe">Bäcker, Arnd, Roland Ketzmerick, Steffen Löck, and Normann Mertig, 2011, “Fractional-Power-Law Level Statistics Due to Dynamical Tunneling,” Phys. Rev. Lett. <b>106</b>, 024101. doi:10.1103/PhysRevLett.106.024101.</span>
 
 <div id="Backer2011Fractional-Powe-tabs">
   View
@@ -505,7 +505,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     });
   });
 </script></li>
-<li><span id="Bouchaud2009Financial-Appli">Bouchaud, J. P., and M. Potters, 2009, “Financial Applications Of Random Matrix Theory: a Short Review,” ArXiv e-prints.</span>
+<li><span id="Bouchaud2009Financial-Appli">Bouchaud, J. P., and M. Potters, 2009, “Financial Applications of Random Matrix Theory: a Short Review,” ArXiv e-prints.</span>
 
 <div id="Bouchaud2009Financial-Appli-tabs">
   View
@@ -677,7 +677,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     });
   });
 </script></li>
-<li><span id="Mirlin1996Transition-from">Mirlin, Alexander D., Yan V. Fyodorov, Frank-Michael Dittes, Javier Quezada, and Thomas H. Seligman, 1996, “Transition From Localized to Extended Eigenstates in the Ensemble of Power-Law Random Banded Matrices,” Phys. Rev. E <b>54</b>, 3221.</span>
+<li><span id="Mirlin1996Transition-from">Mirlin, Alexander D., Yan V. Fyodorov, Frank-Michael Dittes, Javier Quezada, and Thomas H. Seligman, 1996, “Transition from Localized to Extended Eigenstates in the Ensemble of Power-Law Random Banded Matrices,” Phys. Rev. E <b>54</b>, 3221.</span>
 
 <div id="Mirlin1996Transition-from-tabs">
   View
@@ -711,7 +711,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     });
   });
 </script></li>
-<li><span id="Cizeau1994Theory-of-Levy-">Cizeau, P., and J. P. Bouchaud, 1994, “Theory Of Lévy Matrices,” Phys. Rev. E <b>50</b>, 1810.</span>
+<li><span id="Cizeau1994Theory-of-Levy-">Cizeau, P., and J. P. Bouchaud, 1994, “Theory of Lévy Matrices,” Phys. Rev. E <b>50</b>, 1810.</span>
 
 <div id="Cizeau1994Theory-of-Levy--tabs">
   View
@@ -855,7 +855,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     });
   });
 </script></li>
-<li><span id="Dyson1970Correlations-be">Dyson, Freeman J., 1970, “Correlations Between Eigenvalues of a Random Matrix,” Comm. Math. Phys. <b>19</b>, 235.</span>
+<li><span id="Dyson1970Correlations-be">Dyson, Freeman J., 1970, “Correlations between Eigenvalues of a Random Matrix,” Comm. Math. Phys. <b>19</b>, 235.</span>
 
 <div id="Dyson1970Correlations-be-tabs">
   View
@@ -890,7 +890,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     });
   });
 </script></li>
-<li><span id="Wigner1967Random-Matrices">Wigner, E., 1967, “Random Matrices In Physics,” SIAM Rev. <b>9</b>, 1.</span>
+<li><span id="Wigner1967Random-Matrices">Wigner, E., 1967, “Random Matrices in Physics,” SIAM Rev. <b>9</b>, 1.</span>
 
 <div id="Wigner1967Random-Matrices-tabs">
   View
@@ -944,7 +944,7 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
           <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
-        </section>                
+        </section>
       
 
       <!-- Share links section -->
@@ -986,10 +986,10 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
     <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
   
 </section>
-      
+
       <!-- Disqus comments -->
       
-      
+
     </footer>
 
   </article>
@@ -999,12 +999,12 @@ and the corresponding unfolded mean level spacing equals one, $\overline{\tilde{
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="/">Meticulous Disorder</a> &copy; 
-               &bull; All rights reserved.
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
       </section>
-      <section class="poweredby">Made with Jekyll using 
+      <section class="poweredby">Made with Jekyll using
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer> 
+    </footer>
   </body>
 </html>

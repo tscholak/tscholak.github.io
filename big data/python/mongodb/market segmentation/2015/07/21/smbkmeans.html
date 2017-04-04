@@ -59,12 +59,12 @@
     </script>
   </head>
 
-  <body class="post-template">
+  <body class="home-template">
 
     <header class="main-header post-head no-cover">
   <nav class="main-nav  clearfix">
     <a class="back-button icon-arrow-left" href="/">Home</a>
-    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
   </nav>
 </header>
 
@@ -74,10 +74,10 @@
 
     <header class="post-header">
       <h1 class="post-title">A $K$-Means Odyssey</h1>
-      <section class="post-meta">                
+      <section class="post-meta">
         <time class="post-date" datetime="2015-07-21">21 Jul 2015</time>
-         
-          on big data, python, mongodb, and market segmentation 
+        
+          on big data, Python, MongoDB, and market segmentation
         
       </section>
     </header>
@@ -86,14 +86,14 @@
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">Meticulous Disorder</span>
-         
+        
       </a>
     </header> -->
-    
+
     <!-- <span class="post-meta">
       <time datetime="2015-07-21">21 Jul 2015</time>
-       
-        on big data, python, mongodb, and market segmentation 
+      
+        on big data, Python, MongoDB, and market segmentation
       
     </span> -->
 
@@ -127,14 +127,14 @@
 
 <p>In <a href="/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html">my current project</a>, I am dealing with similar classification problems, and it seemed to be a good idea to try out tf-idf and $k$-means on them before going over to any more sophisticated methods. Instead of documents and terms, I have data describing the interactions between consumers and items, i.e. data about who purchased which item and how often. Most of the methodology applies unchanged. Still, the large size of my dataset made it necessary to think about every tiny cog in the machine, and to come up with my own implementation, see below. Unfortunately, the results weren&#39;t particularly useful... -- but see for yourself.</p>
 
-<h2 id="implementing-the-tf–idf-statistic">Implementing the tf–idf statistic</h2>
+<h2 id="implementing-the-tf-idf-statistic">Implementing the tf–idf statistic</h2>
 
 <p>tf-idf is short for &quot;term-frequency inverse-document-frequency&quot; and it&#39;s a statistic <a href="#Manning2008Introduction-to">(Manning et al. 2008)</a>. I already wrote about tf-idf in an <a href="/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html#WeightsForDocumentWordNetworks">earlier article</a>, and I won&#39;t repeat here what I said there. Instead, I am focusing on my implementation of tf-idf in Python -- actually, in <a href="http://cython.org">Cython</a>, which I prefer because of its higher performance. Cython code looks almost like it could be Python, but it isn&#39;t. While Python code is usually valid Cython, it doesn&#39;t work the other way around. That is because Cython allows you to exactly specify the type of each parameter and every variable, and these types can be C data types, too. This is possible, since, behind the curtain, Cython first converts the code into C and then compiles it with gcc, clang, or icc (for instance). This also explains how Cython can outperform Python: the code is not interpreted, but compiled.</p>
 
 <h6 id="tfidf_module-pyx"><code>tfidf_module.pyx</code></h6>
 
 <p>Let me now go through my implementation step by step. The Cython program code for the tf-idf computation (see <code>tfidf_module.pyx</code> in the <a href="https://github.com/tscholak/smbkmeans">repository</a>), started with:</p>
-<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span class="c"># -*- coding: utf-8 -*-</span>
+<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span></span><span class="c"># -*- coding: utf-8 -*-</span>
 <span class="k">import</span> <span class="nn">cython</span>
 <span class="k">from</span> <span class="nn">cython.parallel</span> <span class="k">cimport</span> <span class="n">prange</span>
 <span class="k">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -145,7 +145,7 @@
 <p>Nothing really interesting to see here -- just a bunch of mandatory imports. For instance, <code>np.import_array()</code> is part of Numpy&#39;s <a href="https://github.com/cython/cython/wiki/tutorials-numpy#c-api-initalization">C-API initialization</a>. Moving on.</p>
 
 <p>Normally, the tf-idf statistic is used on corpi $D$ of documents $d$ and terms $t$. Here, however, I was applying it to my consumer-item data. The first step was to calculate the idf, the inverse document frequency, or, I should rather say, the <em>inverse consumer frequency</em>. If $t$ is an item, then $\mathrm{idf}(t)$ is defined as the logarithm of the fraction of the total number of consumers and the number of consumers $d$ who purchased $t$. In my case, <code>n_consumers</code> was the total number of consumers, and <code>counts</code> was an array with the number of purchases per consumer. Thus, $\mathrm{idf}(t)$ could be computed like this:</p>
-<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span></span><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@cython</span><span class="o">.</span><span class="n">wraparound</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@cython</span><span class="o">.</span><span class="n">cdivision</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="k">cpdef</span> <span class="kt">np</span>.<span class="kt">float64_t</span> <span class="nf">get_idf</span><span class="p">(</span>
@@ -174,7 +174,7 @@
 </ul>
 
 <p>Now for the term frequency tf, or, rather, the <em>item frequency</em>. There are two popular definitions of $\mathrm{tf}(t, d)$ <a href="#Manning2008Introduction-to">(Manning et al. 2008)</a>, which I implemented as the functions <code>get_tf1</code> and <code>get_tf2</code>, respectively. Let us first discuss <code>get_tf1</code>:</p>
-<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span></span><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@cython</span><span class="o">.</span><span class="n">wraparound</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@cython</span><span class="o">.</span><span class="n">cdivision</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
 <span class="k">cpdef</span> <span class="kt">np</span>.<span class="kt">float64_t</span> <span class="nf">get_tf1</span><span class="p">(</span>
@@ -188,7 +188,7 @@
     <span class="k">return</span> <span class="n">tf</span>
 </code></pre></div>
 <p>This function was trivial. It simply returned its argument, <code>count</code>, where <code>count</code> was the number of times an item $t$ had been purchased by a consumer $d$. The alternative, <code>get_tf2</code>, was slightly more complicated:</p>
-<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span></span><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@cython</span><span class="o">.</span><span class="n">wraparound</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@cython</span><span class="o">.</span><span class="n">cdivision</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
 <span class="k">cpdef</span> <span class="kt">np</span>.<span class="kt">float64_t</span> <span class="nf">get_tf2</span><span class="p">(</span>
@@ -208,7 +208,7 @@
 <p>Effectively, this function returned the natural logarithm of the product of Euler&#39;s number and <code>f</code>. This way, the return value of <code>get_tf2</code> was equal to that of <code>get_tf1</code> when <code>count</code> was zero or one. However, it was smaller when <code>count</code> was two or larger. You will see shortly why.</p>
 
 <p>First, however, I show you how I plugged these functions together. This allowed me to calculate the tf-idf statistic, which is defined as the product of $\mathrm{tf}(t, d)$ and $\mathrm{idf}(t)$:</p>
-<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-cython" data-lang="cython"><span></span><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@cython</span><span class="o">.</span><span class="n">wraparound</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@cython</span><span class="o">.</span><span class="n">cdivision</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
 <span class="k">cpdef</span> <span class="kt">np</span>.<span class="kt">ndarray</span>[<span class="kt">np</span>.<span class="nf">float64_t</span><span class="p">,</span> <span class="nf">ndim</span><span class="o">=</span><span class="mf">2</span><span class="p">]</span> <span class="n">get_tfidf</span><span class="p">(</span>
@@ -241,7 +241,7 @@
 <h6 id="tfidf_setup-py"><code>tfidf_setup.py</code></h6>
 
 <p>Before I could use the tf-idf code, it had to be compiled. Python&#39;s <code>distutils</code> package assisted me with this task. First, I needed a file, <code>tfidf_setup.py</code>, with the following content:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">from</span> <span class="nn">distutils.core</span> <span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">Extension</span>
 <span class="kn">from</span> <span class="nn">Cython.Distutils</span> <span class="kn">import</span> <span class="n">build_ext</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
@@ -252,17 +252,17 @@
     <span class="n">numpy_include</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">get_numpy_include</span><span class="p">()</span>
 
 <span class="n">tfidf_module</span> <span class="o">=</span> <span class="n">Extension</span><span class="p">(</span>
-        <span class="s">&quot;tfidf_module&quot;</span><span class="p">,</span>
-        <span class="p">[</span><span class="s">&quot;tfidf_module.pyx&quot;</span><span class="p">],</span>
-        <span class="n">extra_compile_args</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;-O3&#39;</span><span class="p">,</span> <span class="s">&#39;-fopenmp&#39;</span><span class="p">],</span>
-        <span class="n">extra_link_args</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;-fopenmp&#39;</span><span class="p">],)</span>
+        <span class="s2">&quot;tfidf_module&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="s2">&quot;tfidf_module.pyx&quot;</span><span class="p">],</span>
+        <span class="n">extra_compile_args</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;-O3&#39;</span><span class="p">,</span> <span class="s1">&#39;-fopenmp&#39;</span><span class="p">],</span>
+        <span class="n">extra_link_args</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;-fopenmp&#39;</span><span class="p">],)</span>
 
-<span class="n">setup</span><span class="p">(</span><span class="n">cmdclass</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;build_ext&#39;</span><span class="p">:</span> <span class="n">build_ext</span><span class="p">},</span>
+<span class="n">setup</span><span class="p">(</span><span class="n">cmdclass</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;build_ext&#39;</span><span class="p">:</span> <span class="n">build_ext</span><span class="p">},</span>
       <span class="n">ext_modules</span> <span class="o">=</span> <span class="p">[</span><span class="n">tfidf_module</span><span class="p">,],</span>
       <span class="n">include_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy_include</span><span class="p">,],)</span>
 </code></pre></div>
 <p>This Python file was similar in function to a <code>Makefile</code> from an <a href="https://en.wikipedia.org/wiki/GNU_build_system">Autotools</a> project. It specified which module I was building and how this was supposed to be done. In this case, the module was called <code>tfidf_module</code>, and it was a Cython extension. I didn&#39;t do anything out of the ordinary here, this was fairly <a href="http://docs.cython.org/src/userguide/source_files_and_compilation.html">run of the mill</a>. On my Mac, the extension was built using</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ <span class="nv">CC</span><span class="o">=</span>gcc-mp-4.9 python2.7 tfidf_setup.py build_ext --inplace
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ <span class="nv">CC</span><span class="o">=</span>gcc-mp-4.9 python2.7 tfidf_setup.py build_ext --inplace
 </code></pre></div>
 <p>The compilation result, <code>tfidf_module.so</code>, was saved in the current directory, and the compiler used was <code>gcc-mp-4.9</code>.</p>
 
@@ -281,7 +281,7 @@
 <h6 id="transactions_to_tfidf-py"><code>transactions_to_tfidf.py</code></h6>
 
 <p>The <a href="https://github.com/tscholak/smbkmeans">code</a> began with a trick that I learned <a href="http://stackoverflow.com/questions/279237/import-a-module-from-a-relative-path">here</a>:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
@@ -303,124 +303,124 @@
 <p>The rest of the file was derived from another script, <code>transactions_to_graph.py</code>, that I discussed <a href="/big%20data/python/mongodb/2015/07/14/MongoDB-workflow.html#CreatingSpecializedDataCollections">here</a>. In my case, all data was stored in a <a href="/update/python/mongodb/docker/2015/07/13/the-setup.html#MongoDB">MongoDB database</a>. The transaction was in a collection called <code>transactions</code>, and the tf-idf data was supposed to end up in a collection called <code>tfidf</code>. Accordingly, the script&#39;s purpose was to access <code>transactions</code>, calculate the tf-idf statistic for each consumer-item pair, and then store the results in <code>tfidf</code>.</p>
 
 <p>First, the script had to import and configure several other modules to be able to talk to the database:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span><span class="p">,</span> <span class="n">ASCENDING</span>
 
 <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s">&#39;server.local&#39;</span><span class="p">,</span>
-        <span class="s">&#39;mongo_db_name&#39;</span><span class="p">:</span> <span class="s">&#39;mydb&#39;</span><span class="p">,</span>
-        <span class="s">&#39;mongo_port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
-        <span class="s">&#39;drop_collections_on_load&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-        <span class="s">&#39;transactions_collection&#39;</span><span class="p">:</span> <span class="s">&#39;transactions&#39;</span><span class="p">,</span>
-        <span class="s">&#39;tfidf_collection&#39;</span><span class="p">:</span> <span class="s">&#39;tfidf&#39;</span>
+        <span class="s1">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s1">&#39;server.local&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mongo_db_name&#39;</span><span class="p">:</span> <span class="s1">&#39;mydb&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mongo_port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
+        <span class="s1">&#39;drop_collections_on_load&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="s1">&#39;transactions_collection&#39;</span><span class="p">:</span> <span class="s1">&#39;transactions&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;tfidf_collection&#39;</span><span class="p">:</span> <span class="s1">&#39;tfidf&#39;</span>
     <span class="p">}</span>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="c"># establish connection:</span>
-    <span class="n">mongo_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_host&#39;</span><span class="p">],</span>
-                               <span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_port&#39;</span><span class="p">])</span>
-    <span class="n">mongo_db</span> <span class="o">=</span> <span class="n">mongo_client</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_db_name&#39;</span><span class="p">]]</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># establish connection:</span>
+    <span class="n">mongo_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_host&#39;</span><span class="p">],</span>
+                               <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_port&#39;</span><span class="p">])</span>
+    <span class="n">mongo_db</span> <span class="o">=</span> <span class="n">mongo_client</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_db_name&#39;</span><span class="p">]]</span>
 
-    <span class="c"># get collections:</span>
-    <span class="n">transactions_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;transactions_collection&#39;</span><span class="p">]]</span>
-    <span class="n">tfidf_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;tfidf_collection&#39;</span><span class="p">]]</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;drop_collections_on_load&#39;</span><span class="p">]):</span>
+    <span class="c1"># get collections:</span>
+    <span class="n">transactions_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;transactions_collection&#39;</span><span class="p">]]</span>
+    <span class="n">tfidf_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tfidf_collection&#39;</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;drop_collections_on_load&#39;</span><span class="p">]):</span>
         <span class="n">tfidf_collection</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
 </code></pre></div>
 <p>Second, in order to be able to calculate the idf, the script had to query the <code>transaction</code> collection for the number of consumers:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># query number of consumers d in cohort D</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span>    <span class="c1"># query number of consumers d in cohort D</span>
     <span class="n">pipeline</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">{</span><span class="s">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="s">&quot;$id&quot;</span>
+            <span class="p">{</span><span class="s2">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="s2">&quot;$id&quot;</span>
             <span class="p">}},</span>
-            <span class="p">{</span><span class="s">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="s">&quot;null&quot;</span><span class="p">,</span>
-                <span class="s">&quot;count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$sum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+            <span class="p">{</span><span class="s2">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="s2">&quot;null&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$sum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
             <span class="p">}},</span>
-            <span class="p">{</span><span class="s">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
-                <span class="s">&quot;count&quot;</span><span class="p">:</span> <span class="bp">True</span>
+            <span class="p">{</span><span class="s2">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="bp">True</span>
             <span class="p">}}</span>
         <span class="p">]</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">transactions_collection</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span>
                                                <span class="n">allowDiskUse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
-    <span class="n">n_consumers</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;count&#39;</span><span class="p">]</span>
+    <span class="n">n_consumers</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;count&#39;</span><span class="p">]</span>
 </code></pre></div>
 <p>Third, the script had to query and index all individual items that occurred in the <code>transaction</code> collection:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># query items:</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span>    <span class="c1"># query items:</span>
     <span class="n">pipeline</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">{</span><span class="s">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$brand&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$company&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$category&quot;</span>
+            <span class="p">{</span><span class="s2">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$brand&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$company&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$category&quot;</span>
                 <span class="p">}</span>
             <span class="p">}},</span>
-            <span class="p">{</span><span class="s">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
-                <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.brand&quot;</span><span class="p">,</span>
-                <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.company&quot;</span><span class="p">,</span>
-                <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.category&quot;</span>
+            <span class="p">{</span><span class="s2">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.brand&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.company&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.category&quot;</span>
             <span class="p">}}</span>
         <span class="p">]</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">transactions_collection</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span>
                                                <span class="n">allowDiskUse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">items</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cursor</span><span class="p">))</span>
-    <span class="n">items</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;item&quot;</span>
+    <span class="n">items</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;item&quot;</span>
     <span class="n">items</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">items</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s">&#39;brand&#39;</span><span class="p">,</span>
-                             <span class="s">&#39;company&#39;</span><span class="p">,</span>
-                             <span class="s">&#39;category&#39;</span><span class="p">])</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;brand&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;company&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;category&#39;</span><span class="p">])</span>
 </code></pre></div>
 <p>And fourth, the script had to perform a complex aggregate job:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># get items t</span>
-    <span class="c"># (group by brand, company, category)</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span>    <span class="c1"># get items t</span>
+    <span class="c1"># (group by brand, company, category)</span>
     <span class="n">pipeline</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">{</span><span class="s">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;consumer&quot;</span><span class="p">:</span> <span class="s">&quot;$id&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$brand&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$company&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$category&quot;</span>
+            <span class="p">{</span><span class="s2">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;consumer&quot;</span><span class="p">:</span> <span class="s2">&quot;$id&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$brand&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$company&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$category&quot;</span>
                 <span class="p">},</span>
-                <span class="s">&quot;purchasecount&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;$sum&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s">&quot;$cond&quot;</span><span class="p">:</span> <span class="p">[</span>
-                            <span class="p">{</span><span class="s">&quot;$and&quot;</span><span class="p">:</span> <span class="p">[</span>
-                                <span class="p">{</span><span class="s">&quot;$gt&quot;</span><span class="p">:</span> <span class="p">[</span>
-                                    <span class="s">&quot;$purchasequantity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;purchasecount&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;$sum&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;$cond&quot;</span><span class="p">:</span> <span class="p">[</span>
+                            <span class="p">{</span><span class="s2">&quot;$and&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                <span class="p">{</span><span class="s2">&quot;$gt&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="s2">&quot;$purchasequantity&quot;</span><span class="p">,</span>
                                     <span class="mi">0</span>
                                 <span class="p">]},</span>
-                                <span class="p">{</span><span class="s">&quot;$gt&quot;</span><span class="p">:</span> <span class="p">[</span>
-                                    <span class="s">&quot;$purchaseamount&quot;</span><span class="p">,</span>
+                                <span class="p">{</span><span class="s2">&quot;$gt&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="s2">&quot;$purchaseamount&quot;</span><span class="p">,</span>
                                     <span class="mi">0</span>
                                 <span class="p">]}</span>
                             <span class="p">]},</span>
-                            <span class="s">&quot;$purchasequantity&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;$purchasequantity&quot;</span><span class="p">,</span>
                             <span class="mi">0</span>
                         <span class="p">]</span>
                     <span class="p">}</span>
                 <span class="p">}</span>
             <span class="p">}},</span>
-            <span class="p">{</span><span class="s">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.brand&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.company&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.category&quot;</span>
+            <span class="p">{</span><span class="s2">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.brand&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.company&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.category&quot;</span>
                 <span class="p">},</span>
-                <span class="s">&quot;consumers&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$push&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.consumer&quot;</span><span class="p">},</span>
-                <span class="s">&quot;purchasecounts&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$push&quot;</span><span class="p">:</span> <span class="s">&quot;$purchasecount&quot;</span><span class="p">}</span>
+                <span class="s2">&quot;consumers&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$push&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.consumer&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;purchasecounts&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$push&quot;</span><span class="p">:</span> <span class="s2">&quot;$purchasecount&quot;</span><span class="p">}</span>
             <span class="p">}},</span>
-            <span class="p">{</span><span class="s">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
-                <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.brand&quot;</span><span class="p">,</span>
-                <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.company&quot;</span><span class="p">,</span>
-                <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.category&quot;</span><span class="p">,</span>
-                <span class="s">&quot;consumers&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                <span class="s">&quot;purchasecounts&quot;</span><span class="p">:</span> <span class="bp">True</span>
+            <span class="p">{</span><span class="s2">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.brand&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.company&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.category&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;consumers&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                <span class="s2">&quot;purchasecounts&quot;</span><span class="p">:</span> <span class="bp">True</span>
             <span class="p">}}</span>
         <span class="p">]</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">transactions_collection</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span>
@@ -435,34 +435,34 @@
 </ul>
 
 <p><code>aggregate</code> returned a database cursor that iterated over the query&#39;s results. Each result contained the data of one particular item. This data was used to calculate the tf-idf statistics:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># process records:</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span>    <span class="c1"># process records:</span>
     <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">:</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s">&#39;consumers&#39;</span><span class="p">],</span>
-                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;consumer&#39;</span><span class="p">])</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s">&#39;item&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">record</span><span class="p">[</span><span class="s">&#39;brand&#39;</span><span class="p">],</span>
-                                       <span class="n">record</span><span class="p">[</span><span class="s">&#39;company&#39;</span><span class="p">],</span>
-                                       <span class="n">record</span><span class="p">[</span><span class="s">&#39;category&#39;</span><span class="p">]),</span>
-                                      <span class="s">&#39;item&#39;</span><span class="p">]</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s">&#39;brand&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;brand&#39;</span><span class="p">]</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s">&#39;company&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;company&#39;</span><span class="p">]</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s">&#39;category&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;category&#39;</span><span class="p">]</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s">&#39;purchasecount&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;purchasecounts&#39;</span><span class="p">]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;consumers&#39;</span><span class="p">],</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;consumer&#39;</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;item&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;brand&#39;</span><span class="p">],</span>
+                                       <span class="n">record</span><span class="p">[</span><span class="s1">&#39;company&#39;</span><span class="p">],</span>
+                                       <span class="n">record</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]),</span>
+                                      <span class="s1">&#39;item&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;brand&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s1">&#39;brand&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;company&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s1">&#39;company&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;category&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;purchasecount&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s1">&#39;purchasecounts&#39;</span><span class="p">]</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
                     <span class="n">get_tfidf</span><span class="p">(</span>
                         <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                            <span class="n">df</span><span class="p">[</span><span class="s">&#39;purchasecount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                            <span class="n">df</span><span class="p">[</span><span class="s1">&#39;purchasecount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
                             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
                         <span class="n">n_consumers</span>
                     <span class="p">),</span>
-                    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;purchasetfidf1&#39;</span><span class="p">,</span>
-                             <span class="s">&#39;purchasetfidf2&#39;</span><span class="p">]</span>
+                    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;purchasetfidf1&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;purchasetfidf2&#39;</span><span class="p">]</span>
                 <span class="p">)</span>
             <span class="p">)</span>
-        <span class="c"># insert data:</span>
+        <span class="c1"># insert data:</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">tfidf_collection</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
                 <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
-                    <span class="n">df</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s">&#39;records&#39;</span><span class="p">)</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s1">&#39;records&#39;</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 </code></pre></div>
@@ -477,7 +477,7 @@
 </ol>
 
 <p>I went with the second option. I used the MongoDB console to set a new timeout:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">[tscholak@client ~]＄ mongo server.local:27017
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>[tscholak@client ~]＄ mongo server.local:27017
 MongoDB shell version: 3.0.4
 connecting to: server.local:27017/mydb
 &gt; use admin
@@ -489,21 +489,21 @@ switched to db admin
 <p>I set it to the largest possible value, <code>2147483647</code>, which amounts to a little less than twenty five days. Fortunately, the script finished in much less time than that.</p>
 
 <p>At the end, I ordered MongoDB to create a couple of indexes:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># create indexes:</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span>    <span class="c1"># create indexes:</span>
     <span class="n">tfidf_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;consumer&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s1">&#39;consumer&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">tfidf_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;item&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s1">&#39;item&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">tfidf_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;brand&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
-         <span class="p">(</span><span class="s">&#39;company&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
-         <span class="p">(</span><span class="s">&#39;category&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s1">&#39;brand&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
+         <span class="p">(</span><span class="s1">&#39;company&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
+         <span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </code></pre></div>
 <p>The scripted finished by closing the connection to the database:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># close connection to MongoDB</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span>    <span class="c1"># close connection to MongoDB</span>
     <span class="n">mongo_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
 <h2 id="clustering-with-spherical-mini-batch-k-means"><a name="ClusteringWithSphericalMiniBatchKMeans"></a> Clustering with spherical mini-batch $k$-means</h2>
@@ -515,7 +515,7 @@ switched to db admin
 <h3 id="vanilla-k-means">Vanilla $k$-means</h3>
 
 <p>A very simple implementation of $k$-means could be based on this pseudo-code:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$j$ ← $1$
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>$j$ ← $1$
 while $j$ ≤ $k$ do
     $\pi_j^{(0)}$ ← $\{\,\}$
     $\boldsymbol{c}_j^{(0)}$ ← some (e.g. random) $\boldsymbol{x} \in X$
@@ -551,7 +551,7 @@ One can prove that $q_t = Q\left(\left\{\boldsymbol{c}_j^{(t)}\right\}, \left\{\
 <h3 id="mini-batch-k-means">Mini-batch $k$-means</h3>
 
 <p>Mini-batch $k$-means is a faster, better scalable algorithm than plain $k$-means <a href="#Sculley2010Web-scale-k-mea">(Sculley 2010)</a>. Both algorithms are very similar, with the exception that mini-batch $k$-means uses only small subsets of $X$, the so-called mini-batches, to compute the centroids. This reduces the computation time tremendously, but also the quality of the results. However, the difference in quality is usually insignificant. The mini-batch $k$-means pseudo-code reads:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$j$ ← $1$
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>$j$ ← $1$
 while $j$ ≤ $k$ do
     $\pi_j^{(0)}$ ← $\{\,\}$
     $v_j^{(0)}$ ← $0$
@@ -604,7 +604,7 @@ end while
 <p>Indeed, after the normalization, I found that consumers with similar purchase patterns (that is, buying similar items) but differing total purchase numbers had nonetheless similar feature vectors.</p>
 
 <p>I was pleased. Now I needed a mini-batch version of spherical $k$-means. I couldn&#39;t find any, so I built my own. I didn&#39;t start from scratch, though. I found that <a href="http://scikit-learn.org/stable/">scikit-learn</a> has an <a href="http://scikit-learn.org/stable/modules/clustering.html#mini-batch-k-means">implementation of mini-batch $k$-means</a>. I studied that code, took fragments from it, and integrated these into a new algorithm that suited my goal. It can be simplified into the following pseudo-code:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$j$ ← $1$
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>$j$ ← $1$
 while $j$ ≤ $k$ do
     $\pi_j^{(0)}$ ← $\{\,\}$
     $v_j^{(0)}$ ← $0$
@@ -644,11 +644,11 @@ end while
 <h6 id="mini-batches-sampling-and-length-normalization">Mini-batches sampling and length normalization</h6>
 
 <p>In scikit-learn&#39;s mini-batch $k$-means implementation, the <a href="http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MiniBatchKMeans.html#sklearn.cluster.MiniBatchKMeans.fit">algorithm&#39;s input</a> is an array-like object, <code>X</code>, that is chunked into mini-batches transparently to the user. Although elegant, that method would not have worked for me. Since my data resided on a MongoDB instance, it was never fully accessible as an array-like object. There was simply no way to pass it to the algorithm as a whole. Nevertheless, I had to somehow enable my algorithm to sample mini-batches from the database. At the same time, I needed the algorithm to be multi-purpose. It could not be tied to any specific data storage model. The solution was to pass neither the data itself nor a database handle to the algorithm, but a custom sampling function. This function contained all the logic needed to sample the data. Here is an abridged snipped from one of my scripts that illustrates the solution:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">get_batch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
-    <span class="c"># pick batch_size consumers randomly</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span><span class="k">def</span> <span class="nf">get_batch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="c1"># pick batch_size consumers randomly</span>
     <span class="n">consumer_batch</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
             <span class="n">consumers</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
-    <span class="c"># obtain sparse matrix filled with feature vectors from database</span>
+    <span class="c1"># obtain sparse matrix filled with feature vectors from database</span>
     <span class="n">mtx</span> <span class="o">=</span> <span class="n">get_consumer_mtx</span><span class="p">(</span><span class="n">consumer_batch</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mtx</span>
 
@@ -681,7 +681,7 @@ Evidently, if $\boldsymbol{x}$ and $\boldsymbol{y}$ both have unit length, then 
 
 <h6 id="centroid-sparsification">Centroid sparsification</h6>
 
-<p>In order to make the computation more efficient, every iteration closed with a call to the function <code>to_sparse</code>, with the direction vectors $\boldsymbol{c}_j$ as its arguments. As the name suggests, <code>to_sparse</code> attempted to make the vectors more sparse. To this end, it performed an $\varepsilon$-accurate projection of the direction vectors $\boldsymbol{c}_j$ onto the unit ball of $L^1$ around the origin. I got this idea from a paper by Sculley <a href="#Sculley2010Web-scale-k-mea">(“Web-Scale k-Means Clustering” 2010)</a>. Coordinates with very small values were set to zero and eliminated from the sparse representation. This way, the memory footprint was reduced. The actual mechanism was implemented in the function <code>project_L1</code>.</p>
+<p>In order to make the computation more efficient, every iteration closed with a call to the function <code>to_sparse</code>, with the direction vectors $\boldsymbol{c}_j$ as its arguments. As the name suggests, <code>to_sparse</code> attempted to make the vectors more sparse. To this end, it performed an $\varepsilon$-accurate projection of the direction vectors $\boldsymbol{c}_j$ onto the unit ball of $L^1$ around the origin. I got this idea from a paper by Sculley <a href="#Sculley2010Web-scale-k-mea">(2010)</a>. Coordinates with very small values were set to zero and eliminated from the sparse representation. This way, the memory footprint was reduced. The actual mechanism was implemented in the function <code>project_L1</code>.</p>
 
 <h6 id="convergence-testing">Convergence testing</h6>
 
@@ -696,7 +696,7 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
 <h2 id="deploying-spherical-mini-batch-k-means-on-consumer-item-data">Deploying spherical mini-batch $k$-means on consumer-item data</h2>
 
 <p>At this point, I had tf-idf-weighted consumer-item data and an implementation of spherical mini-batch $k$-means that was capable of handling it. It was time to bring the two together and to crunch some numbers. Below I have reproduced the finished number crunching code. Check it out:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
@@ -729,87 +729,87 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
     <span class="kn">import</span> <span class="nn">pickle</span>
 
 <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s">&#39;server.local&#39;</span><span class="p">,</span>
-        <span class="s">&#39;mongo_db_name&#39;</span><span class="p">:</span> <span class="s">&#39;mydb&#39;</span><span class="p">,</span>
-        <span class="s">&#39;mongo_port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
-        <span class="s">&#39;tfidf_collection&#39;</span><span class="p">:</span> <span class="s">&#39;tfidf&#39;</span><span class="p">,</span>
-        <span class="s">&#39;models_per_k&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
-        <span class="s">&#39;ld_k_min&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-        <span class="s">&#39;ld_k_max&#39;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span>
-        <span class="s">&#39;k_steps&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
-        <span class="s">&#39;batch_size&#39;</span><span class="p">:</span> <span class="mi">1024</span>
+        <span class="s1">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s1">&#39;server.local&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mongo_db_name&#39;</span><span class="p">:</span> <span class="s1">&#39;mydb&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mongo_port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
+        <span class="s1">&#39;tfidf_collection&#39;</span><span class="p">:</span> <span class="s1">&#39;tfidf&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;models_per_k&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+        <span class="s1">&#39;ld_k_min&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s1">&#39;ld_k_max&#39;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span>
+        <span class="s1">&#39;k_steps&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="s1">&#39;batch_size&#39;</span><span class="p">:</span> <span class="mi">1024</span>
     <span class="p">}</span>
 
 <span class="n">blacklist</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;consumers&#39;</span><span class="p">:</span> <span class="p">[],</span>
-        <span class="s">&#39;brands&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="s">&#39;companies&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10000</span><span class="p">],</span>
-        <span class="s">&#39;categories&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="s1">&#39;consumers&#39;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s1">&#39;brands&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="s1">&#39;companies&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10000</span><span class="p">],</span>
+        <span class="s1">&#39;categories&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="p">}</span>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="c"># establish PyMongo connection:</span>
-    <span class="n">mongo_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_host&#39;</span><span class="p">],</span>
-                               <span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_port&#39;</span><span class="p">])</span>
-    <span class="n">mongo_db</span> <span class="o">=</span> <span class="n">mongo_client</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_db_name&#39;</span><span class="p">]]</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># establish PyMongo connection:</span>
+    <span class="n">mongo_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_host&#39;</span><span class="p">],</span>
+                               <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_port&#39;</span><span class="p">])</span>
+    <span class="n">mongo_db</span> <span class="o">=</span> <span class="n">mongo_client</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_db_name&#39;</span><span class="p">]]</span>
 
-    <span class="c"># get collection:</span>
-    <span class="n">tfidf_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;tfidf_collection&#39;</span><span class="p">]]</span>
+    <span class="c1"># get collection:</span>
+    <span class="n">tfidf_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tfidf_collection&#39;</span><span class="p">]]</span>
 
-    <span class="c"># find out who the consumers are</span>
+    <span class="c1"># find out who the consumers are</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">tfidf_collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span>
-            <span class="p">{</span><span class="s">&quot;consumer&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;$nin&quot;</span><span class="p">:</span> <span class="n">blacklist</span><span class="p">[</span><span class="s">&#39;consumers&#39;</span><span class="p">]</span>
+            <span class="p">{</span><span class="s2">&quot;consumer&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;$nin&quot;</span><span class="p">:</span> <span class="n">blacklist</span><span class="p">[</span><span class="s1">&#39;consumers&#39;</span><span class="p">]</span>
             <span class="p">}}</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">(</span><span class="s">&#39;consumer&#39;</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">(</span><span class="s1">&#39;consumer&#39;</span><span class="p">)</span>
     <span class="n">consumers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
     <span class="n">n_consumers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">consumers</span><span class="p">)</span>
 
-    <span class="c"># find out how many items there are</span>
-    <span class="n">cursor</span> <span class="o">=</span> <span class="n">tfidf_collection</span><span class="o">.</span><span class="n">find</span><span class="p">()</span><span class="o">.</span><span class="n">distinct</span><span class="p">(</span><span class="s">&#39;item&#39;</span><span class="p">)</span>
+    <span class="c1"># find out how many items there are</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">tfidf_collection</span><span class="o">.</span><span class="n">find</span><span class="p">()</span><span class="o">.</span><span class="n">distinct</span><span class="p">(</span><span class="s1">&#39;item&#39;</span><span class="p">)</span>
     <span class="n">items</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
     <span class="n">n_items</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
 
-    <span class="c"># close PyMongo connection</span>
+    <span class="c1"># close PyMongo connection</span>
     <span class="n">mongo_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
 <p>The purpose of these lines is quite clear: import the necessary libraries, define the global settings, and query the consumers and items in the dataset. Indeed, these were not the most noticeable features of this script.</p>
 
 <p>The most noticeable feature was the mini-batch sampling. I wanted to make the sampling as fast as possible. I looked up whether or not MongoDB could sample random documents natively from a collection. It couldn&#39;t -- and <a href="https://jira.mongodb.org/browse/SERVER-533">still can&#39;t</a> (random sampling is a planned feature and will presumably be released with version 3.1 or so). There were a <a href="http://stackoverflow.com/questions/2824157/random-record-from-mongodb">couple of workarounds</a>, but I found them mostly impractical. Either they <a href="http://stackoverflow.com/a/2824166/700435">were</a> <a href="http://stackoverflow.com/a/9499484/700435">inefficient</a> or they used a <a href="http://stackoverflow.com/a/5517206/700435">static entropy source</a> to complement the database collection permanently. Thus, I was forced to come up with a solution of my own:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># set up Monary</span>
-    <span class="n">monary_client</span> <span class="o">=</span> <span class="n">Monary</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_host&#39;</span><span class="p">],</span>
-                           <span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_port&#39;</span><span class="p">])</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span>    <span class="c1"># set up Monary</span>
+    <span class="n">monary_client</span> <span class="o">=</span> <span class="n">Monary</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_host&#39;</span><span class="p">],</span>
+                           <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_port&#39;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">get_consumer_mtx</span><span class="p">(</span><span class="n">consumer_batch</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Returns a sparse matrix with feature vectors for a consumer batch.&#39;&#39;&#39;</span>
         <span class="n">pipeline</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">{</span><span class="s">&quot;$match&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;consumer&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$in&quot;</span><span class="p">:</span> <span class="n">consumer_batch</span><span class="p">},</span>
-                    <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$nin&quot;</span><span class="p">:</span> <span class="n">blacklist</span><span class="p">[</span><span class="s">&#39;brands&#39;</span><span class="p">]},</span>
-                    <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$nin&quot;</span><span class="p">:</span> <span class="n">blacklist</span><span class="p">[</span><span class="s">&#39;companies&#39;</span><span class="p">]},</span>
-                    <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$nin&quot;</span><span class="p">:</span> <span class="n">blacklist</span><span class="p">[</span><span class="s">&#39;categories&#39;</span><span class="p">]}</span>
+                <span class="p">{</span><span class="s2">&quot;$match&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;consumer&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$in&quot;</span><span class="p">:</span> <span class="n">consumer_batch</span><span class="p">},</span>
+                    <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$nin&quot;</span><span class="p">:</span> <span class="n">blacklist</span><span class="p">[</span><span class="s1">&#39;brands&#39;</span><span class="p">]},</span>
+                    <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$nin&quot;</span><span class="p">:</span> <span class="n">blacklist</span><span class="p">[</span><span class="s1">&#39;companies&#39;</span><span class="p">]},</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$nin&quot;</span><span class="p">:</span> <span class="n">blacklist</span><span class="p">[</span><span class="s1">&#39;categories&#39;</span><span class="p">]}</span>
                 <span class="p">}},</span>
-                <span class="p">{</span><span class="s">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
-                    <span class="s">&quot;consumer&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                    <span class="s">&quot;item&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                    <span class="s">&quot;tfidf&quot;</span><span class="p">:</span> <span class="s">&quot;$purchasetfidf2&quot;</span>
+                <span class="p">{</span><span class="s2">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                    <span class="s2">&quot;consumer&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s2">&quot;item&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s2">&quot;tfidf&quot;</span><span class="p">:</span> <span class="s2">&quot;$purchasetfidf2&quot;</span>
                 <span class="p">}},</span>
-                <span class="p">{</span><span class="s">&quot;$sort&quot;</span><span class="p">:</span> <span class="n">SON</span><span class="p">([(</span><span class="s">&quot;consumer&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])}</span>
+                <span class="p">{</span><span class="s2">&quot;$sort&quot;</span><span class="p">:</span> <span class="n">SON</span><span class="p">([(</span><span class="s2">&quot;consumer&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])}</span>
             <span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c"># careful! Monary returns masked numpy arrays!</span>
+            <span class="c1"># careful! Monary returns masked numpy arrays!</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">monary_client</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
-                    <span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_db_name&#39;</span><span class="p">],</span>
-                    <span class="n">settings</span><span class="p">[</span><span class="s">&#39;tfidf_collection&#39;</span><span class="p">],</span>
+                    <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_db_name&#39;</span><span class="p">],</span>
+                    <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tfidf_collection&#39;</span><span class="p">],</span>
                     <span class="n">pipeline</span><span class="p">,</span>
-                    <span class="p">[</span><span class="s">&quot;consumer&quot;</span><span class="p">,</span> <span class="s">&quot;item&quot;</span><span class="p">,</span> <span class="s">&quot;tfidf&quot;</span><span class="p">],</span>
-                    <span class="p">[</span><span class="s">&quot;int64&quot;</span><span class="p">,</span> <span class="s">&quot;int64&quot;</span><span class="p">,</span> <span class="s">&quot;float64&quot;</span><span class="p">])</span>
+                    <span class="p">[</span><span class="s2">&quot;consumer&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;tfidf&quot;</span><span class="p">],</span>
+                    <span class="p">[</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="s2">&quot;float64&quot;</span><span class="p">])</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">consumer_batch</span><span class="p">),</span> <span class="n">n_items</span><span class="p">),</span>
                                  <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
-        <span class="c"># convert into CSR matrix</span>
+        <span class="c1"># convert into CSR matrix</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">consumer_idcs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
                                      <span class="n">return_inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="n">mtx</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span>
@@ -818,8 +818,8 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
                 <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">consumer_batch</span><span class="p">),</span> <span class="n">n_items</span><span class="p">),</span>
                 <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
-        <span class="c"># normalize each row (this step can&#39;t be moved into the database</span>
-        <span class="c"># because of the item blacklist)</span>
+        <span class="c1"># normalize each row (this step can&#39;t be moved into the database</span>
+        <span class="c1"># because of the item blacklist)</span>
         <span class="k">for</span> <span class="n">row_idx</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">consumer_batch</span><span class="p">)):</span>
             <span class="n">row</span> <span class="o">=</span> <span class="n">mtx</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">mtx</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">row_idx</span><span class="p">]:</span><span class="n">mtx</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">row_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]]</span>
             <span class="n">row</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
@@ -828,16 +828,16 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
 
     <span class="k">def</span> <span class="nf">get_batch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">random_pick</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">random_pick</span><span class="p">:</span>
-            <span class="c"># pick batch_size examples randomly from the consumers in the</span>
-            <span class="c"># collection</span>
+            <span class="c1"># pick batch_size examples randomly from the consumers in the</span>
+            <span class="c1"># collection</span>
             <span class="n">consumer_batch</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">consumers</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c"># advance index by offset</span>
+            <span class="c1"># advance index by offset</span>
             <span class="n">consumer_batch</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">consumers</span><span class="p">)[</span><span class="n">offset</span><span class="p">:]</span>
-            <span class="c"># get the next batch_size consumers from the collection</span>
+            <span class="c1"># get the next batch_size consumers from the collection</span>
             <span class="n">consumer_batch</span> <span class="o">=</span> <span class="n">consumer_batch</span><span class="p">[:</span><span class="n">batch_size</span><span class="p">]</span>
 
-        <span class="c"># obtain sparse matrix filled with feature vectors from database</span>
+        <span class="c1"># obtain sparse matrix filled with feature vectors from database</span>
         <span class="n">mtx</span> <span class="o">=</span> <span class="n">get_consumer_mtx</span><span class="p">(</span><span class="n">consumer_batch</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">mtx</span>
@@ -845,26 +845,26 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
 <p>My solution sampled randomly from the array-like object <code>consumers</code> that was populated with every consumer ID. I used <a href="/update/python/mongodb/docker/2015/07/13/the-setup.html#Monary">Monary</a> to retrieve the tf-idf feature vectors for every ID sample. I preferred Monary over PyMongo, Python&#39;s standard MongoDB driver, because of its speed. I only included tf-idf weights that were associated with items that belonged to a known company, brand, and category (earlier, I had found that the company ID $10,000$, the brand ID $0$, and the category ID $0$ are wild-cards). The set of feature vectors was returned as a sparse matrix.</p>
 
 <p>The remainder of the code trained various models that were instances of the <code>SphericalMiniBatchKMeans</code> class:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python">    <span class="c"># train the models</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span>    <span class="c1"># train the models</span>
     <span class="n">ns_clusters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span>
-            <span class="mf">10.</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;ld_k_min&#39;</span><span class="p">],</span>
-                               <span class="n">settings</span><span class="p">[</span><span class="s">&#39;ld_k_max&#39;</span><span class="p">],</span>
-                               <span class="n">settings</span><span class="p">[</span><span class="s">&#39;k_steps&#39;</span><span class="p">],</span>
+            <span class="mf">10.</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ld_k_min&#39;</span><span class="p">],</span>
+                               <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ld_k_max&#39;</span><span class="p">],</span>
+                               <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;k_steps&#39;</span><span class="p">],</span>
                                <span class="n">endpoint</span><span class="o">=</span><span class="bp">True</span><span class="p">))))</span>
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">ns_clusters</span><span class="p">)</span>
     <span class="n">ns_clusters</span> <span class="o">=</span> <span class="n">ns_clusters</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
     <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">SphericalMiniBatchKMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
                                        <span class="n">n_init</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                                        <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-                                       <span class="n">batch_size</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;batch_size&#39;</span><span class="p">],</span>
+                                       <span class="n">batch_size</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;batch_size&#39;</span><span class="p">],</span>
                                        <span class="n">reassignment_ratio</span><span class="o">=.</span><span class="mo">01</span><span class="p">,</span>
                                        <span class="n">max_no_improvement</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                                       <span class="n">project_l</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;models_per_k&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">n_clusters</span> <span class="ow">in</span> <span class="n">ns_clusters</span><span class="p">]</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="n">cmd_folder</span> <span class="o">+</span> <span class="s">&#39;/tfidf_smbkmeans__tfidf2.pkl.bz2&#39;</span>
+                                       <span class="n">project_l</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;models_per_k&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">n_clusters</span> <span class="ow">in</span> <span class="n">ns_clusters</span><span class="p">]</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">cmd_folder</span> <span class="o">+</span> <span class="s1">&#39;/tfidf_smbkmeans__tfidf2.pkl.bz2&#39;</span>
     <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="n">n_consumers</span><span class="p">,</span>
                       <span class="n">get_batch</span><span class="o">=</span><span class="n">get_batch</span><span class="p">)</span>
-        <span class="n">fp</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">models</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">)</span>
         <span class="n">fp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
@@ -917,7 +917,7 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
     });
   });
 </script></li>
-<li><span id="Sculley2010Web-scale-k-mea">Sculley, David, 2010, “Web-Scale k-Means Clustering,” in <i>Proceedings Of the 19th International Conference on World Wide Web</i> (ACM), pp. 1177–1178.</span>
+<li><span id="Sculley2010Web-scale-k-mea">Sculley, David, 2010, “Web-Scale k-Means Clustering,” in <i>Proceedings of the 19th International Conference on World Wide Web</i> (ACM), pp. 1177–1178.</span>
 
 <div id="Sculley2010Web-scale-k-mea-tabs">
   View
@@ -951,7 +951,7 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
     });
   });
 </script></li>
-<li><span id="Manning2008Introduction-to">Manning, Christopher D, Prabhakar Raghavan, Hinrich Schütze, and others, 2008, <i>Introduction To Information Retrieval</i>. Vol. 1 (Cambridge university press Cambridge).</span>
+<li><span id="Manning2008Introduction-to">Manning, Christopher D, Prabhakar Raghavan, Hinrich Schütze, and others, 2008, <i>Introduction to Information Retrieval</i>. Vol. 1 (Cambridge university press Cambridge).</span>
 
 <div id="Manning2008Introduction-to-tabs">
   View
@@ -984,7 +984,7 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
     });
   });
 </script></li>
-<li><span id="Arthur2007K-means-The-Ad">Arthur, David, and Sergei Vassilvitskii, 2007, “K-Means++: The Advantages of Careful Seeding,” in <i>Proceedings Of the Eighteenth Annual ACM-SIAM Symposium on Discrete Algorithms</i>. SODA ’07 (Society for Industrial and Applied Mathematics, Philadelphia, PA, USA), pp. 1027–1035. Available at: http://dl.acm.org/citation.cfm?id=1283383.1283494.</span>
+<li><span id="Arthur2007K-means-The-Ad">Arthur, David, and Sergei Vassilvitskii, 2007, “K-Means++: The Advantages of Careful Seeding,” in <i>Proceedings of the Eighteenth Annual ACM-SIAM Symposium on Discrete Algorithms</i>. SODA ’07 (Society for Industrial and Applied Mathematics, Philadelphia, PA, USA), pp. 1027–1035. Available at: http://dl.acm.org/citation.cfm?id=1283383.1283494.</span>
 
 <div id="Arthur2007K-means-The-Ad-tabs">
   View
@@ -1026,7 +1026,7 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
     });
   });
 </script></li>
-<li><span id="Manning1999Foundations-of-">Manning, C.D., and H. Schütze, 1999, <i>Foundations Of Statistical Natural Language Processing</i> (MIT Press).</span>
+<li><span id="Manning1999Foundations-of-">Manning, C.D., and H. Schütze, 1999, <i>Foundations of Statistical Natural Language Processing</i> (MIT Press).</span>
 
 <div id="Manning1999Foundations-of--tabs">
   View
@@ -1079,7 +1079,7 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
           <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
-        </section>                
+        </section>
       
 
       <!-- Share links section -->
@@ -1121,10 +1121,10 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
     <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
   
 </section>
-      
+
       <!-- Disqus comments -->
       
-      
+
     </footer>
 
   </article>
@@ -1134,12 +1134,12 @@ This function is decreasing and bounded during iterations. As in scikit-learn, t
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="/">Meticulous Disorder</a> &copy; 
-               &bull; All rights reserved.
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
       </section>
-      <section class="poweredby">Made with Jekyll using 
+      <section class="poweredby">Made with Jekyll using
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer> 
+    </footer>
   </body>
 </html>

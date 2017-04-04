@@ -59,12 +59,12 @@
     </script>
   </head>
 
-  <body class="post-template">
+  <body class="home-template">
 
     <header class="main-header post-head " style="background-image: url(/assets/images/container_terminal.jpg) ">
   <nav class="main-nav  overlay  clearfix">
     <a class="back-button icon-arrow-left" href="/">Home</a>
-    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
   </nav>
 </header>
 
@@ -74,10 +74,10 @@
 
     <header class="post-header">
       <h1 class="post-title">The Setup</h1>
-      <section class="post-meta">                
+      <section class="post-meta">
         <time class="post-date" datetime="2015-07-13">13 Jul 2015</time>
-         
-          on update, python, mongodb, and docker 
+        
+          on update, Python, MongoDB, and Docker
         
       </section>
     </header>
@@ -86,14 +86,14 @@
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">Meticulous Disorder</span>
-         
+        
       </a>
     </header> -->
-    
+
     <!-- <span class="post-meta">
       <time datetime="2015-07-13">13 Jul 2015</time>
-       
-        on update, python, mongodb, and docker 
+      
+        on update, Python, MongoDB, and Docker
       
     </span> -->
 
@@ -137,7 +137,7 @@
 <p>Luckily, most of my working datasets (and their indexes) fit in RAM. However, since I wanted to cut down the latency associated with some of my more write-heavy operations, I decided to put everything on SSDs. (Note that, even though SSDs alleviate the I/O bottleneck of spinning hard drives, they remain vastly inferior to RAM.) So the first step is to figure out the partitioning and the file system. I use the mature and I/O-optimized <a href="https://en.wikipedia.org/wiki/XFS">XFS</a>, mounted in <code>/srv/docker/mongodb</code>.</p>
 
 <p>MongoDB works best with <a href="https://www.kernel.org/doc/Documentation/vm/transhuge.txt">transparent hugepages</a> turned off. The default for Fedora is to have them enabled. To disable them permanently, I created two files: the script <code>/usr/lib/systemd/scripts/transparent-hugepages.sh</code> and the service file <code>/usr/lib/systemd/system/transparent-hugepages.service</code>. Their contents, respectively, are:</p>
-<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="c">#!/bin/sh</span>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span></span><span class="ch">#!/bin/sh</span>
 
 <span class="k">if</span> /usr/bin/test -f /sys/kernel/mm/transparent_hugepage/khugepaged/defrag<span class="p">;</span> <span class="k">then</span>
   /usr/bin/echo <span class="m">0</span> &gt; /sys/kernel/mm/transparent_hugepage/khugepaged/defrag
@@ -152,7 +152,7 @@
 <span class="k">fi</span>
 </code></pre></div>
 <p>and</p>
-<div class="highlight"><pre><code class="language-ini" data-lang="ini"><span class="k">[Unit]</span>
+<div class="highlight"><pre><code class="language-ini" data-lang="ini"><span></span><span class="k">[Unit]</span>
 <span class="na">Description</span><span class="o">=</span><span class="s">Turn off transparent hugepages</span>
 
 <span class="k">[Service]</span>
@@ -163,14 +163,14 @@
 <span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
 </code></pre></div>
 <p>As root, I then typed</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># chown 755 /usr/lib/systemd/scripts/transparent-hugepages.sh</span>
-<span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># systemctl enable transparent-hugepages</span>
-<span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># systemctl start transparent-hugepages</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@server ~<span class="o">]</span><span class="c1"># chown 755 /usr/lib/systemd/scripts/transparent-hugepages.sh</span>
+<span class="o">[</span>root@server ~<span class="o">]</span><span class="c1"># systemctl enable transparent-hugepages</span>
+<span class="o">[</span>root@server ~<span class="o">]</span><span class="c1"># systemctl start transparent-hugepages</span>
 </code></pre></div>
 <p>to start the service.</p>
 
 <p>Finally, I created a firewall rule for mongodb. On Fedora, firewall rules are stored as XML files in <code>/etc/firewalld/services</code>. There, I created a file called <code>mongodb.xml</code> reading:</p>
-<div class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml"><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
 <span class="nt">&lt;service&gt;</span>
   <span class="nt">&lt;short&gt;</span>MongoDB 1<span class="nt">&lt;/short&gt;</span>
   <span class="nt">&lt;description&gt;</span>MongoDB for Kaggle&#39;s Acquire Valued Shoppers Challenge<span class="nt">&lt;/description&gt;</span>
@@ -178,25 +178,25 @@
 <span class="nt">&lt;/service&gt;</span>
 </code></pre></div>
 <p>I then added the rule to the active zone and reloaded the firewall:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># firewall-cmd --permanent --zone=FedoraServer --add-service=mongodb</span>
-<span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># firewall-cmd --reload</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@server ~<span class="o">]</span><span class="c1"># firewall-cmd --permanent --zone=FedoraServer --add-service=mongodb</span>
+<span class="o">[</span>root@server ~<span class="o">]</span><span class="c1"># firewall-cmd --reload</span>
 </code></pre></div>
 <p>That is all in terms of preparations.</p>
 
 <h6 id="step-2-get-the-docker-image">Step 2: Get the Docker image.</h6>
 
 <p>There&#39;s a popular and well-maintained Docker image with MongoDB 3.0. I got it with:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># docker pull docker.io/mongo:latest</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@server ~<span class="o">]</span><span class="c1"># docker pull docker.io/mongo:latest</span>
 </code></pre></div>
 <p>You can find more information about the <code>mongo</code> repository <a href="https://registry.hub.docker.com/_/mongo/">here</a>. It is based on the <a href="https://registry.hub.docker.com/_/debian/">Debian Wheezy image</a>.</p>
 
 <h6 id="step-3-create-and-start-a-docker-container-over-the-mongodb-image">Step 3: Create and start a Docker container over the MongoDB image.</h6>
 
 <p>Then, I ran:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@server ~<span class="o">]</span><span class="c"># docker run -d \</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@server ~<span class="o">]</span><span class="c1"># docker run -d \</span>
   --name mongodb_acquire_valued_shoppers_challenge <span class="se">\</span>
   --net<span class="o">=</span>host <span class="se">\</span>
-  -p 27017:27017 <span class="se">\</span>
+  -p <span class="m">27017</span>:27017 <span class="se">\</span>
   -v /srv/docker/mongodb/acquire_valued_shoppers_challenge:/data/db
   --privileged<span class="o">=</span><span class="nb">false</span> <span class="se">\</span>
   mongo --storageEngine<span class="o">=</span>wiredTiger
@@ -219,20 +219,20 @@
 <h3 id="python-pandas-and-pymongo">Python, Pandas, and PyMongo</h3>
 
 <p>Now for the desktop. At its core, my data science software stack consists of <a href="https://www.python.org">Python</a>, <a href="http://ipython.org/notebook.html">IPython Notebook</a>, <a href="http://www.numpy.org">Numpy</a>, <a href="http://matplotlib.org">Matplotlib</a>, <a href="http://www.scipy.org">SciPy</a>, <a href="">Pandas</a>, and the <a href="https://github.com/mongodb/mongo-python-driver">PyMongo</a> MongoDB driver. With the <a href="https://www.macports.org">MacPorts</a> package management system, I got these up and running with</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo xcode-select --install
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo xcode-select --install
 <span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo port selfupdate
 <span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo port install python27 py27-numpy py27-matplotlib py27-scipy py27-pandas py27-pymongo py27-ipython +notebook
 <span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo port <span class="k">select</span> --set python python27
 <span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ sudo port <span class="k">select</span> --set ipython ipython27
-<span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ <span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span>/opt/local/bin:/opt/local/sbin:<span class="nv">$PATH</span>
+<span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ <span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span>/opt/local/bin:/opt/local/sbin:<span class="nv">$PATH</span>
 <span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ ipython notebook
 </code></pre></div>
 <p>The last command starts an interactive Python shell and opens the <a href="https://jupyter.org">Jupyter web UI</a> in the default web browser, e.g. in Safari.</p>
 
-<h3 id="hydrogen-amp-atom">Hydrogen &amp; Atom</h3>
+<h3 id="hydrogen-atom">Hydrogen &amp; Atom</h3>
 
 <p>Jupyter notebooks are great for interactive exploratory analyses. They are convenient, flexible, and give you instant gratification. However, I find they are not the best choice for hacking together complex algorithms and batch jobs. That&#39;s why I started using <a href="https://atom.io/packages/hydrogen">Hydrogen</a>, a plugin for GitHub&#39;s <a href="https://atom.io">Atom editor</a>. The user experience is similar to what <a href="http://lighttable.com">Light Table</a> and <a href="http://junolab.org">Juno</a> offer for the <a href="http://julialang.org">Julia</a> language. Hydrogen connects to the IPython Jupyter kernel to allow for executing and displaying output of any Python code directly within Atom. Since Jupyter is language agnostic, Hydrogen also works with other languages, e.g. R. The only inconvenience it has is that, for it to work, you have to start Atom from the command line, e.g. via</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ atom awesome_algorithm.py
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>tscholak@client ~<span class="o">]</span>＄ atom awesome_algorithm.py
 </code></pre></div>
 <p>It&#39;s quite annoying when you find out right after clicking on the Atom icon that you forgot about this... Again...</p>
 
@@ -259,9 +259,9 @@
 <p><a href="https://bitbucket.org/djcbeach/monary/wiki/Home">Monary</a> is an alternative MongoDB driver for Python that is slowly but steadily advancing. Whereas PyMongo is implemented in pure Python, Monary is a Python wrapper for the super-fast <a href="http://hergert.me/blog/2014/04/07/mongo-c-driver-0-94-0.html">MongoDB C driver</a>. The biggest advantage of Monary is <a href="https://www.youtube.com/watch?v=E70AO8r5sMs">speed</a>, its biggest disadvantage the yet incomplete feature set. For instance, it <a href="https://monary.readthedocs.org/faq.html#can-monary-do-removes-updates-and-or-upserts">doesn&#39;t do any updates</a>, and <a href="https://bitbucket.org/djcbeach/monary/issues/14/passing-options-to-aggregate">aggregation lacks support for certain keyword arguments</a>. It&#39;s also not as well tested as PyMongo. That being said, I use Monary quite often and haven&#39;t observed any serious problems so far.</p>
 
 <p>You can get Monary like this:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ sudo port install mercurial libbson mongo-c-driver
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ sudo port install mercurial libbson mongo-c-driver
 ＄ hg clone https://bitbucket.org/djcbeach/monary
-＄ <span class="nb">cd </span>monary
+＄ <span class="nb">cd</span> monary
 ＄ python setup.py install
 </code></pre></div>
 <h2 id="what-would-be-my-dream-setup">What Would Be My Dream Setup?</h2>
@@ -286,7 +286,7 @@
           <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
-        </section>                
+        </section>
       
 
       <!-- Share links section -->
@@ -328,10 +328,10 @@
     <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
   
 </section>
-      
+
       <!-- Disqus comments -->
       
-      
+
     </footer>
 
   </article>
@@ -341,12 +341,12 @@
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="/">Meticulous Disorder</a> &copy; 
-               &bull; All rights reserved.
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
       </section>
-      <section class="poweredby">Made with Jekyll using 
+      <section class="poweredby">Made with Jekyll using
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer> 
+    </footer>
   </body>
 </html>

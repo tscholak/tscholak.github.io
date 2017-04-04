@@ -59,12 +59,12 @@
     </script>
   </head>
 
-  <body class="post-template">
+  <body class="home-template">
 
     <header class="main-header post-head " style="background-image: url(/assets/images/birdcommunities.jpg) ">
   <nav class="main-nav  overlay  clearfix">
     <a class="back-button icon-arrow-left" href="/">Home</a>
-    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
   </nav>
 </header>
 
@@ -74,10 +74,10 @@
 
     <header class="post-header">
       <h1 class="post-title">Communities and Markets</h1>
-      <section class="post-meta">                
+      <section class="post-meta">
         <time class="post-date" datetime="2015-07-07">07 Jul 2015</time>
-         
-          on big data, graphs, community detection, and market segmentation 
+        
+          on big data, graphs, community detection, and market segmentation
         
       </section>
     </header>
@@ -86,14 +86,14 @@
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">Meticulous Disorder</span>
-         
+        
       </a>
     </header> -->
-    
+
     <!-- <span class="post-meta">
       <time datetime="2015-07-07">07 Jul 2015</time>
-       
-        on big data, graphs, community detection, and market segmentation 
+      
+        on big data, graphs, community detection, and market segmentation
       
     </span> -->
 
@@ -175,9 +175,9 @@
 
 <p>The above examples have something in common. In each one of them, the link structure is either fully known or easily obtainable. In many cases, however, this is not the case. In fact, it can be very challenging or even impossible to collect information about the links between the network nodes directly. This section is about the methods that have been developed to cope with this situation.</p>
 
-<p>Consider the task of collecting data about the political alliances between members of a parliament <a href="#Neal2014The-backbone-of">(Neal 2014)</a>. Here, asking every pair of politicians about their mutual alignment is not really an option. That would give only a very biased picture of reality, either because the politicians would decline to comment or because their answer would just reflect their respective party memberships. A solution to this problem is to get the data not from the politicians directly, but indirectly from their actions, for instance, from whether records show that they tend to agree or disagree in matters of legislation. For example, in an effort to detecting political alliances, Neal <a href="#Neal2014The-backbone-of">(“The Backbone of Bipartite Projections: Inferring Relationships from Co-Authorship, Co-Sponsorship, Co-Attendance and Other Co-Behaviors” 2014)</a> analyzed data about the sponsorship of bills by senators in the US congress.</p>
+<p>Consider the task of collecting data about the political alliances between members of a parliament <a href="#Neal2014The-backbone-of">(Neal 2014)</a>. Here, asking every pair of politicians about their mutual alignment is not really an option. That would give only a very biased picture of reality, either because the politicians would decline to comment or because their answer would just reflect their respective party memberships. A solution to this problem is to get the data not from the politicians directly, but indirectly from their actions, for instance, from whether records show that they tend to agree or disagree in matters of legislation. For example, in an effort to detecting political alliances, Neal <a href="#Neal2014The-backbone-of">(2014)</a> analyzed data about the sponsorship of bills by senators in the US congress.</p>
 
-<p>One of the earliest attempts of inferring unobserved relationships is the work of Davis et al. <a href="#Davis1969Deep-south">(<i>Deep South</i> 1969)</a>, who studied what is now known as the classic Southern Women network (see picture below). This ethnographic dataset is a record of the attendance of 18 women at 14 informal social events that took place in the 1930s in southern Alabama. The goal was to unravel the connection between an individual&#39;s social class and her pattern of informal interaction in 1930s America. In the absence of any modern community detection methods, Davis et al. relied fully on their ethnographic knowledge and intuition. They discovered that the women were split into two loosely overlapping groups, evidencing two latent social classes.</p>
+<p>One of the earliest attempts of inferring unobserved relationships is the work of Davis et al. <a href="#Davis1969Deep-south">(1969)</a>, who studied what is now known as the classic Southern Women network (see picture below). This ethnographic dataset is a record of the attendance of 18 women at 14 informal social events that took place in the 1930s in southern Alabama. The goal was to unravel the connection between an individual&#39;s social class and her pattern of informal interaction in 1930s America. In the absence of any modern community detection methods, Davis et al. relied fully on their ethnographic knowledge and intuition. They discovered that the women were split into two loosely overlapping groups, evidencing two latent social classes.</p>
 
 <p>
   <figure>
@@ -186,7 +186,7 @@
   </figure>
 </p>
 
-<p>Over time, the Southern Women dataset has become a benchmark of analytic methods in social network analysis and continues to be relevant today [see Freeman <a href="#Freeman2003Finding-social-">(“Finding Social Groups: A Meta-Analysis of the Southern Women Data” 2003)</a> for a lucid review of this and 20 more recent analyses of the same data]. A modern way of dealing with this data would be to represent it as a <em>bipartite graph</em>. In such a graph, the women and the events would form two disjoint classes of vertices. These classes are also called the <em>modes</em> of the graph. Every edge in the graph connects nodes of a different mode. In this way, an edge between a woman and an event marks an attendance. Similarly, in a bipartite graph representation of the senator-bill co-sponsorship data, an edge between a senator and a bill indicates a sponsorship.</p>
+<p>Over time, the Southern Women dataset has become a benchmark of analytic methods in social network analysis and continues to be relevant today [see Freeman <a href="#Freeman2003Finding-social-">(2003)</a> for a lucid review of this and 20 more recent analyses of the same data]. A modern way of dealing with this data would be to represent it as a <em>bipartite graph</em>. In such a graph, the women and the events would form two disjoint classes of vertices. These classes are also called the <em>modes</em> of the graph. Every edge in the graph connects nodes of a different mode. In this way, an edge between a woman and an event marks an attendance. Similarly, in a bipartite graph representation of the senator-bill co-sponsorship data, an edge between a senator and a bill indicates a sponsorship.</p>
 
 <p>Bipartite graphs are of use where relationships between different kinds of entities need to be described and where these entities do not interact with each other <a href="#Fortunato2010Community-detec">(Fortunato 2010; Latapy, Magnien, and Vecchio 2008)</a>. This includes, but is not restricted to:</p>
 
@@ -198,7 +198,7 @@
 <li><p>and, again, the Twitter network -- if we ignore the information about who follows whom and focus instead on hashtags and who tweets them <a href="#De-Choudhury2010How-does-the-da">(De Choudhury et al. 2010)</a>.</p></li>
 </ul>
 
-<h2 id="a-na�ve-way-of-inferring-unobserved-relationships-from-bipartite-graphs">A naïve way of inferring unobserved relationships from bipartite graphs</h2>
+<h2 id="a-na-ve-way-of-inferring-unobserved-relationships-from-bipartite-graphs">A naïve way of inferring unobserved relationships from bipartite graphs</h2>
 
 <p>An example of a simple bipartite graph is depicted below. To stay with the senator-bill co-sponsorship graph mentioned above, you can think of the seals as the senators and the gulls as the bills (or vice versa).</p>
 
@@ -256,7 +256,7 @@
 
 <h3 id="weights-for-collaboration-networks">Weights for collaboration networks</h3>
 
-<p>While working on scientific collaboration networks, Newman <a href="#Newman2001aScientific-col">(“Scientific Collaboration Networks. I. Network Construction and Fundamental Results” 2001; “Scientific Collaboration Networks. II. Shortest Paths, Weighted Networks, and Centrality” 2001)</a> found a heuristic degree-conditional one-mode projection method that takes into account the number of co-authors on each publication $v$ (this number is equal to the publication&#39;s degree, $\mathrm{deg}(v)$). Newman was interested in the social bonds among collaborating scientists $u$, and he wanted the projection to respect the fact that two authors tend to know each other less well if they only collaborate on articles with many authors and much better if they repeatedly write papers together as the sole authors. To this end, Newman assigned weights to the edges in the projected author graph. A weight $W_{ij}$ of an edge $\{u_i, u_j\}$ was made inversely proportional to the degrees of the publications the authors had collaborated in,
+<p>While working on scientific collaboration networks, Newman <a href="#Newman2001aScientific-col">(2001; 2001)</a> found a heuristic degree-conditional one-mode projection method that takes into account the number of co-authors on each publication $v$ (this number is equal to the publication&#39;s degree, $\mathrm{deg}(v)$). Newman was interested in the social bonds among collaborating scientists $u$, and he wanted the projection to respect the fact that two authors tend to know each other less well if they only collaborate on articles with many authors and much better if they repeatedly write papers together as the sole authors. To this end, Newman assigned weights to the edges in the projected author graph. A weight $W_{ij}$ of an edge $\{u_i, u_j\}$ was made inversely proportional to the degrees of the publications the authors had collaborated in,
 \[
   W_{ij} = \sum_{k}&#39; \frac{1}{\mathrm{deg}(v_k) - 1},
 \]
@@ -271,7 +271,7 @@ where the sum runs over those publications $v_k$ in which $u_i$ and $u_j$ appear
 
 <h3 id="weights-for-document-word-networks"><a name="WeightsForDocumentWordNetworks"></a> Weights for document-word networks</h3>
 
-<p>Another interesting application of weights is the work of Srivastava et al. <a href="#Srivastava2013Text-Clustering">(“Text Clustering Using One-Mode Projection of Document-Word Bipartite Graphs” 2013)</a>, who obtained document clusterings from bipartite graphs representing document-word relationships. They did so by first creating weighted document-document similarity graphs and then running community detection algorithms on them. This procedure was found to outperform conventional document clustering techniques by a large margin, in particular, those based on the popular k-means algorithm <a href="#Sculley2010Web-scale-k-mea">(Sculley 2010; Abu-Mostafa, Magdon-Ismail, and Lin 2012)</a>. The weights were derived from a degree-conditional measure called the <em>term-frequency inverse-document-frequency statistic</em> (tf-idf) that is the de-facto standard in the field of textual data mining <a href="#Manning2008Introduction-to">(Manning et al. 2008)</a>.</p>
+<p>Another interesting application of weights is the work of Srivastava et al. <a href="#Srivastava2013Text-Clustering">(2013)</a>, who obtained document clusterings from bipartite graphs representing document-word relationships. They did so by first creating weighted document-document similarity graphs and then running community detection algorithms on them. This procedure was found to outperform conventional document clustering techniques by a large margin, in particular, those based on the popular k-means algorithm <a href="#Sculley2010Web-scale-k-mea">(Sculley 2010; Abu-Mostafa, Magdon-Ismail, and Lin 2012)</a>. The weights were derived from a degree-conditional measure called the <em>term-frequency inverse-document-frequency statistic</em> (tf-idf) that is the de-facto standard in the field of textual data mining <a href="#Manning2008Introduction-to">(Manning et al. 2008)</a>.</p>
 
 <p>When I first saw their paper, I thought I had finally found the right method to study my own networks. Unfortunately, it is not, for several reasons. Let me first explain what exactly they did and then why this won&#39;t help me.</p>
 
@@ -327,7 +327,7 @@ respectively. $T$ is an $m \times m$ matrix and $B$ an $n \times n$ matrix. As t
 \[
   \mathcal{D}(U) = \left(\mathrm{deg}(u_1), \ldots, \mathrm{deg}(u_m)\right),
 \]
-you get the so-called top <em>degree sequence</em>. For the procedure, it is important to note that the two degree sequences of $G$ -- its top and its bottom sequence, $\mathcal{D}(U)$ and $\mathcal{D}(V)$, respectively -- are insufficient to uniquely identify $G$. In other words, there are many bipartite graphs with the same top and bottom degree sequence. In the method proposed by Zweig et al. <a href="#Zweig2011A-systematic-ap">(“A Systematic Approach to the One-Mode Projection of Bipartite Graphs” 2011; “A Fixed Degree Sequence Model for the One-Mode Projection of Multiplex Bipartite Graphs” 2013)</a>, the entirety $\mathcal{G}$ of all these graphs defines the reference that we need to test our observation for statistical significance. In particular, by comparison with the average top co-occurrences among all these graphs, we can decide whether or not the observed co-occurrence of a pair of top vertices in $G$ is too unlikely to have occurred by chance and thus presents a pattern. That decision is formalized by a statistical hypothesis test. If the test says that the co-occurrence of two top vertices is statistically significant, we place an edge in the top-mode projection. Otherwise, we don&#39;t.</p>
+you get the so-called top <em>degree sequence</em>. For the procedure, it is important to note that the two degree sequences of $G$ -- its top and its bottom sequence, $\mathcal{D}(U)$ and $\mathcal{D}(V)$, respectively -- are insufficient to uniquely identify $G$. In other words, there are many bipartite graphs with the same top and bottom degree sequence. In the method proposed by Zweig et al. <a href="#Zweig2011A-systematic-ap">(2011; 2013)</a>, the entirety $\mathcal{G}$ of all these graphs defines the reference that we need to test our observation for statistical significance. In particular, by comparison with the average top co-occurrences among all these graphs, we can decide whether or not the observed co-occurrence of a pair of top vertices in $G$ is too unlikely to have occurred by chance and thus presents a pattern. That decision is formalized by a statistical hypothesis test. If the test says that the co-occurrence of two top vertices is statistically significant, we place an edge in the top-mode projection. Otherwise, we don&#39;t.</p>
 
 <p>In practical terms, the steps to get a reduced top mode graph are:</p>
 
@@ -345,8 +345,8 @@ you get the so-called top <em>degree sequence</em>. For the procedure, it is imp
 
 <p>These rules replace the old rule 4 from before. Rules 1-3 remain untouched.</p>
 
-<p>I haven&#39;t told you yet how you can sample from the population  $\mathcal{G}$ (as required by the new rule 4). Zweig and Kaufmann <a href="#Zweig2011A-systematic-ap">(“A Systematic Approach to the One-Mode Projection of Bipartite Graphs” 2011)</a> used the <em>Markov Chain Monte Carlo</em> (MCMC) sampling algorithm introduced by Gionis et al. <a href="#Gionis2007Assessing-data-">(“Assessing Data Mining Results via Swap Randomization” 2007)</a>. Its pseudo-code is reproduced below:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$G^{(0)}$ ← $G$
+<p>I haven&#39;t told you yet how you can sample from the population  $\mathcal{G}$ (as required by the new rule 4). Zweig and Kaufmann <a href="#Zweig2011A-systematic-ap">(2011)</a> used the <em>Markov Chain Monte Carlo</em> (MCMC) sampling algorithm introduced by Gionis et al. <a href="#Gionis2007Assessing-data-">(2007)</a>. Its pseudo-code is reproduced below:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>$G^{(0)}$ ← $G$
 $k$ ← $1$
 while $k$ ≤ $N$ do
   $G^{(k)}$ ← $G^{(k-1)}$
@@ -370,7 +370,7 @@ end while
 
 <h3 id="the-benefits">The benefits</h3>
 
-<p>An immediate question is how large $N$ and $T$ have to be in practice. Zweig and Kaufmann <a href="#Zweig2011A-systematic-ap">(“A Systematic Approach to the One-Mode Projection of Bipartite Graphs” 2011)</a> report that $N = 5,000$ and $T = 70,000$ were sufficient for the <a href="https://en.wikipedia.org/wiki/Netflix_Prize">Netflix price data</a>. Note, though, that they deployed their method on subgraphs of $20,000$ user nodes only. The complete Netflix graph has movie ratings from $480,000$ users. For each one of these subgraphs, the computation took roughly a second on a low-end PC. Rule 4 is therefore quite inexpensive computationally. However, the authors observed that processing of rule 5 is considerably slower, in their case, by a factor of five. We recall that the purpose of rule 5 was to estimate the average top and bottom co-occurrence matrices. This can become a serious bottleneck. However, in most real-world cases, the effort is worth it, since Zweig and Kaufmann&#39;s method is currently the only one that:</p>
+<p>An immediate question is how large $N$ and $T$ have to be in practice. Zweig and Kaufmann <a href="#Zweig2011A-systematic-ap">(2011)</a> report that $N = 5,000$ and $T = 70,000$ were sufficient for the <a href="https://en.wikipedia.org/wiki/Netflix_Prize">Netflix price data</a>. Note, though, that they deployed their method on subgraphs of $20,000$ user nodes only. The complete Netflix graph has movie ratings from $480,000$ users. For each one of these subgraphs, the computation took roughly a second on a low-end PC. Rule 4 is therefore quite inexpensive computationally. However, the authors observed that processing of rule 5 is considerably slower, in their case, by a factor of five. We recall that the purpose of rule 5 was to estimate the average top and bottom co-occurrence matrices. This can become a serious bottleneck. However, in most real-world cases, the effort is worth it, since Zweig and Kaufmann&#39;s method is currently the only one that:</p>
 
 <ul>
 <li><p><strong>DOES THE JOB</strong> -- i.e., allows for <em>high-quality</em> detection of communities of entities (users, consumers, items, authors, documents, terms, etc.) whose relationships are <em>not</em> directly available (due to being unobserved or unobtainable) --,</p></li>
@@ -460,7 +460,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
 
 <p>In previous sections, I have discussed bipartite graphs and how one can deduce unobserved relationships from them. In this project, I want to deduce both the similarity between items and the similarity in the shopping habits of consumers. What method should I use?</p>
 
-<p>Since I aim for accuracy and reliability, there is really only one choice: the method of Zweig and Kaufmann <a href="#Zweig2011A-systematic-ap">(“A Systematic Approach to the One-Mode Projection of Bipartite Graphs” 2011)</a>. Let me spell out three reasons for why I cannot use heuristic similarity metrics for this particular transaction dataset.</p>
+<p>Since I aim for accuracy and reliability, there is really only one choice: the method of Zweig and Kaufmann <a href="#Zweig2011A-systematic-ap">(2011)</a>. Let me spell out three reasons for why I cannot use heuristic similarity metrics for this particular transaction dataset.</p>
 
 <ol>
 <li><p>The ground-truth provided is weak. There is some information on price, shop category, item brand, and item manufacturer. The dataset also mentions the branch and store department in which the purchased items appeared. Maybe the results will correspond somehow to these miscellaneous taxonomies, maybe they won&#39;t. If I were to borrow a method originally developed for another purpose -- e.g., a method using edge weights derived from the tf-idf statistic and the cosine distance --, without ground-truth validation, I would be unable to make sense out of the results. </p></li>
@@ -476,7 +476,41 @@ Since all these interactions have only one logical direction (e.g., an item cann
 
 <h1 id="references">References</h1>
 
-<ol class="bibliography"><li><span id="Jeub2015Think-locally-a">Jeub, Lucas G. S., Prakash Balachandran, Mason A. Porter, Peter J. Mucha, and Michael W. Mahoney, 2015, “Think Locally, Act Locally: Detection of Small, Medium-Sized, and Large Communities in Large Networks,” Phys. Rev. E <b>91</b>. doi:10.1103/PhysRevE.91.012821.</span>
+<ol class="bibliography"><li><span id="De-Domenico2015Structural-redu">De Domenico, Manlio, Vincenzo Nicosia, Alexandre Arenas, and Vito Latora, 2015, “Structural Reducibility of Multilayer Networks,” Nat. Commun. <b>6</b>. doi:10.1038/ncomms7864.</span>
+
+<div id="De-Domenico2015Structural-redu-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#De-Domenico2015Structural-redu-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="De-Domenico2015Structural-redu-tabs-3">
+    <pre>@article{De-Domenico2015Structural-redu,
+  author = {De Domenico, Manlio and Nicosia, Vincenzo and Arenas, Alexandre and Latora, Vito},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1038/ncomms7864},
+  journal = {Nat. Commun.},
+  title = {Structural reducibility of multilayer networks},
+  volume = {6},
+  year = {2015},
+  bdsk-url-1 = {http://dx.doi.org/10.1038/ncomms7864}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#De-Domenico2015Structural-redu-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Jeub2015Think-locally-a">Jeub, Lucas G. S., Prakash Balachandran, Mason A. Porter, Peter J. Mucha, and Michael W. Mahoney, 2015, “Think Locally, Act Locally: Detection of Small, Medium-Sized, and Large Communities in Large Networks,” Phys. Rev. E <b>91</b>. doi:10.1103/PhysRevE.91.012821.</span>
 
 <div id="Jeub2015Think-locally-a-tabs">
   View
@@ -506,40 +540,6 @@ Since all these interactions have only one logical direction (e.g., an item cann
 <script>
   $(function() {
     $( "#Jeub2015Think-locally-a-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="De-Domenico2015Structural-redu">De Domenico, Manlio, Vincenzo Nicosia, Alexandre Arenas, and Vito Latora, 2015, “Structural Reducibility of Multilayer Networks,” Nat. Commun. <b>6</b>. doi:10.1038/ncomms7864.</span>
-
-<div id="De-Domenico2015Structural-redu-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#De-Domenico2015Structural-redu-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="De-Domenico2015Structural-redu-tabs-3">
-    <pre>@article{De-Domenico2015Structural-redu,
-  author = {De Domenico, Manlio and Nicosia, Vincenzo and Arenas, Alexandre and Latora, Vito},
-  date-modified = {2015-06-26 16:01:46 +0000},
-  doi = {10.1038/ncomms7864},
-  journal = {Nat. Commun.},
-  title = {Structural reducibility of multilayer networks},
-  volume = {6},
-  year = {2015},
-  bdsk-url-1 = {http://dx.doi.org/10.1038/ncomms7864}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#De-Domenico2015Structural-redu-tabs" ).tabs({
       collapsible: true,
       active: false
     });
@@ -581,42 +581,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="De-Domenico2013Mathematical-fo">De Domenico, Manlio, Albert Solé-Ribalta, Emanuele Cozzo, Mikko Kivelä, Yamir Moreno, Mason A Porter, Sergio Gómez, and Alex Arenas, 2013, “Mathematical Formulation of Multilayer Networks,” Phys. Rev. X <b>3</b>, 041022.</span>
-
-<div id="De-Domenico2013Mathematical-fo-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#De-Domenico2013Mathematical-fo-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="De-Domenico2013Mathematical-fo-tabs-3">
-    <pre>@article{De-Domenico2013Mathematical-fo,
-  author = {De Domenico, Manlio and Sol{\'e}-Ribalta, Albert and Cozzo, Emanuele and Kivel{\"a}, Mikko and Moreno, Yamir and Porter, Mason A and G{\'o}mez, Sergio and Arenas, Alex},
-  date-added = {2015-07-09 13:45:45 +0000},
-  date-modified = {2015-07-09 13:45:59 +0000},
-  journal = {Phys. Rev. X},
-  number = {4},
-  pages = {041022},
-  title = {Mathematical formulation of multilayer networks},
-  volume = {3},
-  year = {2013}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#De-Domenico2013Mathematical-fo-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="James2013An-Introduction">James, G., D. Witten, T. Hastie, and R. Tibshirani, 2013, <i>An Introduction To Statistical Learning: with Applications in R</i>. Springer Texts In Statistics (Springer New York).</span>
+<li><span id="James2013An-Introduction">James, G., D. Witten, T. Hastie, and R. Tibshirani, 2013, <i>An Introduction to Statistical Learning: with Applications in R</i>. Springer Texts in Statistics (Springer New York).</span>
 
 <div id="James2013An-Introduction-tabs">
   View
@@ -644,114 +609,6 @@ Since all these interactions have only one logical direction (e.g., an item cann
 <script>
   $(function() {
     $( "#James2013An-Introduction-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Horvat2013Modelling-and-i">Horvát, Emöke-Ágnes, 2013, “Modelling And Inferring Connections in Complex Networks,” PhD thesis, (Universität Heidelberg).</span>
-
-<div id="Horvat2013Modelling-and-i-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Horvat2013Modelling-and-i-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Horvat2013Modelling-and-i-tabs-3">
-    <pre>@phdthesis{Horvat2013Modelling-and-i,
-  author = {Horv{\'a}t, Em{\"o}ke-{\'A}gnes},
-  date-added = {2015-07-07 20:55:10 +0000},
-  date-modified = {2015-07-07 20:58:40 +0000},
-  school = {Universit{\"a}t Heidelberg},
-  title = {Modelling and inferring connections in complex networks},
-  year = {2013}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Horvat2013Modelling-and-i-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Srivastava2013Text-Clustering">Srivastava, Ajitesh, Axel J. Soto, and Evangelos Milios, 2013, “Text Clustering Using One-Mode Projection of Document-Word Bipartite Graphs,” in <i>Proceedings Of the 28th Annual ACM Symposium on Applied Computing</i>. SAC ’13 (ACM, New York, NY, USA), pp. 927–932. doi:10.1145/2480362.2480539.</span>
-
-<div id="Srivastava2013Text-Clustering-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Srivastava2013Text-Clustering-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Srivastava2013Text-Clustering-tabs-3">
-    <pre>@inproceedings{Srivastava2013Text-Clustering,
-  address = {New York, NY, USA},
-  author = {Srivastava, Ajitesh and Soto, Axel J. and Milios, Evangelos},
-  booktitle = {Proceedings of the 28th Annual ACM Symposium on Applied Computing},
-  date-added = {2015-06-28 00:40:23 +0000},
-  date-modified = {2015-06-28 01:19:47 +0000},
-  doi = {10.1145/2480362.2480539},
-  isbn = {978-1-4503-1656-9},
-  location = {Coimbra, Portugal},
-  numpages = {6},
-  pages = {927--932},
-  publisher = {ACM},
-  series = {SAC '13},
-  title = {Text Clustering Using One-mode Projection of Document-word Bipartite Graphs},
-  year = {2013},
-  bdsk-url-1 = {http://dx.doi.org/10.1145/2480362.2480539}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Srivastava2013Text-Clustering-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Peixoto2013Parsimonious-Mo">Peixoto, Tiago P., 2013, “Parsimonious Module Inference In Large Networks,” Phys. Rev. Lett. <b>110</b>. doi:10.1103/PhysRevLett.110.148701.</span>
-
-<div id="Peixoto2013Parsimonious-Mo-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Peixoto2013Parsimonious-Mo-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Peixoto2013Parsimonious-Mo-tabs-3">
-    <pre>@article{Peixoto2013Parsimonious-Mo,
-  author = {Peixoto, Tiago P.},
-  date-modified = {2015-06-26 16:01:46 +0000},
-  doi = {10.1103/PhysRevLett.110.148701},
-  journal = {Phys. Rev. Lett.},
-  number = {14},
-  title = {Parsimonious Module Inference in Large Networks},
-  volume = {110},
-  year = {2013},
-  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevLett.110.148701}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Peixoto2013Parsimonious-Mo-tabs" ).tabs({
       collapsible: true,
       active: false
     });
@@ -794,7 +651,150 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Abu-Mostafa2012Learning-from-D">Abu-Mostafa, Y.S., M. Magdon-Ismail, and H.T. Lin, 2012, <i>Learning From Data: A Short Course</i> (AMLBook).</span>
+<li><span id="Horvat2013Modelling-and-i">Horvát, Emöke-Ágnes, 2013, “Modelling and Inferring Connections in Complex Networks,” PhD thesis, (Universität Heidelberg).</span>
+
+<div id="Horvat2013Modelling-and-i-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Horvat2013Modelling-and-i-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Horvat2013Modelling-and-i-tabs-3">
+    <pre>@phdthesis{Horvat2013Modelling-and-i,
+  author = {Horv{\'a}t, Em{\"o}ke-{\'A}gnes},
+  date-added = {2015-07-07 20:55:10 +0000},
+  date-modified = {2015-07-07 20:58:40 +0000},
+  school = {Universit{\"a}t Heidelberg},
+  title = {Modelling and inferring connections in complex networks},
+  year = {2013}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Horvat2013Modelling-and-i-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Peixoto2013Parsimonious-Mo">Peixoto, Tiago P., 2013, “Parsimonious Module Inference in Large Networks,” Phys. Rev. Lett. <b>110</b>. doi:10.1103/PhysRevLett.110.148701.</span>
+
+<div id="Peixoto2013Parsimonious-Mo-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Peixoto2013Parsimonious-Mo-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Peixoto2013Parsimonious-Mo-tabs-3">
+    <pre>@article{Peixoto2013Parsimonious-Mo,
+  author = {Peixoto, Tiago P.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1103/PhysRevLett.110.148701},
+  journal = {Phys. Rev. Lett.},
+  number = {14},
+  title = {Parsimonious Module Inference in Large Networks},
+  volume = {110},
+  year = {2013},
+  bdsk-url-1 = {http://dx.doi.org/10.1103/PhysRevLett.110.148701}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Peixoto2013Parsimonious-Mo-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="De-Domenico2013Mathematical-fo">De Domenico, Manlio, Albert Solé-Ribalta, Emanuele Cozzo, Mikko Kivelä, Yamir Moreno, Mason A Porter, Sergio Gómez, and Alex Arenas, 2013, “Mathematical Formulation of Multilayer Networks,” Phys. Rev. X <b>3</b>, 041022.</span>
+
+<div id="De-Domenico2013Mathematical-fo-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#De-Domenico2013Mathematical-fo-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="De-Domenico2013Mathematical-fo-tabs-3">
+    <pre>@article{De-Domenico2013Mathematical-fo,
+  author = {De Domenico, Manlio and Sol{\'e}-Ribalta, Albert and Cozzo, Emanuele and Kivel{\"a}, Mikko and Moreno, Yamir and Porter, Mason A and G{\'o}mez, Sergio and Arenas, Alex},
+  date-added = {2015-07-09 13:45:45 +0000},
+  date-modified = {2015-07-09 13:45:59 +0000},
+  journal = {Phys. Rev. X},
+  number = {4},
+  pages = {041022},
+  title = {Mathematical formulation of multilayer networks},
+  volume = {3},
+  year = {2013}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#De-Domenico2013Mathematical-fo-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Srivastava2013Text-Clustering">Srivastava, Ajitesh, Axel J. Soto, and Evangelos Milios, 2013, “Text Clustering Using One-Mode Projection of Document-Word Bipartite Graphs,” in <i>Proceedings of the 28th Annual ACM Symposium on Applied Computing</i>. SAC ’13 (ACM, New York, NY, USA), pp. 927–932. doi:10.1145/2480362.2480539.</span>
+
+<div id="Srivastava2013Text-Clustering-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Srivastava2013Text-Clustering-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Srivastava2013Text-Clustering-tabs-3">
+    <pre>@inproceedings{Srivastava2013Text-Clustering,
+  address = {New York, NY, USA},
+  author = {Srivastava, Ajitesh and Soto, Axel J. and Milios, Evangelos},
+  booktitle = {Proceedings of the 28th Annual ACM Symposium on Applied Computing},
+  date-added = {2015-06-28 00:40:23 +0000},
+  date-modified = {2015-06-28 01:19:47 +0000},
+  doi = {10.1145/2480362.2480539},
+  isbn = {978-1-4503-1656-9},
+  location = {Coimbra, Portugal},
+  numpages = {6},
+  pages = {927--932},
+  publisher = {ACM},
+  series = {SAC '13},
+  title = {Text Clustering Using One-mode Projection of Document-word Bipartite Graphs},
+  year = {2013},
+  bdsk-url-1 = {http://dx.doi.org/10.1145/2480362.2480539}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Srivastava2013Text-Clustering-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Abu-Mostafa2012Learning-from-D">Abu-Mostafa, Y.S., M. Magdon-Ismail, and H.T. Lin, 2012, <i>Learning from Data: A Short Course</i> (AMLBook).</span>
 
 <div id="Abu-Mostafa2012Learning-from-D-tabs">
   View
@@ -863,6 +863,74 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
+<li><span id="De-Choudhury2010How-does-the-da">De Choudhury, Munmun, Yu-Ru Lin, Hari Sundaram, K Selcuk Candan, Lexing Xie, and Aisling Kelliher, 2010, “How Does the Data Sampling Strategy Impact the Discovery of Information Diffusion in Social Media?,” ICWSM <b>10</b>, 34–41.</span>
+
+<div id="De-Choudhury2010How-does-the-da-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#De-Choudhury2010How-does-the-da-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="De-Choudhury2010How-does-the-da-tabs-3">
+    <pre>@article{De-Choudhury2010How-does-the-da,
+  author = {De Choudhury, Munmun and Lin, Yu-Ru and Sundaram, Hari and Candan, K Selcuk and Xie, Lexing and Kelliher, Aisling},
+  date-added = {2015-06-28 01:41:33 +0000},
+  date-modified = {2015-06-28 01:41:37 +0000},
+  journal = {ICWSM},
+  pages = {34--41},
+  title = {How does the data sampling strategy impact the discovery of information diffusion in social media?},
+  volume = {10},
+  year = {2010}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#De-Choudhury2010How-does-the-da-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Sculley2010Web-scale-k-mea">Sculley, David, 2010, “Web-Scale k-Means Clustering,” in <i>Proceedings of the 19th International Conference on World Wide Web</i> (ACM), pp. 1177–1178.</span>
+
+<div id="Sculley2010Web-scale-k-mea-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Sculley2010Web-scale-k-mea-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Sculley2010Web-scale-k-mea-tabs-3">
+    <pre>@inproceedings{Sculley2010Web-scale-k-mea,
+  author = {Sculley, David},
+  booktitle = {Proceedings of the 19th international conference on World wide web},
+  date-added = {2015-07-07 02:32:27 +0000},
+  date-modified = {2015-07-07 02:32:30 +0000},
+  organization = {ACM},
+  pages = {1177--1178},
+  title = {Web-scale k-means clustering},
+  year = {2010}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Sculley2010Web-scale-k-mea-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
 <li><span id="Fortunato2010Community-detec">Fortunato, Santo, 2010, “Community Detection in Graphs,” Phys. Rep. <b>486</b>, 75–174. doi:10.1016/j.physrep.2009.11.002.</span>
 
 <div id="Fortunato2010Community-detec-tabs">
@@ -899,74 +967,6 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="De-Choudhury2010How-does-the-da">De Choudhury, Munmun, Yu-Ru Lin, Hari Sundaram, K Selcuk Candan, Lexing Xie, and Aisling Kelliher, 2010, “How Does the Data Sampling Strategy Impact the Discovery of Information Diffusion in Social Media?,” ICWSM <b>10</b>, 34–41.</span>
-
-<div id="De-Choudhury2010How-does-the-da-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#De-Choudhury2010How-does-the-da-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="De-Choudhury2010How-does-the-da-tabs-3">
-    <pre>@article{De-Choudhury2010How-does-the-da,
-  author = {De Choudhury, Munmun and Lin, Yu-Ru and Sundaram, Hari and Candan, K Selcuk and Xie, Lexing and Kelliher, Aisling},
-  date-added = {2015-06-28 01:41:33 +0000},
-  date-modified = {2015-06-28 01:41:37 +0000},
-  journal = {ICWSM},
-  pages = {34--41},
-  title = {How does the data sampling strategy impact the discovery of information diffusion in social media?},
-  volume = {10},
-  year = {2010}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#De-Choudhury2010How-does-the-da-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Sculley2010Web-scale-k-mea">Sculley, David, 2010, “Web-Scale k-Means Clustering,” in <i>Proceedings Of the 19th International Conference on World Wide Web</i> (ACM), pp. 1177–1178.</span>
-
-<div id="Sculley2010Web-scale-k-mea-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Sculley2010Web-scale-k-mea-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Sculley2010Web-scale-k-mea-tabs-3">
-    <pre>@inproceedings{Sculley2010Web-scale-k-mea,
-  author = {Sculley, David},
-  booktitle = {Proceedings of the 19th international conference on World wide web},
-  date-added = {2015-07-07 02:32:27 +0000},
-  date-modified = {2015-07-07 02:32:30 +0000},
-  organization = {ACM},
-  pages = {1177--1178},
-  title = {Web-scale k-means clustering},
-  year = {2010}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Sculley2010Web-scale-k-mea-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
 <li><span id="Lancichinetti2009Community-detec">Lancichinetti, Andrea, and Santo Fortunato, 2009, “Community Detection Algorithms: A Comparative Analysis,” Phys. Rev. E <b>80</b>, 056117. doi:10.1103/PhysRevE.80.056117.</span>
 
 <div id="Lancichinetti2009Community-detec-tabs">
@@ -998,108 +998,6 @@ Since all these interactions have only one logical direction (e.g., an item cann
 <script>
   $(function() {
     $( "#Lancichinetti2009Community-detec-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Reichardt2008Structure-in-Co">Reichardt, J., 2008, <i>Structure In Complex Networks</i>. Lecture Notes In Physics (Springer).</span>
-
-<div id="Reichardt2008Structure-in-Co-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Reichardt2008Structure-in-Co-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Reichardt2008Structure-in-Co-tabs-3">
-    <pre>@book{Reichardt2008Structure-in-Co,
-  author = {Reichardt, J.},
-  date-modified = {2015-06-26 16:01:46 +0000},
-  isbn = {978-3540878322},
-  publisher = {Springer},
-  series = {Lecture Notes in Physics},
-  title = {Structure in Complex Networks},
-  year = {2008}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Reichardt2008Structure-in-Co-tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Blondel2008Fast-unfolding-">Blondel, Vincent D, Jean-Loup Guillaume, Renaud Lambiotte, and Etienne Lefebvre, 2008, “Fast Unfolding of Communities in Large Networks,” J. Stat. Mech. <b>2008</b>, P10008. doi:10.1088/1742-5468/2008/10/P10008.</span>
-
-<div id="Blondel2008Fast-unfolding--tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Blondel2008Fast-unfolding--tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Blondel2008Fast-unfolding--tabs-3">
-    <pre>@article{Blondel2008Fast-unfolding-,
-  author = {Blondel, Vincent D and Guillaume, Jean-Loup and Lambiotte, Renaud and Lefebvre, Etienne},
-  date-modified = {2015-06-26 16:01:46 +0000},
-  doi = {10.1088/1742-5468/2008/10/P10008},
-  journal = {J. Stat. Mech.},
-  number = {10},
-  pages = {P10008},
-  title = {Fast unfolding of communities in large networks},
-  volume = {2008},
-  year = {2008},
-  bdsk-url-1 = {http://dx.doi.org/10.1088/1742-5468/2008/10/P10008}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Blondel2008Fast-unfolding--tabs" ).tabs({
-      collapsible: true,
-      active: false
-    });
-  });
-</script></li>
-<li><span id="Manning2008Introduction-to">Manning, Christopher D, Prabhakar Raghavan, Hinrich Schütze, and others, 2008, <i>Introduction To Information Retrieval</i>. Vol. 1 (Cambridge university press Cambridge).</span>
-
-<div id="Manning2008Introduction-to-tabs">
-  View
-  <ul>
-    
-    
-    <li><a href="#Manning2008Introduction-to-tabs-3">BibTeX entry</a>.</li>
-  </ul>
-  
-  
-  
-  <div id="Manning2008Introduction-to-tabs-3">
-    <pre>@book{Manning2008Introduction-to,
-  author = {Manning, Christopher D and Raghavan, Prabhakar and Sch{\"u}tze, Hinrich and others},
-  date-added = {2015-06-28 00:41:21 +0000},
-  date-modified = {2015-06-28 00:41:24 +0000},
-  publisher = {Cambridge university press Cambridge},
-  title = {Introduction to information retrieval},
-  volume = {1},
-  year = {2008}
-}
-</pre>
-  </div>
-</div>
-<script>
-  $(function() {
-    $( "#Manning2008Introduction-to-tabs" ).tabs({
       collapsible: true,
       active: false
     });
@@ -1182,37 +1080,103 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Gionis2007Assessing-data-">Gionis, Aristides, Heikki Mannila, Taneli Mielikäinen, and Panayiotis Tsaparas, 2007, “Assessing Data Mining Results via Swap Randomization,” ACM Transactions on Knowledge Discovery from Data (TKDD) <b>1</b> (ACM), 14.</span>
+<li><span id="Reichardt2008Structure-in-Co">Reichardt, J., 2008, <i>Structure in Complex Networks</i>. Lecture Notes in Physics (Springer).</span>
 
-<div id="Gionis2007Assessing-data--tabs">
+<div id="Reichardt2008Structure-in-Co-tabs">
   View
   <ul>
     
     
-    <li><a href="#Gionis2007Assessing-data--tabs-3">BibTeX entry</a>.</li>
+    <li><a href="#Reichardt2008Structure-in-Co-tabs-3">BibTeX entry</a>.</li>
   </ul>
   
   
   
-  <div id="Gionis2007Assessing-data--tabs-3">
-    <pre>@article{Gionis2007Assessing-data-,
-  author = {Gionis, Aristides and Mannila, Heikki and Mielik{\"a}inen, Taneli and Tsaparas, Panayiotis},
-  date-added = {2015-07-04 17:42:02 +0000},
-  date-modified = {2015-07-04 17:42:04 +0000},
-  journal = {ACM Transactions on Knowledge Discovery from Data (TKDD)},
-  number = {3},
-  pages = {14},
-  publisher = {ACM},
-  title = {Assessing data mining results via swap randomization},
-  volume = {1},
-  year = {2007}
+  <div id="Reichardt2008Structure-in-Co-tabs-3">
+    <pre>@book{Reichardt2008Structure-in-Co,
+  author = {Reichardt, J.},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  isbn = {978-3540878322},
+  publisher = {Springer},
+  series = {Lecture Notes in Physics},
+  title = {Structure in Complex Networks},
+  year = {2008}
 }
 </pre>
   </div>
 </div>
 <script>
   $(function() {
-    $( "#Gionis2007Assessing-data--tabs" ).tabs({
+    $( "#Reichardt2008Structure-in-Co-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Manning2008Introduction-to">Manning, Christopher D, Prabhakar Raghavan, Hinrich Schütze, and others, 2008, <i>Introduction to Information Retrieval</i>. Vol. 1 (Cambridge university press Cambridge).</span>
+
+<div id="Manning2008Introduction-to-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Manning2008Introduction-to-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Manning2008Introduction-to-tabs-3">
+    <pre>@book{Manning2008Introduction-to,
+  author = {Manning, Christopher D and Raghavan, Prabhakar and Sch{\"u}tze, Hinrich and others},
+  date-added = {2015-06-28 00:41:21 +0000},
+  date-modified = {2015-06-28 00:41:24 +0000},
+  publisher = {Cambridge university press Cambridge},
+  title = {Introduction to information retrieval},
+  volume = {1},
+  year = {2008}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Manning2008Introduction-to-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Blondel2008Fast-unfolding-">Blondel, Vincent D, Jean-Loup Guillaume, Renaud Lambiotte, and Etienne Lefebvre, 2008, “Fast Unfolding of Communities in Large Networks,” J. Stat. Mech. <b>2008</b>, P10008. doi:10.1088/1742-5468/2008/10/P10008.</span>
+
+<div id="Blondel2008Fast-unfolding--tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Blondel2008Fast-unfolding--tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Blondel2008Fast-unfolding--tabs-3">
+    <pre>@article{Blondel2008Fast-unfolding-,
+  author = {Blondel, Vincent D and Guillaume, Jean-Loup and Lambiotte, Renaud and Lefebvre, Etienne},
+  date-modified = {2015-06-26 16:01:46 +0000},
+  doi = {10.1088/1742-5468/2008/10/P10008},
+  journal = {J. Stat. Mech.},
+  number = {10},
+  pages = {P10008},
+  title = {Fast unfolding of communities in large networks},
+  volume = {2008},
+  year = {2008},
+  bdsk-url-1 = {http://dx.doi.org/10.1088/1742-5468/2008/10/P10008}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Blondel2008Fast-unfolding--tabs" ).tabs({
       collapsible: true,
       active: false
     });
@@ -1254,7 +1218,43 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Newman2006Modularity-and-">Newman, Mark E. J., 2006, “Modularity And Community Structure in Networks,” Proc. Natl. Acad. Sci. <b>103</b>, 8577–8582.</span>
+<li><span id="Gionis2007Assessing-data-">Gionis, Aristides, Heikki Mannila, Taneli Mielikäinen, and Panayiotis Tsaparas, 2007, “Assessing Data Mining Results via Swap Randomization,” ACM Transactions on Knowledge Discovery from Data (TKDD) <b>1</b> (ACM), 14.</span>
+
+<div id="Gionis2007Assessing-data--tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Gionis2007Assessing-data--tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Gionis2007Assessing-data--tabs-3">
+    <pre>@article{Gionis2007Assessing-data-,
+  author = {Gionis, Aristides and Mannila, Heikki and Mielik{\"a}inen, Taneli and Tsaparas, Panayiotis},
+  date-added = {2015-07-04 17:42:02 +0000},
+  date-modified = {2015-07-04 17:42:04 +0000},
+  journal = {ACM Transactions on Knowledge Discovery from Data (TKDD)},
+  number = {3},
+  pages = {14},
+  publisher = {ACM},
+  title = {Assessing data mining results via swap randomization},
+  volume = {1},
+  year = {2007}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Gionis2007Assessing-data--tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Newman2006Modularity-and-">Newman, Mark E. J., 2006, “Modularity and Community Structure in Networks,” Proc. Natl. Acad. Sci. <b>103</b>, 8577–8582.</span>
 
 <div id="Newman2006Modularity-and--tabs">
   View
@@ -1289,7 +1289,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
     });
   });
 </script></li>
-<li><span id="Newman2004Finding-and-eva">Newman, M. E. J., and M. Girvan, 2004, “Finding And Evaluating Community Structure in Networks,” Phys. Rev. E <b>69</b>, 026113. doi:10.1103/PhysRevE.69.026113.</span>
+<li><span id="Newman2004Finding-and-eva">Newman, M. E. J., and M. Girvan, 2004, “Finding and Evaluating Community Structure in Networks,” Phys. Rev. E <b>69</b>, 026113. doi:10.1103/PhysRevE.69.026113.</span>
 
 <div id="Newman2004Finding-and-eva-tabs">
   View
@@ -1590,7 +1590,7 @@ Since all these interactions have only one logical direction (e.g., an item cann
           <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
-        </section>                
+        </section>
       
 
       <!-- Share links section -->
@@ -1632,10 +1632,10 @@ Since all these interactions have only one logical direction (e.g., an item cann
     <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
   
 </section>
-      
+
       <!-- Disqus comments -->
       
-      
+
     </footer>
 
   </article>
@@ -1645,12 +1645,12 @@ Since all these interactions have only one logical direction (e.g., an item cann
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="/">Meticulous Disorder</a> &copy; 
-               &bull; All rights reserved.
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
       </section>
-      <section class="poweredby">Made with Jekyll using 
+      <section class="poweredby">Made with Jekyll using
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer> 
+    </footer>
   </body>
 </html>

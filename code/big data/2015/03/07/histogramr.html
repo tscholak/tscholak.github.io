@@ -59,12 +59,12 @@
     </script>
   </head>
 
-  <body class="post-template">
+  <body class="home-template">
 
     <header class="main-header post-head no-cover">
   <nav class="main-nav  clearfix">
     <a class="back-button icon-arrow-left" href="/">Home</a>
-    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
   </nav>
 </header>
 
@@ -74,10 +74,10 @@
 
     <header class="post-header">
       <h1 class="post-title">Meet histogramr</h1>
-      <section class="post-meta">                
+      <section class="post-meta">
         <time class="post-date" datetime="2015-03-07">07 Mar 2015</time>
-         
-          on code and big data 
+        
+          on code and big data
         
       </section>
     </header>
@@ -86,14 +86,14 @@
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">Meticulous Disorder</span>
-         
+        
       </a>
     </header> -->
-    
+
     <!-- <span class="post-meta">
       <time datetime="2015-03-07">07 Mar 2015</time>
-       
-        on code and big data 
+      
+        on code and big data
       
     </span> -->
 
@@ -107,10 +107,10 @@
 <h1 id="histogramr-is-now-on-github">histogramr is now on GitHub!</h1>
 
 <p>Today I release histogramr under the GPLv3 <a href="https://github.com/tscholak/histogramr">on GitHub</a>. You can download and use it for <em>free</em>. The easiest way to do so is by using <a href="http://git-scm.com">Git</a>. In Linux or Mac OS X, fire up a terminal and run:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ git clone git@github.com:tscholak/histogramr.git
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ git clone git@github.com:tscholak/histogramr.git
 </code></pre></div>
 <p>This downloads the most recent version of histogramr into the directory <code>histogramr</code>. After that, <code>cd</code> into that folder and run:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">＄ ./autogen.sh
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>＄ ./autogen.sh
 ＄ ./configure
 ＄ make
 ＄ ln -sf <span class="s2">&quot;`pwd`/src/histogramr&quot;</span> ~/bin
@@ -120,7 +120,7 @@
 <h1 id="usage"><a name="usage"></a>Usage</h1>
 
 <p>histogramr reads in the input files one-by-one and commits the data to the histogram data structure. The output file is written multiple times, whenever a predetermined number of input files has been processed. Below the output of <code>histogramr --help</code>:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">histogramr: create multivariate histograms of continuous data
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>histogramr: create multivariate histograms of continuous data
 
 Usage: histogramr -d &lt;dsname1&gt; -m &lt;mname1<span class="o">[</span>:mname2...<span class="o">]</span>&gt;
   -b &lt;size1<span class="o">[</span>:size2...<span class="o">]</span>&gt; -l &lt;range1<span class="o">[</span>:range2...<span class="o">]</span>&gt;
@@ -128,19 +128,19 @@ Usage: histogramr -d &lt;dsname1&gt; -m &lt;mname1<span class="o">[</span>:mname
   -o &lt;outfile&gt; &lt;infile1&gt; <span class="o">[</span>&lt;infile2&gt; ...<span class="o">]</span>
 
 Mandatory options:
-  -d, --dataset &lt;dsname&gt;     data <span class="nb">set</span><span class="o">(</span>s<span class="o">)</span> must be specified first
-  -m, --member &lt;mname&gt;       data <span class="nb">set </span>member<span class="o">(</span>s<span class="o">)</span>
+  -d, --dataset &lt;dsname&gt;     data set<span class="o">(</span>s<span class="o">)</span> must be specified first
+  -m, --member &lt;mname&gt;       data <span class="nb">set</span> member<span class="o">(</span>s<span class="o">)</span>
   -b, --binning &lt;size&gt;       histogram binning<span class="o">(</span>s<span class="o">)</span>
   -l, --limit &lt;range&gt;        histogram limits
   -o, --output &lt;outfile&gt;     name the output file
 
 Optional options:
   -e, --save-every &lt;number&gt;  save every &lt;number&gt; of files
-                             <span class="o">(</span>default: 1<span class="o">)</span>
+                             <span class="o">(</span>default: <span class="m">1</span><span class="o">)</span>
   -L, --l10 &lt;boolean&gt;        logarithmic transform <span class="o">(</span>default: <span class="nb">false</span><span class="o">)</span>
 
 Other options:
-  -h, --help                 print this <span class="nb">help </span>message and quit
+  -h, --help                 print this <span class="nb">help</span> message and quit
   -v, --version              print version information and quit
 
 Report bugs to: torsten.scholak+histogramr@googlemail.com
@@ -206,7 +206,7 @@ histogramr home page: &lt;https://github.com/tscholak/histogramr&gt;
     });
   });
 </script></li>
-<li><span id="zech2013quantum">Zech, Tobias, Mattia Walschaers, Torsten Scholak, Roberto Mulet, Thomas Wellens, and Andreas Buchleitner, 2013, “Quantum Transport In Biological Functional Units: Noise, Disorder, Structure,” Fluct. Noise Lett. <b>12</b> (World Scientific Publishing Company), 1340007. doi:10.1142/S0219477513400075.</span>
+<li><span id="zech2013quantum">Zech, Tobias, Mattia Walschaers, Torsten Scholak, Roberto Mulet, Thomas Wellens, and Andreas Buchleitner, 2013, “Quantum Transport in Biological Functional Units: Noise, Disorder, Structure,” Fluct. Noise Lett. <b>12</b> (World Scientific Publishing Company), 1340007. doi:10.1142/S0219477513400075.</span>
 
 <div id="zech2013quantum-tabs">
   View
@@ -422,7 +422,7 @@ histogramr home page: &lt;https://github.com/tscholak/histogramr&gt;
     });
   });
 </script></li>
-<li><span id="scholak2011efficient">Scholak, Torsten, Fernando de Melo, Thomas Wellens, Florian Mintert, and Andreas Buchleitner, 2011, “Efficient And Coherent Excitation Transfer across Disordered Molecular Networks,” Phys. Rev. E <b>83</b> (American Physical Society), 021912. doi:10.1103/PhysRevE.83.021912.</span>
+<li><span id="scholak2011efficient">Scholak, Torsten, Fernando de Melo, Thomas Wellens, Florian Mintert, and Andreas Buchleitner, 2011, “Efficient and Coherent Excitation Transfer across Disordered Molecular Networks,” Phys. Rev. E <b>83</b> (American Physical Society), 021912. doi:10.1103/PhysRevE.83.021912.</span>
 
 <div id="scholak2011efficient-tabs">
   View
@@ -476,7 +476,7 @@ histogramr home page: &lt;https://github.com/tscholak/histogramr&gt;
     });
   });
 </script></li>
-<li><span id="scholak2010transport">Scholak, Torsten, Florian Mintert, Thomas Wellens, and Andreas Buchleitner, 2010, “Transport And Entanglement,” in <i>Quantum Efficiency In Complex Systems, Part I: Biomolecular Systems, Part 1</i>. Vol. 83. Semiconductors And Semimetals (Elsevier Science), pp. 1–38. doi:10.1016/B978-0-12-375042-6.00001-8.</span>
+<li><span id="scholak2010transport">Scholak, Torsten, Florian Mintert, Thomas Wellens, and Andreas Buchleitner, 2010, “Transport and Entanglement,” in <i>Quantum Efficiency in Complex Systems, Part I: Biomolecular Systems, Part 1</i>. Vol. 83. Semiconductors and Semimetals (Elsevier Science), pp. 1–38. doi:10.1016/B978-0-12-375042-6.00001-8.</span>
 
 <div id="scholak2010transport-tabs">
   View
@@ -548,7 +548,7 @@ histogramr home page: &lt;https://github.com/tscholak/histogramr&gt;
           <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
-        </section>                
+        </section>
       
 
       <!-- Share links section -->
@@ -590,10 +590,10 @@ histogramr home page: &lt;https://github.com/tscholak/histogramr&gt;
     <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
   
 </section>
-      
+
       <!-- Disqus comments -->
       
-      
+
     </footer>
 
   </article>
@@ -603,12 +603,12 @@ histogramr home page: &lt;https://github.com/tscholak/histogramr&gt;
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="/">Meticulous Disorder</a> &copy; 
-               &bull; All rights reserved.
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
       </section>
-      <section class="poweredby">Made with Jekyll using 
+      <section class="poweredby">Made with Jekyll using
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer> 
+    </footer>
   </body>
 </html>

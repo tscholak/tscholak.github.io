@@ -59,12 +59,12 @@
     </script>
   </head>
 
-  <body class="post-template">
+  <body class="home-template">
 
     <header class="main-header post-head " style="background-image: url(/assets/images/MongoDB-workflow.jpg) ">
   <nav class="main-nav  overlay  clearfix">
     <a class="back-button icon-arrow-left" href="/">Home</a>
-    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
   </nav>
 </header>
 
@@ -74,10 +74,10 @@
 
     <header class="post-header">
       <h1 class="post-title">Big-Data Work-Flow with MongoDB</h1>
-      <section class="post-meta">                
+      <section class="post-meta">
         <time class="post-date" datetime="2015-07-14">14 Jul 2015</time>
-         
-          on big data, python, and mongodb 
+        
+          on big data, Python, and MongoDB
         
       </section>
     </header>
@@ -86,14 +86,14 @@
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">Meticulous Disorder</span>
-         
+        
       </a>
     </header> -->
-    
+
     <!-- <span class="post-meta">
       <time datetime="2015-07-14">14 Jul 2015</time>
-       
-        on big data, python, and mongodb 
+      
+        on big data, Python, and MongoDB
       
     </span> -->
 
@@ -161,47 +161,47 @@
 <p>My first task was to load that file and store its contents in MongoDB. I wrote a little Python script that does exactly that. It is shown below.</p>
 
 <p><em>Note that this and all following code examples have been edited for length and clarity. There is no error handling, no logging, and no user feedback.</em></p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span>
 
 <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s">&#39;server.local&#39;</span><span class="p">,</span>
-        <span class="s">&#39;mongo_db_name&#39;</span><span class="p">:</span> <span class="s">&#39;mydb&#39;</span><span class="p">,</span>
-        <span class="s">&#39;mongo_port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
-        <span class="s">&#39;chunk_size&#39;</span><span class="p">:</span> <span class="mi">100000</span><span class="p">,</span>
-        <span class="s">&#39;drop_collections_on_load&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-        <span class="s">&#39;transactions_collection&#39;</span><span class="p">:</span> <span class="s">&#39;transactions&#39;</span><span class="p">,</span>
-        <span class="s">&#39;transactions_source_csv_gz&#39;</span><span class="p">:</span> <span class="s">&#39;transactions.csv.gz&#39;</span>
+        <span class="s1">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s1">&#39;server.local&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mongo_db_name&#39;</span><span class="p">:</span> <span class="s1">&#39;mydb&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mongo_port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
+        <span class="s1">&#39;chunk_size&#39;</span><span class="p">:</span> <span class="mi">100000</span><span class="p">,</span>
+        <span class="s1">&#39;drop_collections_on_load&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="s1">&#39;transactions_collection&#39;</span><span class="p">:</span> <span class="s1">&#39;transactions&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;transactions_source_csv_gz&#39;</span><span class="p">:</span> <span class="s1">&#39;transactions.csv.gz&#39;</span>
     <span class="p">}</span>
 
 <span class="k">def</span> <span class="nf">to_mongo</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">idxs</span><span class="o">=</span><span class="p">[]):</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;drop_collections_on_load&#39;</span><span class="p">]):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;drop_collections_on_load&#39;</span><span class="p">]):</span>
         <span class="n">dest</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-        <span class="n">dest</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s">&#39;records&#39;</span><span class="p">)))</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s1">&#39;records&#39;</span><span class="p">)))</span>
     <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
         <span class="n">dest</span><span class="o">.</span><span class="n">ensure_index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="c"># establish connection:</span>
-    <span class="n">mongo_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_host&#39;</span><span class="p">],</span>
-                               <span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_port&#39;</span><span class="p">])</span>
-    <span class="n">mongo_db</span> <span class="o">=</span> <span class="n">mongo_client</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_db_name&#39;</span><span class="p">]]</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># establish connection:</span>
+    <span class="n">mongo_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_host&#39;</span><span class="p">],</span>
+                               <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_port&#39;</span><span class="p">])</span>
+    <span class="n">mongo_db</span> <span class="o">=</span> <span class="n">mongo_client</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_db_name&#39;</span><span class="p">]]</span>
 
-    <span class="c"># load data:</span>
+    <span class="c1"># load data:</span>
     <span class="n">transactions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;transactions_source_csv_gz&#39;</span><span class="p">],</span>
-        <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;date&#39;</span><span class="p">],</span>
-        <span class="n">compression</span><span class="o">=</span><span class="s">&#39;gzip&#39;</span><span class="p">,</span>
-        <span class="n">chunksize</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;chunk_size&#39;</span><span class="p">])</span>
-    <span class="c"># insert data:</span>
-    <span class="n">to_mongo</span><span class="p">(</span><span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;transactions_collection&#39;</span><span class="p">]],</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;transactions_source_csv_gz&#39;</span><span class="p">],</span>
+        <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+        <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">,</span>
+        <span class="n">chunksize</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;chunk_size&#39;</span><span class="p">])</span>
+    <span class="c1"># insert data:</span>
+    <span class="n">to_mongo</span><span class="p">(</span><span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;transactions_collection&#39;</span><span class="p">]],</span>
              <span class="n">transactions</span><span class="p">,</span>
-             <span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;brand&#39;</span><span class="p">,</span> <span class="s">&#39;category&#39;</span><span class="p">,</span> <span class="s">&#39;company&#39;</span><span class="p">,</span> <span class="s">&#39;date&#39;</span><span class="p">])</span>
+             <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;brand&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">,</span> <span class="s1">&#39;company&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">])</span>
 
-    <span class="c"># close connection:</span>
+    <span class="c1"># close connection:</span>
     <span class="n">mongo_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
 <p>With this script, I can copy all data in <code>transactions.csv</code> to a MongoDB collection called <code>transactions</code> using the PyMongo driver. Any preexisting collection with that name is wiped. The script is divided into three major tasks:</p>
@@ -217,148 +217,148 @@
 <p>The <code>transactions</code> collection contains a lot of information, not all of which is constantly in need. Since every bit of additional information equals more waiting, it makes sense to create a couple of thinned out collections that are tailored to specific use cases. I have picked one of my use cases to illustrate this process.</p>
 
 <p>Currently, <a href="/big%20data/graphs/community%20detection/market%20segmentation/2015/07/07/communities-and-markets.html#MarketSegmentationAndRecommendationSystems">I am studying graphs</a> that represent the relationship between the consumers and the items in the dataset. These relationships are solely inferred from aggregated transaction data. Since the original <code>transactions</code> collection contains atomic transaction data, I decided to create another collection, <code>graph</code>, populated just with aggregated data. For that purpose, I wrote the following Python script:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span><span class="p">,</span> <span class="n">ASCENDING</span>
 
 <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s">&#39;server.local&#39;</span><span class="p">,</span>
-        <span class="s">&#39;mongo_db_name&#39;</span><span class="p">:</span> <span class="s">&#39;mydb&#39;</span><span class="p">,</span>
-        <span class="s">&#39;mongo_port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
-        <span class="s">&#39;drop_collections_on_load&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-        <span class="s">&#39;transactions_collection&#39;</span><span class="p">:</span> <span class="s">&#39;transactions&#39;</span><span class="p">,</span>
-        <span class="s">&#39;graph_collection&#39;</span><span class="p">:</span> <span class="s">&#39;graph&#39;</span>
+        <span class="s1">&#39;mongo_host&#39;</span><span class="p">:</span> <span class="s1">&#39;server.local&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mongo_db_name&#39;</span><span class="p">:</span> <span class="s1">&#39;mydb&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mongo_port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
+        <span class="s1">&#39;drop_collections_on_load&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="s1">&#39;transactions_collection&#39;</span><span class="p">:</span> <span class="s1">&#39;transactions&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;graph_collection&#39;</span><span class="p">:</span> <span class="s1">&#39;graph&#39;</span>
     <span class="p">}</span>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="c"># establish connection:</span>
-    <span class="n">mongo_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_host&#39;</span><span class="p">],</span>
-                               <span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_port&#39;</span><span class="p">])</span>
-    <span class="n">mongo_db</span> <span class="o">=</span> <span class="n">mongo_client</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;mongo_db_name&#39;</span><span class="p">]]</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># establish connection:</span>
+    <span class="n">mongo_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_host&#39;</span><span class="p">],</span>
+                               <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_port&#39;</span><span class="p">])</span>
+    <span class="n">mongo_db</span> <span class="o">=</span> <span class="n">mongo_client</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;mongo_db_name&#39;</span><span class="p">]]</span>
 
-    <span class="c"># get collections:</span>
-    <span class="n">transactions_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;transactions_collection&#39;</span><span class="p">]]</span>
-    <span class="n">graph_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;graph_collection&#39;</span><span class="p">]]</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;drop_collections_on_load&#39;</span><span class="p">]):</span>
+    <span class="c1"># get collections:</span>
+    <span class="n">transactions_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;transactions_collection&#39;</span><span class="p">]]</span>
+    <span class="n">graph_collection</span> <span class="o">=</span> <span class="n">mongo_db</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;graph_collection&#39;</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;drop_collections_on_load&#39;</span><span class="p">]):</span>
         <span class="n">graph_collection</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
 
-    <span class="c"># query items:</span>
+    <span class="c1"># query items:</span>
     <span class="n">pipeline</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">{</span><span class="s">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$brand&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$company&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$category&quot;</span>
+            <span class="p">{</span><span class="s2">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$brand&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$company&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$category&quot;</span>
                 <span class="p">}</span>
             <span class="p">}},</span>
-            <span class="p">{</span><span class="s">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
-                <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.brand&quot;</span><span class="p">,</span>
-                <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.company&quot;</span><span class="p">,</span>
-                <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.category&quot;</span>
+            <span class="p">{</span><span class="s2">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.brand&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.company&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.category&quot;</span>
             <span class="p">}}</span>
         <span class="p">]</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">transactions_collection</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span>
                                                <span class="n">allowDiskUse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">items</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cursor</span><span class="p">))</span>
-    <span class="n">items</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;item&quot;</span>
+    <span class="n">items</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;item&quot;</span>
     <span class="n">items</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">items</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s">&#39;brand&#39;</span><span class="p">,</span>
-                             <span class="s">&#39;company&#39;</span><span class="p">,</span>
-                             <span class="s">&#39;category&#39;</span><span class="p">])</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;brand&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;company&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;category&#39;</span><span class="p">])</span>
 
-    <span class="c"># for each consumer and item, aggregate purchases and returns:</span>
+    <span class="c1"># for each consumer and item, aggregate purchases and returns:</span>
     <span class="n">pipeline</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">{</span><span class="s">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;consumer&quot;</span><span class="p">:</span> <span class="s">&quot;$id&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$brand&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$company&quot;</span><span class="p">,</span>
-                    <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$category&quot;</span>
+            <span class="p">{</span><span class="s2">&quot;$group&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;consumer&quot;</span><span class="p">:</span> <span class="s2">&quot;$id&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$brand&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$company&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$category&quot;</span>
                 <span class="p">},</span>
-                <span class="s">&quot;dept&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$first&quot;</span><span class="p">:</span> <span class="s">&quot;$dept&quot;</span><span class="p">},</span>
-                <span class="s">&quot;transactioncount&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$sum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
-                <span class="s">&quot;purchasecount&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$sum&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;$cond&quot;</span><span class="p">:</span> <span class="p">[</span>
-                        <span class="p">{</span><span class="s">&quot;$and&quot;</span><span class="p">:</span> <span class="p">[</span>
-                            <span class="p">{</span><span class="s">&quot;$gt&quot;</span><span class="p">:</span> <span class="p">[</span>
-                                <span class="s">&quot;$purchasequantity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;dept&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$first&quot;</span><span class="p">:</span> <span class="s2">&quot;$dept&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;transactioncount&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$sum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;purchasecount&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$sum&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;$cond&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span><span class="s2">&quot;$and&quot;</span><span class="p">:</span> <span class="p">[</span>
+                            <span class="p">{</span><span class="s2">&quot;$gt&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                <span class="s2">&quot;$purchasequantity&quot;</span><span class="p">,</span>
                                 <span class="mi">0</span>
                             <span class="p">]},</span>
-                            <span class="p">{</span><span class="s">&quot;$gt&quot;</span><span class="p">:</span> <span class="p">[</span>
-                                <span class="s">&quot;$purchaseamount&quot;</span><span class="p">,</span>
+                            <span class="p">{</span><span class="s2">&quot;$gt&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                <span class="s2">&quot;$purchaseamount&quot;</span><span class="p">,</span>
                                 <span class="mi">0</span>
                             <span class="p">]}</span>
                         <span class="p">]},</span>
-                        <span class="s">&quot;$purchasequantity&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;$purchasequantity&quot;</span><span class="p">,</span>
                         <span class="mi">0</span>
                     <span class="p">]</span>
                 <span class="p">}},</span>
-                <span class="s">&quot;returncount&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$sum&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s">&quot;$cond&quot;</span><span class="p">:</span> <span class="p">[</span>
-                        <span class="p">{</span><span class="s">&quot;$or&quot;</span><span class="p">:</span> <span class="p">[</span>
-                            <span class="p">{</span><span class="s">&quot;$lt&quot;</span><span class="p">:</span> <span class="p">[</span>
-                                <span class="s">&quot;$purchasequantity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;returncount&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$sum&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;$cond&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span><span class="s2">&quot;$or&quot;</span><span class="p">:</span> <span class="p">[</span>
+                            <span class="p">{</span><span class="s2">&quot;$lt&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                <span class="s2">&quot;$purchasequantity&quot;</span><span class="p">,</span>
                                 <span class="mi">0</span>
                             <span class="p">]},</span>
-                            <span class="p">{</span><span class="s">&quot;$lt&quot;</span><span class="p">:</span> <span class="p">[</span>
-                                <span class="s">&quot;$purchaseamount&quot;</span><span class="p">,</span>
+                            <span class="p">{</span><span class="s2">&quot;$lt&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                <span class="s2">&quot;$purchaseamount&quot;</span><span class="p">,</span>
                                 <span class="mi">0</span>
                             <span class="p">]}</span>
                         <span class="p">]},</span>
-                        <span class="p">{</span><span class="s">&quot;$cond&quot;</span><span class="p">:</span> <span class="p">[</span>
-                            <span class="p">{</span><span class="s">&quot;$lt&quot;</span><span class="p">:</span> <span class="p">[</span>
-                                <span class="s">&quot;$purchasequantity&quot;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s2">&quot;$cond&quot;</span><span class="p">:</span> <span class="p">[</span>
+                            <span class="p">{</span><span class="s2">&quot;$lt&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                <span class="s2">&quot;$purchasequantity&quot;</span><span class="p">,</span>
                                 <span class="mi">0</span>
                             <span class="p">]},</span>
-                            <span class="p">{</span><span class="s">&quot;$subtract&quot;</span><span class="p">:</span> <span class="p">[</span>
+                            <span class="p">{</span><span class="s2">&quot;$subtract&quot;</span><span class="p">:</span> <span class="p">[</span>
                                 <span class="mi">0</span><span class="p">,</span>
-                                <span class="s">&quot;$purchasequantity&quot;</span>
+                                <span class="s2">&quot;$purchasequantity&quot;</span>
                             <span class="p">]},</span>
-                            <span class="s">&quot;$purchasequantity&quot;</span>
+                            <span class="s2">&quot;$purchasequantity&quot;</span>
                         <span class="p">]},</span>
                         <span class="mi">0</span>
                     <span class="p">]</span>
                 <span class="p">}}</span>
             <span class="p">}},</span>
-            <span class="p">{</span><span class="s">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
-                <span class="s">&quot;consumer&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.consumer&quot;</span><span class="p">,</span>
-                <span class="s">&quot;brand&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.brand&quot;</span><span class="p">,</span>
-                <span class="s">&quot;company&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.company&quot;</span><span class="p">,</span>
-                <span class="s">&quot;category&quot;</span><span class="p">:</span> <span class="s">&quot;$_id.category&quot;</span><span class="p">,</span>
-                <span class="s">&quot;dept&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                <span class="s">&quot;transactioncount&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                <span class="s">&quot;purchasecount&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-                <span class="s">&quot;returncount&quot;</span><span class="p">:</span> <span class="bp">True</span>
+            <span class="p">{</span><span class="s2">&quot;$project&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s2">&quot;consumer&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.consumer&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.brand&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;company&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.company&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;$_id.category&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;dept&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                <span class="s2">&quot;transactioncount&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                <span class="s2">&quot;purchasecount&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                <span class="s2">&quot;returncount&quot;</span><span class="p">:</span> <span class="bp">True</span>
             <span class="p">}}</span>
         <span class="p">]</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">transactions_collection</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span>
                                                <span class="n">allowDiskUse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="c"># process records:</span>
+    <span class="c1"># process records:</span>
     <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">:</span>
-        <span class="n">record</span><span class="p">[</span><span class="s">&#39;item&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
-            <span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s">&#39;brand&#39;</span><span class="p">],</span>
-             <span class="n">record</span><span class="p">[</span><span class="s">&#39;company&#39;</span><span class="p">],</span>
-             <span class="n">record</span><span class="p">[</span><span class="s">&#39;category&#39;</span><span class="p">]),</span>
-            <span class="s">&#39;item&#39;</span><span class="p">]</span>
-        <span class="c"># insert data:</span>
+        <span class="n">record</span><span class="p">[</span><span class="s1">&#39;item&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+            <span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;brand&#39;</span><span class="p">],</span>
+             <span class="n">record</span><span class="p">[</span><span class="s1">&#39;company&#39;</span><span class="p">],</span>
+             <span class="n">record</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]),</span>
+            <span class="s1">&#39;item&#39;</span><span class="p">]</span>
+        <span class="c1"># insert data:</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">graph_collection</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 
-    <span class="c"># create indexes:</span>
+    <span class="c1"># create indexes:</span>
     <span class="n">graph_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;consumer&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s1">&#39;consumer&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">graph_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;item&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s1">&#39;item&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">graph_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s">&#39;brand&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
-         <span class="p">(</span><span class="s">&#39;company&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
-         <span class="p">(</span><span class="s">&#39;category&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="s1">&#39;brand&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
+         <span class="p">(</span><span class="s1">&#39;company&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">),</span>
+         <span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">,</span> <span class="n">ASCENDING</span><span class="p">)],</span>
         <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-    <span class="c"># close connection</span>
+    <span class="c1"># close connection</span>
     <span class="n">mongo_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
 <p>Here is how it works:</p>
@@ -397,7 +397,7 @@
 <h6 id="using-both-purchasequantity-and-purchaseamount">Using both <code>purchasequantity</code> and <code>purchaseamount</code></h6>
 
 <p>I concluded that the best criterion for when it was a return is to look for instances in which <code>purchasequantity</code> $&lt; 0$ <em>or</em> <code>purchaseamount</code> $&lt; 0$ (a nonexclusive or). In the MongoDB console, this could look like: </p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">db</span><span class="p">.</span><span class="nx">transactions</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span> <span class="p">{</span> <span class="nx">$or</span><span class="o">:</span> <span class="p">[</span> <span class="p">{</span> <span class="nx">purchasequantity</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$lt</span><span class="o">:</span> <span class="mi">0</span> <span class="p">}</span> <span class="p">},</span> <span class="p">{</span> <span class="nx">purchaseamount</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$lt</span><span class="o">:</span> <span class="mi">0</span> <span class="p">}</span> <span class="p">}</span> <span class="p">]</span> <span class="p">}</span> <span class="p">)</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span></span><span class="nx">db</span><span class="p">.</span><span class="nx">transactions</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span> <span class="p">{</span> <span class="nx">$or</span><span class="o">:</span> <span class="p">[</span> <span class="p">{</span> <span class="nx">purchasequantity</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$lt</span><span class="o">:</span> <span class="mi">0</span> <span class="p">}</span> <span class="p">},</span> <span class="p">{</span> <span class="nx">purchaseamount</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$lt</span><span class="o">:</span> <span class="mi">0</span> <span class="p">}</span> <span class="p">}</span> <span class="p">]</span> <span class="p">}</span> <span class="p">)</span>
 </code></pre></div>
 <p>That command returns $8,120,882$ transactions. As you can see from the code above, this filter is what I ended up using.</p>
 
@@ -487,7 +487,7 @@
           <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
-        </section>                
+        </section>
       
 
       <!-- Share links section -->
@@ -529,10 +529,10 @@
     <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
   
 </section>
-      
+
       <!-- Disqus comments -->
       
-      
+
     </footer>
 
   </article>
@@ -542,12 +542,12 @@
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="/">Meticulous Disorder</a> &copy; 
-               &bull; All rights reserved.
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
       </section>
-      <section class="poweredby">Made with Jekyll using 
+      <section class="poweredby">Made with Jekyll using
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer> 
+    </footer>
   </body>
 </html>

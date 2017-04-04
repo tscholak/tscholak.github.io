@@ -59,12 +59,12 @@
     </script>
   </head>
 
-  <body class="post-template">
+  <body class="home-template">
 
     <header class="main-header post-head no-cover">
   <nav class="main-nav  clearfix">
     <a class="back-button icon-arrow-left" href="/">Home</a>
-    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
   </nav>
 </header>
 
@@ -74,10 +74,10 @@
 
     <header class="post-header">
       <h1 class="post-title">Chipgate</h1>
-      <section class="post-meta">                
+      <section class="post-meta">
         <time class="post-date" datetime="2015-10-14">14 Oct 2015</time>
-         
-          on bayesianism, apple, and chipgate 
+        
+          on Bayesianism, Apple, and Chipgate
         
       </section>
     </header>
@@ -86,14 +86,14 @@
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">Meticulous Disorder</span>
-         
+        
       </a>
     </header> -->
-    
+
     <!-- <span class="post-meta">
       <time datetime="2015-10-14">14 Oct 2015</time>
-       
-        on bayesianism, apple, and chipgate 
+      
+        on Bayesianism, Apple, and Chipgate
       
     </span> -->
 
@@ -167,8 +167,8 @@
 
 <p>where $k = 1, \ldots, K$. The number $K$ is the number of classes, and it is fix. Since there are two chip types, I set $K = 2$. The observations $X_n$, $n = 1, \ldots, N$, are conditionally independent. Each one is believed to be drawn from a normal distribution with mean $\mu_{y_n}$ and variance $\sigma_{y_n}^2$. Furthermore, each data point is a member of a single category $y_n \in \{1, \ldots, K\}$. These indicator variables are distributed according to a categorical distribution, $\mathcal{C}\left(\boldsymbol{\pi}\right)$, where the parameter $\boldsymbol{\pi}$ is a $K$-simplex: it is a vector of $K$ probabilities $\pi_k$ with $0 \le \pi_k \le 1$ that sum up to one, i.e. $\sum_{k=1}^K \pi_k = 1$. The simplex is given a symmetric Dirichlet prior with concentration parameter $\alpha &gt; 0$. I set $\alpha$ to $\frac{1}{2}$. Lastly, I put independent priors on $\mu_k$ and $\sigma_k$. I did this because I think that the location of the mean should be uninformative of the variance (and vice versa). The priors are furthermore flat. Letting $\sigma_k^{-1}$ be uniformly distributed on the positive real axis implements a Jeffreys prior for $\sigma$ <a href="#Kass1996SelectionOfPriorDistributions">(Kass and Wasserman 1996)</a>.</p>
 
-<p>For Bayesian analyses, it is common to compute the posterior distribution by means of MCMC sampling. I used <a href="http://mc-stan.org">PyStan</a> to explore the parameter space, which is why I had to write down my entire model in the Stan programming language <a href="#2015StanReferenceManual">(<i>Stan Modeling Language Users Guide And Reference Manual, Version 2.8.0</i> 2015)</a>. I coded it as follows:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">data {
+<p>For Bayesian analyses, it is common to compute the posterior distribution by means of MCMC sampling. I used <a href="http://mc-stan.org">PyStan</a> to explore the parameter space, which is why I had to write down my entire model in the Stan programming language <a href="#2015StanReferenceManual">(<i>Stan Modeling Language Users Guide and Reference Manual, Version 2.8.0</i> 2015)</a>. I coded it as follows:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>data {
     // training data
     int&lt;lower=1&gt; K;             // number of classes
     int&lt;lower=1&gt; D;             // number of features
@@ -219,7 +219,7 @@ generated quantities {
 </code></pre></div>
 <p>Note that the model is defined such that it can be used in cases with more than one feature, but only if the naive independence assumption between the features applies.</p>
 
-<p>The above implementation allows me to use both labelled and unlabelled data for the parameter inference. To this end, I assume that the labels of the unlabelled dataset are missing completely at random. A conceptually very similar implementation is described in section 13.3 of version 2.8.0 of the Stan manual <a href="#2015StanReferenceManual">(<i>Stan Modeling Language Users Guide And Reference Manual, Version 2.8.0</i> 2015)</a>. The nice thing about this idea is that all data -- not only the labelled, but also the unlabelled data -- contributes to the parameter inference. Since I had only 29 labelled data points to work with, this really helped to improve the results.</p>
+<p>The above implementation allows me to use both labelled and unlabelled data for the parameter inference. To this end, I assume that the labels of the unlabelled dataset are missing completely at random. A conceptually very similar implementation is described in section 13.3 of version 2.8.0 of the Stan manual <a href="#2015StanReferenceManual">(2015)</a>. The nice thing about this idea is that all data -- not only the labelled, but also the unlabelled data -- contributes to the parameter inference. Since I had only 29 labelled data points to work with, this really helped to improve the results.</p>
 
 <p>In the end, I added the <code>generated quantities</code> block in order to draw values for the missing labels <code>yp</code>. In other words, I can predict the manufacturer of an iPhone&#39;s SoC based on its battery test score. What I created can perhaps be described as a semi-supervised version of the common naive Bayes classifier.</p>
 
@@ -231,7 +231,7 @@ generated quantities {
 
 <h1 id="references">References</h1>
 
-<ol class="bibliography"><li><span id="2015StanReferenceManual"><i>Stan Modeling Language Users Guide And Reference Manual, Version 2.8.0</i>, 2015. Available at: http://mc-stan.org/.</span>
+<ol class="bibliography"><li><span id="2015StanReferenceManual"><i>Stan Modeling Language Users Guide and Reference Manual, Version 2.8.0</i>, 2015. Available at: http://mc-stan.org/.</span>
 
 <div id="2015StanReferenceManual-tabs">
   View
@@ -318,7 +318,7 @@ generated quantities {
           <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
-        </section>                
+        </section>
       
 
       <!-- Share links section -->
@@ -360,10 +360,10 @@ generated quantities {
     <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
   
 </section>
-      
+
       <!-- Disqus comments -->
       
-      
+
     </footer>
 
   </article>
@@ -373,12 +373,12 @@ generated quantities {
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="/">Meticulous Disorder</a> &copy; 
-               &bull; All rights reserved.
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
       </section>
-      <section class="poweredby">Made with Jekyll using 
+      <section class="poweredby">Made with Jekyll using
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer> 
+    </footer>
   </body>
 </html>

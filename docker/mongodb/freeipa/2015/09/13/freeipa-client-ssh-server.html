@@ -59,12 +59,12 @@
     </script>
   </head>
 
-  <body class="post-template">
+  <body class="home-template">
 
     <header class="main-header post-head no-cover">
   <nav class="main-nav  clearfix">
     <a class="back-button icon-arrow-left" href="/">Home</a>
-    <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
   </nav>
 </header>
 
@@ -74,10 +74,10 @@
 
     <header class="post-header">
       <h1 class="post-title">A Dockerized Login Server for Docker Services</h1>
-      <section class="post-meta">                
+      <section class="post-meta">
         <time class="post-date" datetime="2015-09-13">13 Sep 2015</time>
-         
-          on docker, mongodb, and freeipa 
+        
+          on Docker, MongoDB, and FreeIPA
         
       </section>
     </header>
@@ -86,14 +86,14 @@
       <a id="blog-logo" href="http://tscholak.github.io">
         
           <span class="blog-title">Meticulous Disorder</span>
-         
+        
       </a>
     </header> -->
-    
+
     <!-- <span class="post-meta">
       <time datetime="2015-09-13">13 Sep 2015</time>
-       
-        on docker, mongodb, and freeipa 
+      
+        on Docker, MongoDB, and FreeIPA
       
     </span> -->
 
@@ -119,15 +119,15 @@
 <p>The image is based on the official <a href="https://hub.docker.com/_/fedora/">Fedora 22 image</a> and also incorporates some pieces from <a href="http://developerblog.redhat.com/2014/05/05/running-systemd-within-docker-container/">here</a>, <a href="https://vpavlin.eu/2015/02/fedora-docker-and-systemd/">there</a>, and <a href="https://github.com/fedora-cloud/Fedora-Dockerfiles/tree/master/systemd/systemd">elsewhere</a> to get systemd to run inside a Docker container.</p>
 
 <p>You can either pull the image from Docker Hub,</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo docker pull tscholak/freeipa-client-ssh-server
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo docker pull tscholak/freeipa-client-ssh-server
 </code></pre></div>
 <p>or pull the sources from GitHub, make changes, and build it yourself:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ git clone https://github.com/tscholak/dockerfiles.git
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ git clone https://github.com/tscholak/dockerfiles.git
 ＄ cd dockerfiles/freeipa-client-ssh-server
 ＄ sudo docker build --rm -t tscholak/freeipa-client-ssh-server .
 </code></pre></div>
 <p>Give the image a try and run a container called <code>fcss</code> from it by executing:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo docker run -d --name=fcss \
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo docker run -d --name=fcss \
   --privileged=false --cap-add SYS_TIME \
   --net=none --hostname=fcss.[YOUR IPA DOMAIN] \
   -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
@@ -144,22 +144,22 @@
 <h3 id="configure-the-physical-network-adapters">Configure the physical network adapters</h3>
 
 <p>I assume you are on Fedora 22 with the NetworkManager service enabled (that would be the case for any standard installation). The primary network interface shall be named <code>em1</code> (typically, the name of a wired network interface in Linux is <code>eth0</code>, so replace <code>em1</code> where appropriate). Start by creating the <code>network</code> directory in <code>/etc/systemd</code>:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo mkdir -p /etc/systemd/network
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo mkdir -p /etc/systemd/network
 </code></pre></div>
 <p>Then, create a bridge device called <code>br0</code>. It will replace Docker&#39;s <code>docker0</code> device. To this end, create a new file <code>/etc/systemd/network/br0.netdev</code> reading</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">[NetDev]
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>[NetDev]
 Name=br0
 Kind=bridge
 </code></pre></div>
 <p>This tells systemd that the new device has the name <code>br0</code> and is an ethernet bridge. Proceed by creating the file <code>/etc/systemd/network/em1.network</code>. Into it, write the following:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">[Match]
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>[Match]
 Name=em1
 
 [Network]
 Bridge=br0
 </code></pre></div>
 <p>That lets systemd attach the physical network interface <code>em1</code> to the bridge device <code>br0</code>. In a sense, <code>br0</code> will replace <code>em1</code>. Therefore, you will need to assign an IP to it. If your physical interface used to have the IP <code>10.0.0.2/24</code> with a default gateway at <code>10.0.0.1</code> and two DNS servers, e.g. at <code>10.0.0.2</code> and at <code>8.8.8.8</code>, then <code>br0</code> would need to be configured in the exact same way. Create the file <code>/etc/systemd/network/br0.network</code> and fill it with:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">[Match]
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>[Match]
 Name=br0
 
 [Network]
@@ -180,24 +180,24 @@ Domains=[YOUR IPA DOMAIN]
 <p><strong>CAUTION! Make sure that you issue the following commands LOCALLY on the server or via iKVM over LAN!</strong> Your machine will at least temporarily lose network connection and, if anything goes wrong, you won&#39;t be able to log in via SSH again.</p>
 
 <p>The critical commands are:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo systemctl disable network
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo systemctl disable network
 ＄ sudo systemctl disable NetworkManager
 ＄ sudo systemctl enable systemd-networkd
 </code></pre></div>
 <p>If there are no errors, the machine should be on-line again with network being managed by systemd-networkd.</p>
 
 <p>One more thing: NetworkManager also manages <code>/etc/resolv.conf</code>. After disabling NetworkManager it is therefore unmanaged. Systemd brings its own caching resolver, though, systemd-resolved. To activate it, issue:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo systemctl enable systemd-resolved
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo systemctl enable systemd-resolved
 ＄ sudo systemctl start systemd-resolved
 ＄ sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 </code></pre></div>
 <p>To make use of the local DNS stub resolver of systemd-resolved, replace <code>dns</code> with <code>resolve</code> in <code>/etc/nsswitch.conf</code>:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">hosts: files resolve myhostname mymachines
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>hosts: files resolve myhostname mymachines
 </code></pre></div>
 <h3 id="check-the-basic-network-configuration">Check the basic network configuration</h3>
 
 <p>Try running</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ networkctl 
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ networkctl 
 IDX LINK             TYPE               OPERATIONAL SETUP     
   1 lo               loopback           carrier     unmanaged 
   2 br0              ether              routable    configured
@@ -216,20 +216,20 @@ IDX LINK             TYPE               OPERATIONAL SETUP
 <h3 id="switching-from-docker0-to-br0">Switching from <code>docker0</code> to <code>br0</code></h3>
 
 <p>You need to tell Docker to use the new bridge <code>br0</code> instead of the legacy interface <code>docker0</code>. For this, the docker daemon needs to be temporarily stopped (running containers will be stopped too!):</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo systemctl stop docker
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo systemctl stop docker
 </code></pre></div>
 <p>Add the following to <code>/etc/sysconfig/docker-network</code>:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">DOCKER_NETWORK_OPTIONS=&#39;-b=br0&#39;
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>DOCKER_NETWORK_OPTIONS=&#39;-b=br0&#39;
 </code></pre></div>
 <p>You can now delete the <code>docker0</code> bridge interface (this is optional):</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo ip link set dev docker0 down
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo ip link set dev docker0 down
 ＄ sudo brctl delbr docker0
 </code></pre></div>
 <p>Note that, if <code>brctl</code> cannot be found, install it with <code>sudo dnf install bridge-utils</code> (read <a href="http://dnf.readthedocs.org/en/latest/cli_vs_yum.html">this</a> if you are unfamiliar with DNF). Next is NAT. I didn&#39;t need it, but <a href="https://www.ibm.com/developerworks/community/blogs/powermeup/entry/Setting_up_a_Docker_Bridge">this article</a> recommends to issue to following <code>iptables</code> command:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo iptables -t nat -F POSTROUTING
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo iptables -t nat -F POSTROUTING
 </code></pre></div>
 <p>In any case, make sure that <code>iptables -t nat -L</code> lists following rule:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">...
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>...
 Chain POSTROUTING (policy ACCEPT)
 target     prot opt source               destination         
 ...
@@ -237,29 +237,29 @@ MASQUERADE  all  --  10.0.0.0/24          anywhere
 ...
 </code></pre></div>
 <p>Once this checks out, you can restart the Docker service and the container:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo systemctl start docker
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo systemctl start docker
 ＄ sudo docker start fcss
 </code></pre></div>
 <h3 id="bringing-up-the-network-in-the-container">Bringing up the network in the container</h3>
 
 <p>The container <code>fcss</code> still hasn&#39;t got any networking. You are almost there, though. First, create a new <code>veth</code> <a href="http://superuser.com/questions/764986/howto-setup-a-veth-virtual-network">virtual interface</a>:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo ip link add veth0 type veth peer name fcss-veth0
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo ip link add veth0 type veth peer name fcss-veth0
 </code></pre></div>
 <p>Then, activate the newly created interface:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo ip link set fcss-veth0 up
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo ip link set fcss-veth0 up
 </code></pre></div>
 <p>Now add the interface to the bridge <code>br0</code>:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo brctl addif br0 fcss-veth0
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo brctl addif br0 fcss-veth0
 </code></pre></div>
 <p>For the next steps, you will need to know the PID of the container <code>fcss</code>. You can get it with:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo docker inspect --format &#39;\{\{.State.Pid\}\}&#39; fcss
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo docker inspect --format &#39;\{\{.State.Pid\}\}&#39; fcss
 31058
 </code></pre></div>
 <p>In this example, the PID is <code>31058</code> (since yours will be most certainly different, don&#39;t forget to make the necessary changes below). Now, move the <code>veth0</code> interface into the container&#39;s name space:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo ip link set netns 31058 dev veth0
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo ip link set netns 31058 dev veth0
 </code></pre></div>
 <p>Since <code>--privileged=false</code>, you cannot modify the network configuration of the container from within. Instead, you have to do this from the outside. This is where the <code>nsenter</code> tool comes in handy (part of the <code>util-linux</code> package). With the following commands, you should be able to activate <code>veth0</code>, set the IP address, and specify the default gateway:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo nsenter -t 31058 --net ip link set veth0 up
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo nsenter -t 31058 --net ip link set veth0 up
 ＄ sudo nsenter -t 31058 --net ip addr add 10.0.0.101/24 dev veth0
 ＄ sudo nsenter -t 31058 --net ip route add default via 10.0.0.1 dev veth0
 </code></pre></div>
@@ -268,13 +268,13 @@ MASQUERADE  all  --  10.0.0.0/24          anywhere
 <h2 id="setting-up-the-container-as-a-freeipa-client">Setting up the container as a FreeIPA client</h2>
 
 <p>Enter the docker container <code>fcss</code> with:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo docker exec -t -i fcss /bin/bash
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo docker exec -t -i fcss /bin/bash
 </code></pre></div>
 <p>Check that you have network access:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text"># curl http://www.google.ca/index.html
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span># curl http://www.google.ca/index.html
 </code></pre></div>
 <p>Now, run the client setup command:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text"># ipa-client-install --unattended \
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span># ipa-client-install --unattended \
   --server=&quot;[YOUR IPA SERVER]&quot; \
   --domain=&quot;[YOUR IPA REALM]&quot; --principal=&quot;admin&quot; \
   --password=&quot;[YOUR IPA ADMIN PASSWORD]&quot; \
@@ -283,22 +283,22 @@ MASQUERADE  all  --  10.0.0.0/24          anywhere
 <p>where <code>[YOUR IPA REALM]</code>, <code>[YOUR IPA SERVER]</code> (e.g., <code>10.0.0.2</code>), and <code>[YOUR IPA ADMIN PASSWORD]</code> need to be replaced by your FreeIPA realm, the IP address of (one of) your FreeIPA directory server(s), and the password to your FreeIPA admin account, respectively.</p>
 
 <p>That&#39;s it. You should now be able to ssh into the container from anywhere in your local network with:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ ssh [IPA USERNAME]@fcss.[YOUR IPA DOMAIN]
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ ssh [IPA USERNAME]@fcss.[YOUR IPA DOMAIN]
 </code></pre></div>
 <p>If it doesn&#39;t work, and if you see</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">System is booting up. See pam_nologin(8)
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>System is booting up. See pam_nologin(8)
 Connection closed by 10.0.0.101
 </code></pre></div>
 <p>instead, delete <code>/run/nologin</code> by running</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ sudo docker exec -t -i fcss rm /run/nologin
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ sudo docker exec -t -i fcss rm /run/nologin
 </code></pre></div>
 <h2 id="ssh-port-forwarding-with-three-hosts">SSH port forwarding with three hosts</h2>
 
 <p>Below I describe quickly how you would use the login server. On the server with the MongoDB instance, run:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ ssh -f -o TCPKeepAlive=no -o ServerAliveInterval=15 -nNT -R 27017:localhost:27017 [IPA USERNAME]@fcss.[YOUR IPA DOMAIN]
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ ssh -f -o TCPKeepAlive=no -o ServerAliveInterval=15 -nNT -R 27017:localhost:27017 [IPA USERNAME]@fcss.[YOUR IPA DOMAIN]
 </code></pre></div>
 <p>This establishes a persistent SSH tunnel. You need to configure your router/firewall to forward incoming outside SSH requests to your WAN IP address (<code>[WAN IP ADDRESS]</code> below) to <code>fcss.[YOUR IPA DOMAIN]:22</code>. Once everything is in place, run on the remote client:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">＄ ssh -f -o TCPKeepAlive=no -o ServerAliveInterval=15 -nNT -L 27017:localhost:27017 [IPA USERNAME]@$[WAN IP ADDRESS]
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>＄ ssh -f -o TCPKeepAlive=no -o ServerAliveInterval=15 -nNT -L 27017:localhost:27017 [IPA USERNAME]@$[WAN IP ADDRESS]
 ＄ mongo localhost:27017
 MongoDB shell version: 3.0.6
 connecting to: localhost:27017/[YOUR DB]
@@ -324,7 +324,7 @@ connecting to: localhost:27017/[YOUR DB]
           <p>
             Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
           </p>
-        </section>                
+        </section>
       
 
       <!-- Share links section -->
@@ -366,10 +366,10 @@ connecting to: localhost:27017/[YOUR DB]
     <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
   
 </section>
-      
+
       <!-- Disqus comments -->
       
-      
+
     </footer>
 
   </article>
@@ -379,12 +379,12 @@ connecting to: localhost:27017/[YOUR DB]
 
     <footer class="site-footer clearfix">
       <section class="copyright">
-        <a href="/">Meticulous Disorder</a> &copy; 
-               &bull; All rights reserved.
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
       </section>
-      <section class="poweredby">Made with Jekyll using 
+      <section class="poweredby">Made with Jekyll using
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
-    </footer> 
+    </footer>
   </body>
 </html>
