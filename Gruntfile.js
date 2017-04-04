@@ -37,10 +37,10 @@ module.exports = function(grunt) {
     },
     exec: {
       jekyll: {
-        cmd: 'jekyll build --trace'
+        cmd: 'jekyll build --trace --incremental'
       },
       jekyll_drafts: {
-        cmd: 'jekyll build --trace --drafts'
+        cmd: 'jekyll build --trace --drafts --incremental'
       }
     },
     watch: {
