@@ -5,119 +5,9 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Sat, 11 Feb 2017 16:18:06 -0500</pubDate>
-    <lastBuildDate>Sat, 11 Feb 2017 16:18:06 -0500</lastBuildDate>
+    <pubDate>Thu, 06 Apr 2017 13:11:45 -0400</pubDate>
+    <lastBuildDate>Thu, 06 Apr 2017 13:11:45 -0400</lastBuildDate>
     <generator>Jekyll v3.4.0</generator>
-    
-      <item>
-        <title>Log-Likelihood Ratio (LLR) in The Context of Recommendations</title>
-        
-          <dc:creator>Torsten Scholak</dc:creator>
-        
-        
-          <description>&lt;p&gt;Looking at all recorded history,
-do the events $A$ and $B$ co-occur more often than chance would suggest?&lt;/p&gt;
-
-&lt;p&gt;If the events $A$ and $B$ occur independently, then
-\begin{align}
-  p(a, b) = p(a) p(b)
-\end{align}
-where $a \in \{A, \not A\}$, $b \in \{B, \not B\}$.&lt;/p&gt;
-
-&lt;p&gt;Furthermore,
-\begin{align}
-  p(a|B) = \frac{p(a, B)}{p(B)} = p(a) = \frac{p(a, \not B)}{p(\not B)} = p(a|\not B)
-\end{align}&lt;/p&gt;
-</description>
-        
-        <pubDate>Tue, 31 Jan 2017 23:00:00 -0500</pubDate>
-        <link>http://tscholak.github.io//recommendations/2017/01/31/llr.html</link>
-        <guid isPermaLink="true">http://tscholak.github.io//recommendations/2017/01/31/llr.html</guid>
-        
-        
-          <category>recommendations</category>
-        
-      </item>
-    
-      <item>
-        <title>Test</title>
-        
-          <dc:creator>Torsten Scholak</dc:creator>
-        
-        
-          <description>&lt;h1 id=&quot;literature&quot;&gt;Literature&lt;/h1&gt;
-
-&lt;p&gt;This is a preliminary list of articles and books with necessary background information. Annotations and summaries will follow where necessary.&lt;/p&gt;
-
-&lt;h2 id=&quot;where-to-start-reading&quot;&gt;Where To Start Reading?&lt;/h2&gt;
-
-&lt;p&gt;I recommend starting with &lt;a href=&quot;#BPMF&quot;&gt;Russ Salakhutdinov&amp;#39;s article&lt;/a&gt; about Bayesian probabilistic matrix factorization. &lt;a href=&quot;#COBAFI&quot;&gt;Alex Beutel&amp;#39;s article&lt;/a&gt; should be next. The issue of side information should be postponed since it adds further complications.&lt;/p&gt;
-
-&lt;p&gt;Most of &lt;code&gt;imm&lt;/code&gt;&amp;#39;s code is based on the approach described in &lt;a href=&quot;#DPGMM&quot;&gt;Dilan Görür&amp;#39;s article&lt;/a&gt;. The inference algorithms used by the &lt;code&gt;imm&lt;/code&gt; package are introduced and explained in the five articles in the section &lt;a href=&quot;#Algorithms&quot;&gt;&amp;quot;Bayesian Inference Algorithms&amp;quot;&lt;/a&gt;. Perhaps most interesting is the &lt;a href=&quot;#MapReduce&quot;&gt;last article&lt;/a&gt; in that section: Ge et al. describe a distributed approach to inference for Dirichlet process mixture models.&lt;/p&gt;
-
-&lt;h2 id=&quot;papers&quot;&gt;Papers&lt;/h2&gt;
-
-&lt;h3 id=&quot;recommender-systems-based-on-matrix-factorization&quot;&gt;Recommender Systems Based On Matrix Factorization&lt;/h3&gt;
-
-&lt;h4 id=&quot;without-side-information&quot;&gt;Without Side Information&lt;/h4&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;&lt;a name=&quot;BPMF&quot;&gt;&lt;/a&gt;Salakhutdinov, Ruslan, and Andriy Mnih, 2008, &amp;quot;Bayesian Probabilistic Matrix Factorization Using Markov Chain Monte Carlo,&amp;quot; in In ICML ’08: Proceedings Of the 25th International Conference on Machine Learning. &lt;a href=&quot;https://doi.org/10.1145/1390156.1390267&quot;&gt;doi:10.1145/1390156.1390267&lt;/a&gt;. Available at: &lt;a href=&quot;https://www.cs.toronto.edu/%7Eamnih/papers/bpmf.pdf&quot;&gt;https://www.cs.toronto.edu/~amnih/papers/bpmf.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Sutskever Ilya, Ruslan Salakhutdinov, and Joshua B. Tenenbaum, 2009, &amp;quot;Modelling relational data using Bayesian clustered tensor factorization,&amp;quot; in Advances In Neural Information Processing Systems 22, edited by Y. Bengio, D. Schuurmans, J. D. Lafferty, C. K. I. Williams, and A. Culotta (Curran Associates, Inc.), pp. 1821–1828. Available at: &lt;a href=&quot;http://papers.nips.cc/paper/3863-modelling-relational-data-using-bayesian-clustered-tensor-factorization.pdf&quot;&gt;http://papers.nips.cc/paper/3863-modelling-relational-data-using-bayesian-clustered-tensor-factorization.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;a name=&quot;COBAFI&quot;&gt;&lt;/a&gt;Beutel, Alex, Kenton Murray, Christos Faloutsos, and Alexander J. Smola, 2014, &amp;quot;CoBaFi: Collaborative Bayesian Filtering,&amp;quot; in Proceedings Of the 23rd International Conference on World Wide Web. WWW ’14 (ACM, New York, NY, USA), pp. 97–108. &lt;a href=&quot;https://doi.org/10.1145/2566486.2568040&quot;&gt;doi:10.1145/2566486.2568040&lt;/a&gt;. Available at: &lt;a href=&quot;http://alexbeutel.com/papers/www2014.cobafi.pdf&quot;&gt;http://alexbeutel.com/papers/www2014.cobafi.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h4 id=&quot;with-side-information&quot;&gt;With Side Information&lt;/h4&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;Porteous, Ian, Arthur U. Asuncion, and Max Welling, 2010, &amp;quot;Bayesian Matrix Factorization With Side Information and Dirichlet Process Mixtures.,&amp;quot; in AAAI, edited by Maria Fox and David Poole (AAAI Press). Available at: &lt;a href=&quot;http://www.aaai.org/ocs/index.php/AAAI/AAAI10/paper/view/1871/2039&quot;&gt;http://www.aaai.org/ocs/index.php/AAAI/AAAI10/paper/view/1871/2039&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Park, Sunho, Yong-Deok Kim, and Seungjin Choi, 2013, &amp;quot;Hierarchical Bayesian Matrix Factorization With Side Information,&amp;quot; in Proceedings Of the Twenty-Third International Joint Conference on Artificial Intelligence. IJCAI ’13 (AAAI Press), pp. 1593–1599. Available at: &lt;a href=&quot;http://mlg.postech.ac.kr/%7Eseungjin/publications/ijcai13_ParkSH.pdf&quot;&gt;http://mlg.postech.ac.kr/~seungjin/publications/ijcai13_ParkSH.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Kim, Yong-Deok, and Seungjin Choi, 2014, &amp;quot;Scalable Variational Bayesian Matrix Factorization With Side Information,&amp;quot; in Proceedings Of the Seventeenth International Conference on Artificial Intelligence and Statistics, pp. 493–502. Available at: &lt;a href=&quot;http://jmlr.org/proceedings/papers/v33/kim14b.pdf&quot;&gt;http://jmlr.org/proceedings/papers/v33/kim14b.pdf&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Wang, Hao, Naiyan Wang, and Dit-Yan Yeung, 2015, &amp;quot;Collaborative Deep Learning For Recommender Systems,&amp;quot; in Proceedings Of the 21th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. KDD ’15 (ACM, New York, NY, USA), pp. 1235–1244. &lt;a href=&quot;https://doi.org/10.1145/2783258.2783273&quot;&gt;doi:10.1145/2783258.2783273&lt;/a&gt;. Preprint available at: &lt;a href=&quot;http://arxiv.org/pdf/1409.2944.pdf&quot;&gt;http://arxiv.org/pdf/1409.2944.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Li, Sheng, Jaya Kawale, and Yun Fu, 2015, &amp;quot;Deep Collaborative Filtering Via Marginalized Denoising Auto-Encoder,&amp;quot; in Proceedings Of the 24th ACM International on Conference on Information and Knowledge Management. CIKM ’15 (ACM, New York, NY, USA), pp. 811–820. &lt;a href=&quot;https://doi.org/10.1145/2806416.2806527&quot;&gt;doi:10.1145/2806416.2806527&lt;/a&gt;. Preprint available at: &lt;a href=&quot;http://arxiv.org/pdf/1409.2944v2.pdf&quot;&gt;http://arxiv.org/pdf/1409.2944v2.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;applied-bayesian-statistics&quot;&gt;Applied Bayesian Statistics&lt;/h3&gt;
-
-&lt;h4 id=&quot;nonparametric-bayesian-statistics&quot;&gt;Nonparametric Bayesian Statistics&lt;/h4&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;Rasmussen, Carl Edward, 2000, &amp;quot;The Infinite Gaussian Mixture Model,&amp;quot; in Advances In Neural Information Processing Systems, pp. 554–560. Available at: &lt;a href=&quot;https://www.seas.harvard.edu/courses/cs281/papers/rasmussen-1999a.pdf&quot;&gt;https://www.seas.harvard.edu/courses/cs281/papers/rasmussen-1999a.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;a name=&quot;DPGMM&quot;&gt;&lt;/a&gt;Görür, Dilan, and Carl Edward Rasmussen, 2010, &amp;quot;Dirichlet Process Gaussian Mixture Models: Choice Of the Base Distribution,&amp;quot; Journal of Computer Science and Technology. &lt;a href=&quot;https://doi.org/10.1007/s11390-010-9355-8&quot;&gt;doi:10.1007/s11390-010-9355-8&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Miller, Jeffrey W, and Matthew T Harrison, 2015, &amp;quot;Mixture Models with a Prior on the Number of Components,&amp;quot; arXiv preprint arXiv:1502.06241. Preprint available at: &lt;a href=&quot;http://www2.stat.duke.edu/%7Ejwm40/publications/MFM.pdf&quot;&gt;http://www2.stat.duke.edu/~jwm40/publications/MFM.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;bayesian-inference-algorithms&quot;&gt;&lt;a name=&quot;Algorithms&quot;&gt;&lt;/a&gt;Bayesian Inference Algorithms&lt;/h3&gt;
-
-&lt;h4 id=&quot;mcmc&quot;&gt;MCMC&lt;/h4&gt;
-
-&lt;ol&gt;
-&lt;li&gt;Neal, Radford M., 2000, &amp;quot;Markov Chain Sampling Methods for Dirichlet Process Mixture Models,&amp;quot; Journal of Computational and Graphical Statistics 9, pp. 249–265. &lt;a href=&quot;https://doi.org/10.2307/1390653&quot;&gt;doi:10.2307/1390653&lt;/a&gt;. Preprint available at: &lt;a href=&quot;http://www.cs.toronto.edu/%7Eradford/ftp/mixmc.pdf&quot;&gt;http://www.cs.toronto.edu/~radford/ftp/mixmc.pdf&lt;/a&gt;.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h4 id=&quot;split-and-merge&quot;&gt;Split And Merge&lt;/h4&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;Jain, Sonia, and Radford M. Neal, 2004, &amp;quot;A Split-Merge Markov Chain Monte Carlo Procedure for the Dirichlet Process Mixture Model,&amp;quot; J. Comput. Graph. Statist. 13, pp. 158–182. &lt;a href=&quot;https://doi.org/10.1198/1061860043001&quot;&gt;doi:10.1198/1061860043001&lt;/a&gt;. Available at: &lt;a href=&quot;http://www.cs.toronto.edu/%7Eradford/ftp/mixsplit.pdf&quot;&gt;http://www.cs.toronto.edu/~radford/ftp/mixsplit.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Dahl, David B., 2003, &amp;quot;An Improved Merge-Split Sampler for Conjugate Dirichlet Process Mixture Models.&amp;quot; Technical Report 1086 (Department of Statistics, University of Wisconsin). Available at: &lt;a href=&quot;http://www.stat.wisc.edu/techreports/tr1086.pdf&quot;&gt;http://www.stat.wisc.edu/techreports/tr1086.pdf&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Jain, Sonia, and Radford M. Neal, 2007, &amp;quot;Splitting And Merging Components of a Nonconjugate Dirichlet Process Mixture Model,&amp;quot; Bayesian Anal. 2 (International Society for Bayesian Analysis), pp. 445–472. &lt;a href=&quot;https://doi.org/10.1214/07-BA219&quot;&gt;doi:10.1214/07-BA219&lt;/a&gt;. Available at: &lt;a href=&quot;http://www.cs.toronto.edu/%7Eradford/ftp/mixsplit2.pdf&quot;&gt;http://www.cs.toronto.edu/~radford/ftp/mixsplit2.pdf&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h4 id=&quot;distributed-slice-sampling&quot;&gt;Distributed Slice Sampling&lt;/h4&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;a name=&quot;MapReduce&quot;&gt;&lt;/a&gt;Ge, Hong, Yutian Chen, Moquan Wan, and Zoubin Ghahramani, 2015, &amp;quot;Distributed Inference For Dirichlet Process Mixture Models,&amp;quot; in Proceedings Of the 32nd International Conference on Machine Learning. Vol. 37. JMLR Proceedings (JMLR.org), pp. 2276–2284. Available at: &lt;a href=&quot;http://jmlr.org/proceedings/papers/v37/gea15.pdf&quot;&gt;http://jmlr.org/proceedings/papers/v37/gea15.pdf&lt;/a&gt;.&lt;/li&gt;
-&lt;/ol&gt;
-</description>
-        
-        <pubDate>Wed, 24 Feb 2016 01:30:00 -0500</pubDate>
-        <link>http://tscholak.github.io//bayesianism/2016/02/24/test.html</link>
-        <guid isPermaLink="true">http://tscholak.github.io//bayesianism/2016/02/24/test.html</guid>
-        
-        
-          <category>Bayesianism</category>
-        
-      </item>
     
       <item>
         <title>Chipgate</title>
@@ -138,43 +28,6 @@ where $a \in \{A, \not A\}$, $b \in \{B, \not B\}$.&lt;/p&gt;
           <category>Apple</category>
         
           <category>Chipgate</category>
-        
-      </item>
-    
-      <item>
-        <title>Collaborative Bayesian Filtering</title>
-        
-          <dc:creator>Torsten Scholak</dc:creator>
-        
-        
-          <description>&lt;p&gt;I recently found this paper: Beutel et al. &lt;a href=&quot;#Beutel2014CoBaFi&quot;&gt;(2014)&lt;/a&gt;.
-Want to reproduce the model and the results.&lt;/p&gt;
-</description>
-        
-        <pubDate>Thu, 01 Oct 2015 02:30:00 -0400</pubDate>
-        <link>http://tscholak.github.io//bayesianism/2015/10/01/collaborative-Bayesian-filtering.html</link>
-        <guid isPermaLink="true">http://tscholak.github.io//bayesianism/2015/10/01/collaborative-Bayesian-filtering.html</guid>
-        
-        
-          <category>Bayesianism</category>
-        
-      </item>
-    
-      <item>
-        <title>Bayesian Hierarchical Modeling</title>
-        
-          <dc:creator>Torsten Scholak</dc:creator>
-        
-        
-          <description>&lt;p&gt;Bayesian Inference&lt;/p&gt;
-</description>
-        
-        <pubDate>Sun, 27 Sep 2015 02:30:00 -0400</pubDate>
-        <link>http://tscholak.github.io//bayesianism/2015/09/27/Bayesian-hierarchical-modeling.html</link>
-        <guid isPermaLink="true">http://tscholak.github.io//bayesianism/2015/09/27/Bayesian-hierarchical-modeling.html</guid>
-        
-        
-          <category>Bayesianism</category>
         
       </item>
     
@@ -303,6 +156,86 @@ Want to reproduce the model and the results.&lt;/p&gt;
           <category>community detection</category>
         
           <category>market segmentation</category>
+        
+      </item>
+    
+      <item>
+        <title>Unfold with unfoldr</title>
+        
+          <dc:creator>Torsten Scholak</dc:creator>
+        
+        
+          <description>&lt;p&gt;unfoldr is the second program of my complex systems software suite that I open-source. (&lt;a href=&quot;/code/big%20data/2015/03/07/histogramr.html&quot;&gt;histogramr&lt;/a&gt; was the first one.) For those of you who study the spectral features of complex systems such as random networks I think unfoldr will prove quite useful. Given the eigenvalues of an ensemble of random matrices, unfoldr calculates the nearest-neighbor level spacings of the unfolded spectrum, either as a whole or for &lt;em&gt;slices&lt;/em&gt; of it. You can specify how you want to cut the spectrum into slices — linearly, logarithmically —, and unfoldr will calculate the level spacings for each slice individually. With this you can study how the level spacing statistics change with energy and whether or not there is a phase transition in the spectrum. &lt;/p&gt;
+</description>
+        
+        <pubDate>Tue, 05 May 2015 20:00:00 -0400</pubDate>
+        <link>http://tscholak.github.io//code/physics/2015/05/05/unfoldr.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//code/physics/2015/05/05/unfoldr.html</guid>
+        
+        
+          <category>code</category>
+        
+          <category>physics</category>
+        
+      </item>
+    
+      <item>
+        <title>Meet histogramr</title>
+        
+          <dc:creator>Torsten Scholak</dc:creator>
+        
+        
+          <description>&lt;p&gt;histogramr is a piece of software that produces multivariate histograms from numerical data. I started working on histogramr during my PhD and have been using and improving it ever since. It has been instrumental in many of my scientific achievements &lt;a href=&quot;#scholak2010transport&quot;&gt;(Scholak et al. 2010; Scholak et al. 2011; Scholak, Wellens, and Buchleitner 2011; Scholak, Wellens, and Buchleitner 2011; Scholak et al. 2011; Zech et al. 2013; Scholak, Wellens, and Buchleitner 2014)&lt;/a&gt;, because it has allowed for the statistical analysis of extremely large scientific data sets. &lt;/p&gt;
+</description>
+        
+        <pubDate>Sat, 07 Mar 2015 19:00:00 -0500</pubDate>
+        <link>http://tscholak.github.io//code/big%20data/2015/03/07/histogramr.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//code/big%20data/2015/03/07/histogramr.html</guid>
+        
+        
+          <category>code</category>
+        
+          <category>big data</category>
+        
+      </item>
+    
+      <item>
+        <title>Jekyll and GitHub Pages</title>
+        
+          <dc:creator>Torsten Scholak</dc:creator>
+        
+        
+          <description>&lt;p&gt;By the time you read this, I will have tossed my old obsolete &lt;a href=&quot;wordpress&quot;&gt;Wordpress website&lt;/a&gt; in favor of this one, a modern &lt;a href=&quot;jekyll&quot;&gt;Jekyll&lt;/a&gt; powered &lt;a href=&quot;github&quot;&gt;GitHub&lt;/a&gt; page. I have started from scratch. The old site didn&amp;#39;t have enough content worth rescuing. Unfortunately, I never found the ambition or the time to write blog posts. Of course, this is going to change now. &lt;/p&gt;
+</description>
+        
+        <pubDate>Fri, 06 Mar 2015 19:00:00 -0500</pubDate>
+        <link>http://tscholak.github.io//update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//update/guide/jekyll/2015/03/06/jekyll-and-github-pages.html</guid>
+        
+        
+          <category>update</category>
+        
+          <category>guide</category>
+        
+          <category>jekyll</category>
+        
+      </item>
+    
+      <item>
+        <title>Finding the right fonts</title>
+        
+          <dc:creator>Torsten Scholak</dc:creator>
+        
+        
+          <description>&lt;p&gt;Kasper, the theme that I am using for this web site, comes with three fonts: &lt;a href=&quot;http://www.google.com/fonts/specimen/Open+Sans&quot;&gt;Open Sans&lt;/a&gt;, &lt;a href=&quot;http://www.google.com/fonts/specimen/Merriweather&quot;&gt;Merriweather&lt;/a&gt;, and &lt;a href=&quot;https://www.google.com/fonts/specimen/Inconsolata&quot;&gt;Inconsolata&lt;/a&gt;. I did not like these very much, so I set out to find suitable replacements. &lt;/p&gt;
+</description>
+        
+        <pubDate>Sun, 01 Mar 2015 19:00:00 -0500</pubDate>
+        <link>http://tscholak.github.io//update/2015/03/01/finding-the-right-fonts.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//update/2015/03/01/finding-the-right-fonts.html</guid>
+        
+        
+          <category>update</category>
         
       </item>
     
