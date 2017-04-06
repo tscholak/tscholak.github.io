@@ -58,7 +58,7 @@ module.exports = function(grunt) {
           '*.md',
           'feed.xml'
         ],
-        tasks: ['exec:jekyll_drafts'],      
+        tasks: ['exec:jekyll_drafts'],
         options: {
           livereload: true
         }
