@@ -109,134 +109,10 @@
   <div class="extra-pagination inner">
     <nav class="pagination" role="pagination">
     
-    <span class="page-number"> Page 1 of 2 </span>
-     
-        <a class="older-posts" href="/page2/" title="Next Page">Older Posts &raquo;</a>
+    <span class="page-number"> Page 1 of 1 </span>
      
 </nav>
   </div>
-
-  
-
-  <article class="post">
-    <header class="post-header">
-      <h2 class="post-title"><a href="/recommendations/2017/01/31/llr.html">Log-Likelihood Ratio (LLR) in The Context of Recommendations</a></h2>
-    </header>
-    <section class="post-excerpt">
-      <p>Looking at all recorded history,
-do the events $A$ and $B$ co-occur more often than chance would suggest?</p>
-
-<p>If the events $A$ and $B$ occur independently, then
-\begin{align}
-  p(a, b) = p(a) p(b)
-\end{align}
-where $a \in \{A, \not A\}$, $b \in \{B, \not B\}$.</p>
-
-<p>Furthermore,
-\begin{align}
-  p(a|B) = \frac{p(a, B)}{p(B)} = p(a) = \frac{p(a, \not B)}{p(\not B)} = p(a|\not B)
-\end{align}</p>
- <a class="read-more" href="/recommendations/2017/01/31/llr.html">&raquo;</a>
-    </section>
-    <footer class="post-meta">
-      
-        <img class="author-thumb" src="/assets/images/profile.png" alt="that's me" nopin="nopin" />
-        Torsten Scholak
-      
-       
-        on recommendations 
-      
-      <time class="post-date" datetime="2017-01-31">
-        31 Jan 2017
-      </time> 
-    </footer>
-  </article>
-
-  
-
-  <article class="post">
-    <header class="post-header">
-      <h2 class="post-title"><a href="/bayesianism/2016/02/24/test.html">Test</a></h2>
-    </header>
-    <section class="post-excerpt">
-      <h1 id="literature">Literature</h1>
-
-<p>This is a preliminary list of articles and books with necessary background information. Annotations and summaries will follow where necessary.</p>
-
-<h2 id="where-to-start-reading">Where To Start Reading?</h2>
-
-<p>I recommend starting with <a href="#BPMF">Russ Salakhutdinov&#39;s article</a> about Bayesian probabilistic matrix factorization. <a href="#COBAFI">Alex Beutel&#39;s article</a> should be next. The issue of side information should be postponed since it adds further complications.</p>
-
-<p>Most of <code>imm</code>&#39;s code is based on the approach described in <a href="#DPGMM">Dilan Görür&#39;s article</a>. The inference algorithms used by the <code>imm</code> package are introduced and explained in the five articles in the section <a href="#Algorithms">&quot;Bayesian Inference Algorithms&quot;</a>. Perhaps most interesting is the <a href="#MapReduce">last article</a> in that section: Ge et al. describe a distributed approach to inference for Dirichlet process mixture models.</p>
-
-<h2 id="papers">Papers</h2>
-
-<h3 id="recommender-systems-based-on-matrix-factorization">Recommender Systems Based On Matrix Factorization</h3>
-
-<h4 id="without-side-information">Without Side Information</h4>
-
-<ol>
-<li><p><a name="BPMF"></a>Salakhutdinov, Ruslan, and Andriy Mnih, 2008, &quot;Bayesian Probabilistic Matrix Factorization Using Markov Chain Monte Carlo,&quot; in In ICML ’08: Proceedings Of the 25th International Conference on Machine Learning. <a href="https://doi.org/10.1145/1390156.1390267">doi:10.1145/1390156.1390267</a>. Available at: <a href="https://www.cs.toronto.edu/%7Eamnih/papers/bpmf.pdf">https://www.cs.toronto.edu/~amnih/papers/bpmf.pdf</a>.</p></li>
-<li><p>Sutskever Ilya, Ruslan Salakhutdinov, and Joshua B. Tenenbaum, 2009, &quot;Modelling relational data using Bayesian clustered tensor factorization,&quot; in Advances In Neural Information Processing Systems 22, edited by Y. Bengio, D. Schuurmans, J. D. Lafferty, C. K. I. Williams, and A. Culotta (Curran Associates, Inc.), pp. 1821–1828. Available at: <a href="http://papers.nips.cc/paper/3863-modelling-relational-data-using-bayesian-clustered-tensor-factorization.pdf">http://papers.nips.cc/paper/3863-modelling-relational-data-using-bayesian-clustered-tensor-factorization.pdf</a>.</p></li>
-<li><p><a name="COBAFI"></a>Beutel, Alex, Kenton Murray, Christos Faloutsos, and Alexander J. Smola, 2014, &quot;CoBaFi: Collaborative Bayesian Filtering,&quot; in Proceedings Of the 23rd International Conference on World Wide Web. WWW ’14 (ACM, New York, NY, USA), pp. 97–108. <a href="https://doi.org/10.1145/2566486.2568040">doi:10.1145/2566486.2568040</a>. Available at: <a href="http://alexbeutel.com/papers/www2014.cobafi.pdf">http://alexbeutel.com/papers/www2014.cobafi.pdf</a>.</p></li>
-</ol>
-
-<h4 id="with-side-information">With Side Information</h4>
-
-<ol>
-<li><p>Porteous, Ian, Arthur U. Asuncion, and Max Welling, 2010, &quot;Bayesian Matrix Factorization With Side Information and Dirichlet Process Mixtures.,&quot; in AAAI, edited by Maria Fox and David Poole (AAAI Press). Available at: <a href="http://www.aaai.org/ocs/index.php/AAAI/AAAI10/paper/view/1871/2039">http://www.aaai.org/ocs/index.php/AAAI/AAAI10/paper/view/1871/2039</a>.</p></li>
-<li><p>Park, Sunho, Yong-Deok Kim, and Seungjin Choi, 2013, &quot;Hierarchical Bayesian Matrix Factorization With Side Information,&quot; in Proceedings Of the Twenty-Third International Joint Conference on Artificial Intelligence. IJCAI ’13 (AAAI Press), pp. 1593–1599. Available at: <a href="http://mlg.postech.ac.kr/%7Eseungjin/publications/ijcai13_ParkSH.pdf">http://mlg.postech.ac.kr/~seungjin/publications/ijcai13_ParkSH.pdf</a>.</p></li>
-<li><p>Kim, Yong-Deok, and Seungjin Choi, 2014, &quot;Scalable Variational Bayesian Matrix Factorization With Side Information,&quot; in Proceedings Of the Seventeenth International Conference on Artificial Intelligence and Statistics, pp. 493–502. Available at: <a href="http://jmlr.org/proceedings/papers/v33/kim14b.pdf">http://jmlr.org/proceedings/papers/v33/kim14b.pdf</a></p></li>
-<li><p>Wang, Hao, Naiyan Wang, and Dit-Yan Yeung, 2015, &quot;Collaborative Deep Learning For Recommender Systems,&quot; in Proceedings Of the 21th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. KDD ’15 (ACM, New York, NY, USA), pp. 1235–1244. <a href="https://doi.org/10.1145/2783258.2783273">doi:10.1145/2783258.2783273</a>. Preprint available at: <a href="http://arxiv.org/pdf/1409.2944.pdf">http://arxiv.org/pdf/1409.2944.pdf</a>.</p></li>
-<li><p>Li, Sheng, Jaya Kawale, and Yun Fu, 2015, &quot;Deep Collaborative Filtering Via Marginalized Denoising Auto-Encoder,&quot; in Proceedings Of the 24th ACM International on Conference on Information and Knowledge Management. CIKM ’15 (ACM, New York, NY, USA), pp. 811–820. <a href="https://doi.org/10.1145/2806416.2806527">doi:10.1145/2806416.2806527</a>. Preprint available at: <a href="http://arxiv.org/pdf/1409.2944v2.pdf">http://arxiv.org/pdf/1409.2944v2.pdf</a>.</p></li>
-</ol>
-
-<h3 id="applied-bayesian-statistics">Applied Bayesian Statistics</h3>
-
-<h4 id="nonparametric-bayesian-statistics">Nonparametric Bayesian Statistics</h4>
-
-<ol>
-<li><p>Rasmussen, Carl Edward, 2000, &quot;The Infinite Gaussian Mixture Model,&quot; in Advances In Neural Information Processing Systems, pp. 554–560. Available at: <a href="https://www.seas.harvard.edu/courses/cs281/papers/rasmussen-1999a.pdf">https://www.seas.harvard.edu/courses/cs281/papers/rasmussen-1999a.pdf</a>.</p></li>
-<li><p><a name="DPGMM"></a>Görür, Dilan, and Carl Edward Rasmussen, 2010, &quot;Dirichlet Process Gaussian Mixture Models: Choice Of the Base Distribution,&quot; Journal of Computer Science and Technology. <a href="https://doi.org/10.1007/s11390-010-9355-8">doi:10.1007/s11390-010-9355-8</a>.</p></li>
-<li><p>Miller, Jeffrey W, and Matthew T Harrison, 2015, &quot;Mixture Models with a Prior on the Number of Components,&quot; arXiv preprint arXiv:1502.06241. Preprint available at: <a href="http://www2.stat.duke.edu/%7Ejwm40/publications/MFM.pdf">http://www2.stat.duke.edu/~jwm40/publications/MFM.pdf</a>.</p></li>
-</ol>
-
-<h3 id="bayesian-inference-algorithms"><a name="Algorithms"></a>Bayesian Inference Algorithms</h3>
-
-<h4 id="mcmc">MCMC</h4>
-
-<ol>
-<li>Neal, Radford M., 2000, &quot;Markov Chain Sampling Methods for Dirichlet Process Mixture Models,&quot; Journal of Computational and Graphical Statistics 9, pp. 249–265. <a href="https://doi.org/10.2307/1390653">doi:10.2307/1390653</a>. Preprint available at: <a href="http://www.cs.toronto.edu/%7Eradford/ftp/mixmc.pdf">http://www.cs.toronto.edu/~radford/ftp/mixmc.pdf</a>.</li>
-</ol>
-
-<h4 id="split-and-merge">Split And Merge</h4>
-
-<ol>
-<li><p>Jain, Sonia, and Radford M. Neal, 2004, &quot;A Split-Merge Markov Chain Monte Carlo Procedure for the Dirichlet Process Mixture Model,&quot; J. Comput. Graph. Statist. 13, pp. 158–182. <a href="https://doi.org/10.1198/1061860043001">doi:10.1198/1061860043001</a>. Available at: <a href="http://www.cs.toronto.edu/%7Eradford/ftp/mixsplit.pdf">http://www.cs.toronto.edu/~radford/ftp/mixsplit.pdf</a>.</p></li>
-<li><p>Dahl, David B., 2003, &quot;An Improved Merge-Split Sampler for Conjugate Dirichlet Process Mixture Models.&quot; Technical Report 1086 (Department of Statistics, University of Wisconsin). Available at: <a href="http://www.stat.wisc.edu/techreports/tr1086.pdf">http://www.stat.wisc.edu/techreports/tr1086.pdf</a></p></li>
-<li><p>Jain, Sonia, and Radford M. Neal, 2007, &quot;Splitting And Merging Components of a Nonconjugate Dirichlet Process Mixture Model,&quot; Bayesian Anal. 2 (International Society for Bayesian Analysis), pp. 445–472. <a href="https://doi.org/10.1214/07-BA219">doi:10.1214/07-BA219</a>. Available at: <a href="http://www.cs.toronto.edu/%7Eradford/ftp/mixsplit2.pdf">http://www.cs.toronto.edu/~radford/ftp/mixsplit2.pdf</a>.</p></li>
-</ol>
-
-<h4 id="distributed-slice-sampling">Distributed Slice Sampling</h4>
-
-<ol>
-<li><a name="MapReduce"></a>Ge, Hong, Yutian Chen, Moquan Wan, and Zoubin Ghahramani, 2015, &quot;Distributed Inference For Dirichlet Process Mixture Models,&quot; in Proceedings Of the 32nd International Conference on Machine Learning. Vol. 37. JMLR Proceedings (JMLR.org), pp. 2276–2284. Available at: <a href="http://jmlr.org/proceedings/papers/v37/gea15.pdf">http://jmlr.org/proceedings/papers/v37/gea15.pdf</a>.</li>
-</ol>
- <a class="read-more" href="/bayesianism/2016/02/24/test.html">&raquo;</a>
-    </section>
-    <footer class="post-meta">
-      
-        <img class="author-thumb" src="/assets/images/profile.png" alt="that's me" nopin="nopin" />
-        Torsten Scholak
-      
-       
-        on Bayesianism 
-      
-      <time class="post-date" datetime="2016-02-24">
-        24 Feb 2016
-      </time> 
-    </footer>
-  </article>
 
   
 
@@ -258,55 +134,6 @@ where $a \in \{A, \not A\}$, $b \in \{B, \not B\}$.</p>
       
       <time class="post-date" datetime="2015-10-14">
         14 Oct 2015
-      </time> 
-    </footer>
-  </article>
-
-  
-
-  <article class="post">
-    <header class="post-header">
-      <h2 class="post-title"><a href="/bayesianism/2015/10/01/collaborative-Bayesian-filtering.html">Collaborative Bayesian Filtering</a></h2>
-    </header>
-    <section class="post-excerpt">
-      <p>I recently found this paper: Beutel et al. <a href="#Beutel2014CoBaFi">(2014)</a>.
-Want to reproduce the model and the results.</p>
- <a class="read-more" href="/bayesianism/2015/10/01/collaborative-Bayesian-filtering.html">&raquo;</a>
-    </section>
-    <footer class="post-meta">
-      
-        <img class="author-thumb" src="/assets/images/profile.png" alt="that's me" nopin="nopin" />
-        Torsten Scholak
-      
-       
-        on Bayesianism 
-      
-      <time class="post-date" datetime="2015-10-01">
-        01 Oct 2015
-      </time> 
-    </footer>
-  </article>
-
-  
-
-  <article class="post">
-    <header class="post-header">
-      <h2 class="post-title"><a href="/bayesianism/2015/09/27/Bayesian-hierarchical-modeling.html">Bayesian Hierarchical Modeling</a></h2>
-    </header>
-    <section class="post-excerpt">
-      <p>Bayesian Inference</p>
- <a class="read-more" href="/bayesianism/2015/09/27/Bayesian-hierarchical-modeling.html">&raquo;</a>
-    </section>
-    <footer class="post-meta">
-      
-        <img class="author-thumb" src="/assets/images/profile.png" alt="that's me" nopin="nopin" />
-        Torsten Scholak
-      
-       
-        on Bayesianism 
-      
-      <time class="post-date" datetime="2015-09-27">
-        27 Sep 2015
       </time> 
     </footer>
   </article>
@@ -519,30 +346,6 @@ Want to reproduce the model and the results.</p>
 
   <article class="post">
     <header class="post-header">
-      <h2 class="post-title"><a href="/physics/rant/2015/03/04/quantum-goldilocks.html">Quantum Goldilocks</a></h2>
-    </header>
-    <section class="post-excerpt">
-      <p>Talk about Quantum Goldilocks.</p>
- <a class="read-more" href="/physics/rant/2015/03/04/quantum-goldilocks.html">&raquo;</a>
-    </section>
-    <footer class="post-meta">
-      
-        <img class="author-thumb" src="/assets/images/profile.png" alt="that's me" nopin="nopin" />
-        Torsten Scholak
-      
-       
-        on physics and rant 
-      
-      <time class="post-date" datetime="2015-03-04">
-        04 Mar 2015
-      </time> 
-    </footer>
-  </article>
-
-  
-
-  <article class="post">
-    <header class="post-header">
       <h2 class="post-title"><a href="/update/2015/03/01/finding-the-right-fonts.html">Finding the right fonts</a></h2>
     </header>
     <section class="post-excerpt">
@@ -565,11 +368,33 @@ Want to reproduce the model and the results.</p>
 
   
 
+  <article class="post">
+    <header class="post-header">
+      <h2 class="post-title"><a href="/update/2015/02/28/new-blog.html">New blog!</a></h2>
+    </header>
+    <section class="post-excerpt">
+      <p>So much still to do, so little to share (at this point). But that will change soon.</p>
+ <a class="read-more" href="/update/2015/02/28/new-blog.html">&raquo;</a>
+    </section>
+    <footer class="post-meta">
+      
+        <img class="author-thumb" src="/assets/images/profile.png" alt="that's me" nopin="nopin" />
+        Torsten Scholak
+      
+       
+        on update 
+      
+      <time class="post-date" datetime="2015-02-28">
+        28 Feb 2015
+      </time> 
+    </footer>
+  </article>
+
+  
+
   <nav class="pagination" role="pagination">
     
-    <span class="page-number"> Page 1 of 2 </span>
-     
-        <a class="older-posts" href="/page2/" title="Next Page">Older Posts &raquo;</a>
+    <span class="page-number"> Page 1 of 1 </span>
      
 </nav>
 
