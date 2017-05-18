@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>Meticulous Disorder by Torsten Scholak</title>
+    <meta name="description" content="theoretical quantum physics, data science, and typography" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="/assets/css/jquery-ui-1.11.3.min.css" /> -->
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <script type="text/javascript" src="/vendor/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.lettering.js"></script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          skipTags: ["script", "noscript", "style", "textarea"]
+        },
+        "HTML-CSS": {
+          scale: 95,
+          mtextFontInherit: true
+        },
+        "SVG": {
+          mtextFontInherit: true
+        },
+        TeX: {
+          extensions: ["autobold.js"]
+        },
+      });
+    </script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-60317908-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+  </head>
+
+  <body class="home-template">
+
+    <header class="main-header post-head no-cover">
+  <nav class="main-nav  clearfix">
+    <a class="back-button icon-arrow-left" href="/">Home</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+  </nav>
+</header>
+
+<main class="content" role="main">
+
+  <article class="post">
+
+    <header class="post-header">
+      <h1 class="post-title">Log-Likelihood Ratio (LLR) in The Context of Recommendations</h1>
+      <section class="post-meta">
+        <time class="post-date" datetime="2017-01-31">31 Jan 2017</time>
+        
+          on recommendations
+        
+      </section>
+    </header>
+
+    <!-- <header class="post-header">
+      <a id="blog-logo" href="http://tscholak.github.io">
+        
+          <span class="blog-title">Meticulous Disorder</span>
+        
+      </a>
+    </header> -->
+
+    <!-- <span class="post-meta">
+      <time datetime="2017-01-31">31 Jan 2017</time>
+      
+        on recommendations
+      
+    </span> -->
+
+    <!-- <h1 class="post-title">Log-Likelihood Ratio (LLR) in The Context of Recommendations</h1> -->
+
+    <section class="post-content">
+      <p>Understanding versus Using.</p>
+
+<p>People have been using this thing like a recipe
+without understanding what&#39;s going on.
+I myself am guilty of this.
+Now I took the time and tried to understand the whole reasoning behind this method.
+And, to my astonishment, I found some fundamental issues with it
+that severely limit its applicability.
+Luckily, there&#39;s a fix.</p>
+
+<p>Looking at all recorded history,
+do the events $A$ and $B$ co-occur more often than chance would suggest?</p>
+
+<p>If the events $A$ and $B$ occur independently, then
+\begin{align}
+  p(a, b) = p(a) \, p(b)
+\end{align}
+where $a \in \{A, \neg A\}$, $b \in \{B, \neg B\}$.</p>
+
+<p>Furthermore,
+\begin{align}
+  p(a|B) = \frac{p(a, B)}{p(B)} = p(a) = \frac{p(a, \neg B)}{p(\neg B)} = p(a|\neg B)
+\end{align}</p>
+
+<p>This means that the distribution of $A$ given the presence of $B$ is the same as the distribution of $A$ given the absence of $B$ ($\neg B$).</p>
+
+<p>That will be our null hypothesis.</p>
+
+<h3 id="model-for-a-single-trial">Model for a single trial</h3>
+
+<p>In the following, we encode $A$ as $1$ and $\neg A$ as $0$.
+We encode $B$ as $1$ and $\neg B$ as $0$.</p>
+
+<p>Let&#39;s build a hierarchical model:
+\begin{align}
+  p(a, b) = p(a|b) \, p(b),
+\end{align}
+where the model for $B$ will be a simple Bernoulli trial:
+\begin{align}
+  p(b) = p_{B}^b \, p_{\neg B}^{1-b}
+\end{align}
+with $p_{B}$ ($p_{\neg B} = 1-p_{B}$) the latent probability of the occurrence (absence) event $B$.</p>
+
+<p>The model for $A$ will be a Bernoulli trial where the probability of the event $A$ depends on the result of the $B$ trial:
+\begin{align}
+  p(a|b) = p_{A}(b)^a \, p_{\neg A}(b)^{1-a}
+\end{align}
+with $p_{A}(b)$ ($p_{\neg A}(b) = 1 - p_{A}(b)$)
+the latent $b$-dependent probability of the occurrence (absence) event $A$.</p>
+
+<h3 id="model-for-repeated-trials">Model for repeated trials</h3>
+
+<p>The statistics is completely determined by four counts:
+The number of trials, $n$, 
+the total number of counts of event $A$, $k_{A}$,
+the total number of counts of event $B$, $k_{B}$,
+the number of times the events $A$ and $B$ occurred together, $k_{A \wedge B}$.</p>
+
+<p>\begin{align}
+  p(a_{1:n}, b_{1:n}, k_{A \wedge B}, k_A, k_B) = \begin{cases}
+    p(a_{1:n}, b_{1:n}), &amp; \text{$k_{A \wedge B} = \sum_i a_i b_i$, $k_A = \sum_i a_i$, $k_B = \sum_i b_i$} \\
+    0, &amp; \text{else}
+  \end{cases}
+\end{align}</p>
+
+<p>Trials are independent:
+\begin{align}
+  p(a_{1:n}, b_{1:n}) = \prod_{i=1}^n p(a_i, b_i)
+\end{align}</p>
+
+<p>\begin{align}
+  p(k_{A \wedge B}, k_A, k_B) &amp; = \sum_{a_{1:n}, b_{1:n}} p(a_{1:n}, b_{1:n}, k_{A \wedge B}, k_A, k_B)
+\end{align}</p>
+
+<p>\begin{multline}
+  p(k_{A \wedge B}, k_A, k_B) = \frac{n!}{k_{A \wedge B}! \, k_{A \wedge \neg B}! \, k_{\neg A \wedge B}! \, k_{\neg A \wedge \neg B}!} \, p_A(B)^{k_{A \wedge B}} [1-p_A(B)]^{k_{\neg A \wedge B}} \\
+  \times p_A(\neg B)^{k_{A \wedge \neg B}} [1-p_A(\neg B)]^{k_{\neg A \wedge \neg B}} p_B^{k_{B}} [1-p_B]^{k_{\neg B}}
+\end{multline}</p>
+
+<p>\begin{align}
+  k_{A \wedge \neg B} &amp; = k_A - k_{A \wedge B} \\
+  k_{\neg A \wedge B} &amp; = k_B - k_{A \wedge B} \\
+  k_{\neg A \wedge \neg B} &amp; = n - k_A - k_B + k_{A \wedge B} \\
+  k_{\neg B} &amp; = n - k_B
+\end{align}</p>
+
+<h2 id="maximum-likelihood-ratio">Maximum Likelihood Ratio</h2>
+
+<p>$p(k_{A \wedge B}, k_A, k_B; p_A(B), p_A(\neg B), p_B)$</p>
+
+<p>The maximum likelihood ratio:
+\begin{align}
+  \lambda(A, B) &amp; = \frac{\max_{p_A, p_B} p(k_{A \wedge B}, k_A, k_B; p_A, p_A, p_B)}{\max_{p_A(B), p_A(\neg B), p_B} p(k_{A \wedge B}, k_A, k_B; p_A(B), p_A(\neg B), p_B)}
+\end{align}</p>
+
+<p>The maximum of the numerator is assumed for
+\begin{align}
+  p_A &amp; = \frac{k_A}{n}, &amp;
+  p_B &amp; = \frac{k_B}{n}.
+\end{align}
+The maximum value is
+\begin{align}
+  p\left(k_{A \wedge B}, k_A, k_B; \tfrac{k_A}{n}, \tfrac{k_A}{n}, \tfrac{k_B}{n}\right) &amp; = \frac{n!}{k_{A \wedge B}! \, k_{A \wedge \neg B}! \, k_{\neg A \wedge B}! \, k_{\neg A \wedge \neg B}!} \, \frac{k_A^{k_A} k_{\neg A}^{k_{\neg A}} k_B^{k_B} k_{\neg B}^{k_{\neg B}}}{n^{2n}}
+\end{align}</p>
+
+<p>The maximum of the denominator is assumed for
+\begin{align}
+  p_A(B) &amp; = \frac{k_{A \wedge B}}{k_B}, &amp;
+  p_A(\neg B) &amp; = \frac{k_{A \wedge \neg B}}{k_{\neg B}}, &amp;
+  p_B &amp; = \frac{k_B}{n}.
+\end{align}
+The maximum value is
+\begin{align}
+  p\left(k_{A \wedge B}, k_A, k_B; \tfrac{k_{A \wedge B}}{k_B}, \tfrac{k_{A \wedge \neg B}}{k_{\neg B}}, \tfrac{k_B}{n}\right) &amp; = \frac{n!}{k_{A \wedge B}! \, k_{A \wedge \neg B}! \, k_{\neg A \wedge B}! \, k_{\neg A \wedge \neg B}!} \, \frac{k_{A \wedge B}^{k_{A \wedge B}} k_{A \wedge \neg B}^{k_{A \wedge \neg B}} k_{\neg A \wedge B}^{k_{\neg A \wedge B}} k_{\neg A \wedge \neg B}^{k_{\neg A \wedge \neg B}}}{n^n}
+\end{align}</p>
+
+<h2 id="log-likelihood-ratio">Log-Likelihood Ratio</h2>
+
+<p>The log-likelihood ratio:
+\begin{align}
+  - 2 \log \lambda(A, B) = 2 n \, MI(A, B)
+\end{align}</p>
+
+<p>$MI(A, B) = H(A) + H(B) - H(A, B)$ the mutual information.</p>
+
+<p>\begin{align}
+  H(A, B) &amp; = - \frac{k_{A \wedge B}}{n} \log \frac{k_{A \wedge B}}{n} - \frac{k_{A \wedge \neg B}}{n} \log \frac{k_{A \wedge \neg B}}{n} - \frac{k_{\neg A \wedge B}}{n} \log \frac{k_{\neg A \wedge B}}{n} - \frac{k_{\neg A \wedge \neg B}}{n} \log \frac{k_{\neg A \wedge \neg B}}{n} \\
+  H(A) &amp; = - \frac{k_A}{n} \log \frac{k_A}{n} - \frac{k_{\neg A}}{n} \log \frac{k_{\neg A}}{n} \\
+  H(A) &amp; = - \frac{k_B}{n} \log \frac{k_B}{n} - \frac{k_{\neg B}}{n} \log \frac{k_{\neg B}}{n}
+\end{align}</p>
+
+<h2 id="cheating">Cheating</h2>
+
+<p><a href="https://nikaashpuri.wordpress.com/2016/03/09/llr-log-likelihood-ratio-used-for-recommendations/">https://nikaashpuri.wordpress.com/2016/03/09/llr-log-likelihood-ratio-used-for-recommendations/</a></p>
+
+<p>From <a href="https://github.com/tdunning/python-llr">https://github.com/tdunning/python-llr</a></p>
+
+<p>llr_2x2(k11, k12, k21, k22) - Compares two binary conditions to see if there is an apparent connection. The idea is that we have made a number of observations that exhibit condition A or B. The number of times we have seen A and B is k11. The number of times we have seen A but not B is k12, not A but B is k21 and not A and not B is k22. Commonly, these are arranged in a so-called contingency table:</p>
+
+<p>A   not A
+B   k11 k12
+not B   k21 k22
+The idea is that llr_2x2 will give a large score if it appears that there is a correlation or anti-correlation between A and B. We don&#39;t get any idea whether A and B occurs more than we expect or not, however.</p>
+
+<p>llr_root(k11, k12, k21, k22) - Computes a signed value much like llr_2x2 that has an added sign that tells us about whether the k11 cell is larger or smaller than we might expect if A and B are independent.</p>
+
+<p>The actual value returned by llr_root is the square root of the value returned by llr_2x2. The reason for this is that in the absence of any correlation between the two conditions, the the output llr_2x2 will be chi-squared distributed. That distribution is the same as the distribution of the square of a normally distributed value. Since the chi-squared distribution cannot have a negative value, but the normal distribution can, it makes sense to take the square root at the same time as we add the sign.</p>
+
+<p>Another nice benefit of taking the square root is that it allows us to interpret the output of llr_root as some number of standard deviations.</p>
+
+    </section>
+
+    
+
+    <footer class="post-footer">
+      <!-- If we want to display author's name and bio -->
+      
+        <figure class="author-image">
+          <a class="img" href="/" style="background-image: url(/assets/images/profile.png)">
+          <span class="hidden">that's me</span></a>
+        </figure>
+        <section class="author">
+          <!-- Author Name -->
+          <h4> Torsten Scholak </h4>
+          <!-- Author Bio -->
+          <p>
+            Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
+          </p>
+        </section>
+      
+
+      <!-- Share links section -->
+      <!-- <section class="share">
+  <h4>Share this post</h4>
+  <a class="icon-twitter" href="http://twitter.com/share?text=Log-Likelihood Ratio (LLR) in The Context of Recommendations&amp;url=http://tscholak.github.io/recommendations/2017/01/31/llr.html"
+    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+    <span class="hidden">Twitter</span>
+  </a>
+  <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://tscholak.github.io/recommendations/2017/01/31/llr.html"
+    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+    <span class="hidden">Facebook</span>
+  </a>
+  <a class="icon-google-plus" href="https://plus.google.com/share?url=http://tscholak.github.io/recommendations/2017/01/31/llr.html"
+     onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+    <span class="hidden">Google+</span>
+  </a>
+</section> -->
+
+      <!-- Follow me section -->
+      <section class="follow">
+  <h4>Follow me</h4>
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Facebook');" class="facebook_follow" title="Follow on Facebook" href="http://www.facebook.com/tscholak" target="_blank"><i class="fa fa-lg fa-facebook-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Twitter');" class="twitter_follow" title="Follow on Twitter" href="https://twitter.com/tscholak" target="_blank"><i class="fa fa-lg fa-twitter-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on LinkedIn');" class="linkedin_follow" title="Follow on LinkedIn" href="http://www.linkedin.com/in/tscholak" target="_blank"><i class="fa fa-lg fa-linkedin-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Google+');" class="googleplus_follow" title="Follow on LinkedIn" href="https://plus.google.com/u/0/+TorstenScholak" target="_blank"><i class="fa fa-lg fa-google-plus-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on StackOverflow');" class="stackoverflow_follow" title="Follow on StackOverflow" href="https://stackoverflow.com/users/700435" target="_blank"><i class="fa fa-lg fa-stack-exchange"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
+  
+</section>
+
+      <!-- Disqus comments -->
+      
+
+    </footer>
+
+  </article>
+
+</main>
+
+
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
+      </section>
+      <section class="poweredby">Made with Jekyll using
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+  </body>
+</html>

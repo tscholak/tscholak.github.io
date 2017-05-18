@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>Meticulous Disorder by Torsten Scholak</title>
+    <meta name="description" content="theoretical quantum physics, data science, and typography" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="/assets/css/jquery-ui-1.11.3.min.css" /> -->
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <script type="text/javascript" src="/vendor/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/vendor/js/jquery.lettering.js"></script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          skipTags: ["script", "noscript", "style", "textarea"]
+        },
+        "HTML-CSS": {
+          scale: 95,
+          mtextFontInherit: true
+        },
+        "SVG": {
+          mtextFontInherit: true
+        },
+        TeX: {
+          extensions: ["autobold.js"]
+        },
+      });
+    </script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-60317908-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+  </head>
+
+  <body class="home-template">
+
+    <header class="main-header post-head no-cover">
+  <nav class="main-nav  clearfix">
+    <a class="back-button icon-arrow-left" href="/">Home</a>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+  </nav>
+</header>
+
+<main class="content" role="main">
+
+  <article class="post">
+
+    <header class="post-header">
+      <h1 class="post-title">Chipgate</h1>
+      <section class="post-meta">
+        <time class="post-date" datetime="2015-10-13">13 Oct 2015</time>
+        
+          on Bayesianism, Apple, and Chipgate
+        
+      </section>
+    </header>
+
+    <!-- <header class="post-header">
+      <a id="blog-logo" href="http://tscholak.github.io">
+        
+          <span class="blog-title">Meticulous Disorder</span>
+        
+      </a>
+    </header> -->
+
+    <!-- <span class="post-meta">
+      <time datetime="2015-10-13">13 Oct 2015</time>
+      
+        on Bayesianism, Apple, and Chipgate
+      
+    </span> -->
+
+    <!-- <h1 class="post-title">Chipgate</h1> -->
+
+    <section class="post-content">
+      <p>If you read this, you probably heard the claim that the battery performance of the new iPhones is markedly different depending on whether its system on chip (SoC) is manufactured by TSMC or by Samsung. <a href="http://www.macrumors.com/2015/10/07/tsmc-samsung-a9-battery-tests/">Early reports</a> indicated that the TSMC chip allows for a dramatically better battery lifetime than its Samsung counterpart. Supposedly, this is due to TSMC&#39;s slight advantage in the semiconductor device fabrication process, which gives the TSMC chip a competitive edge -- although both iPhone chips are based on the same Apple A9 design and despite the fact that Samsung uses a smaller 14 nm process.</p>
+
+<p><span class="more"></span></p>
+
+<p>Whatever the technical explanations are for the discrepancy, when I first heard about this, I was more concerned with the statistical significance of the findings. The amount of reliable measurement data seemed to be far too small. In other words, I was not convinced that the alleged superiority of the TSMC chip over the Samsung chip was not just the result of pure chance. Moreover, I speculated that -- after the news had spread and people began to obsess over this issue -- some people secretly wanted there to be a difference, and newer test results were thus most likely filtered and biased.</p>
+
+<h2 id="stats-to-the-rescue">Stats to The Rescue!</h2>
+
+<p>In order to put the claims on sound statistical footing, someone had to gather a lot of annotated battery performance data (i.e. reproducible battery benchmark data labelled by chip type) and use proper statistical tools to calculate the odds that the TSMC chip is indeed better than the Samsung one. I was determined to do exactly that, yet I found myself without access to such data. I resigned and turned to twitter to <a href="https://twitter.com/tscholak/status/652464956168871936">proclaim my bitterness</a> loudly to the world.</p>
+
+<p>To my astonishment, <a href="https://twitter.com/jfpoole">John Poole</a> from Primate Labs <a href="https://twitter.com/jfpoole/status/652566289945337856">answered my call</a> and provided some Geekbench battery data for the iPhone 6S. That was Friday. That first batch of data was not separated by chip type, unfortunately. At that point in time, Geekbench did not collect that information. However, on the same day, John pushed an update for Geekbench that would remedy that issue. On Monday, he sent me another dataset with new data, this time labelled by chip type. A huge thanks to him!</p>
+
+<p>So, here is what I did with that precious Geekbench data:</p>
+
+<ul>
+<li>First, I defined a Bayesian model -- a mixture of Gaussians in this case, and then</li>
+<li>I inferred the model&#39;s parameters from the data -- i.e. the location and the variance of the Gaussians.</li>
+</ul>
+
+<p>To improve the inference, I used all data -- not only the labelled data in the second batch, but also the unlabelled data of the first batch. Predicting labels for the unlabelled data points was icing on the cake.</p>
+
+<p>I will first reveal the results and then comment on the methodology.</p>
+
+<h2 id="results">Results</h2>
+
+<p>Have a look at the figure below:</p>
+
+<p>
+  <figure>
+    <img src="/assets/images/iPhone_violinplot.png" title="violin plot">
+    <figcaption>The image shows violin plots for the location of the Gaussians (in Geekbench's proprietary battery score units).</figcaption>
+  </figure>
+</p>
+
+<p>The statistical model I defined expresses my belief that the battery score observations are distributed according to a mixture of two distinct components, one for each iPhone chip. In particular, I assume that the observations of each chip follow one of two distinct Gaussian distributions, where the location and the variance of these Gaussians are believed to differ with the chip type. The plot shows the statistical distributions of the locations of the Gaussians that I inferred from the Geekbench data. The depicted violin shapes are kernel density plots. They reflect the degree of belief in a particular value of the locations. The violins illustrate that, given the observed data, there is remaining uncertainty with respect to these locations. However, despite this uncertainty, the locations of the two chip classes are well separated in value, and the TSMC chip clearly has the better average performance (Samsung chips are marked as N71AP in the iPhone 6S, whereas TSMC models are named N71mAP).</p>
+
+<p>The discrepancy between the chips is made explicit by the following figure:</p>
+
+<p>
+  <figure>
+    <img src="/assets/images/iPhone_lift.png" title="lift probability">
+    <figcaption>Plotted is the probability that the lift of the iPhone 6S with TSMC chip relative to its Samsung-powered counterpart is at least as large as the value on the horizontal axis.</figcaption>
+  </figure>
+</p>
+
+<p>The figure can be understood in the following way: A lift of, say, 30% of N71mAP over N71AP means that the N71mAP model has a 30% better average battery score than the N71AP. The lift is on the figure&#39;s horizontal axis. The probability of that lift (or a higher one) is measured on the vertical axis. According to the plot, there is an almost unit probability that the TSMC chip (N71mAP) is at least 30% better on average than the Samsung chip (N71AP). This probability goes down sharply for higher lift values.</p>
+
+<p>These results present strong evidence that the Geekbench battery performance of the TSMC chip is on average much better than that of the Samsung chip.</p>
+
+<p>I am unable to say if this performance discrepancy is relevant for daily usage. <a href="http://www.macrumors.com/2015/10/08/apple-a9-chip-2-3-percent-difference/">Apple claims it&#39;s not</a>. So <a href="http://www.tomshardware.com/news/iphone-6s-a9-samsung-vs-tsmc,30306.html">do</a> <a href="http://arstechnica.com/apple/2015/10/samsung-vs-tsmc-comparing-the-battery-life-of-two-apple-a9s/">several</a> <a href="http://9to5mac.com/2015/10/12/a9-battery-test/">news</a> <a href="http://www.heise.de/mac-and-i/meldung/Akkulaufzeiten-beim-iPhone-6s-Apple-hat-recht-2842072.html">websites</a> that tested the iPhone 6S under &quot;real world&quot; conditions. However, as with the earlier battery performance claims from last week, these new studies suffer from the same small sample bias, and should be taken with a grain of salt.</p>
+
+<p>It is true that Geekbench&#39;s battery test is a synthetic benchmark. It drains the battery by putting a lot of stress on the SoC -- CPU and GPU alike. It is <a href="http://www.primatelabs.com/blog/2014/12/geekbench-33/">designed to measure battery life under heavy load</a>, e.g. while playing graphics-intensive games. Of course, one might argue that this is not representative of typical real-world usage. In fact, for the most common tasks like browsing the web and even light graphics usage, the screen has the highest battery consumption, and thus differences in battery lifetime between models with TSMC and Samsung chip will be small. This is in agreement with those new studies mentioned above. Notwithstanding, for the usage scenario tested by Geekbench (e.g. lots of games, little browsing), my analysis provides compelling evidence that the devices with TSMC chip are indeed much better. So, if this is your usage scenario, then you better make sure you get an iPhone with a SoC manufactured by TSMC.</p>
+
+<h2 id="statistical-model">Statistical Model</h2>
+
+<p>My model is a simple Bayesian Gaussian mixture model. I assume that the observed data is a sequence of random numbers drawn from a mixture of two normal distributions. Specifically, I consider the following model:</p>
+
+<p>\begin{align}
+  \left. X_n \middle| y_n, \left\{\mu_k, \sigma_k\right\} \right. &amp; \sim \mathcal{N}\left(\mu_{y_n}, \sigma_{y_n}^2\right), \\
+  \left. y_n \middle| \boldsymbol{\pi} \right. &amp; \sim \mathcal{C}\left(\boldsymbol{\pi}\right), \\
+  \left. \boldsymbol{\pi} \middle| \alpha \right. &amp; \sim \mathcal{D}\left(\alpha, \ldots, \alpha\right), \\
+  \mu_k &amp; \sim \mathcal{U}\left(-\infty, \infty\right), \\
+  \sigma_k^{-1} &amp; \sim \mathcal{U}\left(0, \infty\right),
+\end{align}</p>
+
+<p>where $k = 1, \ldots, K$. The number $K$ is the number of classes, and it is fix. Since there are two chip types, I set $K = 2$. The observations $X_n$, $n = 1, \ldots, N$, are conditionally independent. Each one is believed to be drawn from a normal distribution with mean $\mu_{y_n}$ and variance $\sigma_{y_n}^2$. Furthermore, each data point is a member of a single category $y_n \in \{1, \ldots, K\}$. These indicator variables are distributed according to a categorical distribution, $\mathcal{C}\left(\boldsymbol{\pi}\right)$, where the parameter $\boldsymbol{\pi}$ is a $K$-simplex: it is a vector of $K$ probabilities $\pi_k$ with $0 \le \pi_k \le 1$ that sum up to one, i.e. $\sum_{k=1}^K \pi_k = 1$. The simplex is given a symmetric Dirichlet prior with concentration parameter $\alpha &gt; 0$. I set $\alpha$ to $\frac{1}{2}$. Lastly, I put independent priors on $\mu_k$ and $\sigma_k$. I did this because I think that the location of the mean should be uninformative of the variance (and vice versa). The priors are furthermore flat. Letting $\sigma_k^{-1}$ be uniformly distributed on the positive real axis implements a Jeffreys prior for $\sigma$ <a href="#Kass1996SelectionOfPriorDistributions">(Kass and Wasserman 1996)</a>.</p>
+
+<p>For Bayesian analyses, it is common to compute the posterior distribution by means of MCMC sampling. I used <a href="http://mc-stan.org">PyStan</a> to explore the parameter space, which is why I had to write down my entire model in the Stan programming language <a href="#2015StanReferenceManual">(<i>Stan Modeling Language Users Guide and Reference Manual, Version 2.8.0</i> 2015)</a>. I coded it as follows:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text"><span></span>data {
+    // training data
+    int&lt;lower=1&gt; K;             // number of classes
+    int&lt;lower=1&gt; D;             // number of features
+    int&lt;lower=0&gt; N;             // number of labelled examples
+    int&lt;lower=1,upper=K&gt; y[N];  // class for labelled example
+    vector[D] x[N];             // features for labelled example
+    // test data
+    int&lt;lower=0&gt; Np;            // number of unlabelled examples
+    vector[D] xp[Np];           // features for unlabelled example
+    // hyperparameters
+    vector&lt;lower=0&gt;[K] alpha;   // class prior
+}
+parameters {
+    simplex[K] pi;                   // class prevalence
+    vector[D] mu[K];                 // locations of features
+    vector&lt;lower=0&gt;[D] invsigma[K];  // inverse scales of features
+}
+transformed parameters {
+    vector&lt;lower=0&gt;[D] sigma[K];     // scales of features
+    vector[K] z[Np];
+    for (k in 1:K)
+        sigma[k] &lt;- rep_vector(1, D) ./ invsigma[k];
+    for (np in 1:Np)
+        for (k in 1:K)
+            z[np, k] &lt;- normal_log(xp[np], mu[k], sigma[k])
+                        + categorical_log(k, pi);
+}
+model {
+    // priors
+    pi ~ dirichlet(alpha);
+    for (n in 1:N)
+        y[n] ~ categorical(pi);
+    // likelihoods
+    for (n in 1:N)
+        x[n] ~ normal(mu[y[n]], sigma[y[n]]);
+                                     // diagonal covariance matrix
+    for (np in 1:Np)
+        increment_log_prob(log_sum_exp(z[np]));
+}
+generated quantities {
+    vector[K] sm[Np];
+    int&lt;lower=1,upper=K&gt; yp[Np];
+    for (np in 1:Np) {
+        sm[np] &lt;- softmax(z[np]);
+        yp[np] &lt;- categorical_rng(sm[np]);
+    }
+}
+</code></pre></div>
+<p>Note that the model is defined such that it can be used in cases with more than one feature, but only if the naive independence assumption between the features applies.</p>
+
+<p>The above implementation allows me to use both labelled and unlabelled data for the parameter inference. To this end, I assume that the labels of the unlabelled dataset are missing completely at random. A conceptually very similar implementation is described in section 13.3 of version 2.8.0 of the Stan manual <a href="#2015StanReferenceManual">(2015)</a>. The nice thing about this idea is that all data -- not only the labelled, but also the unlabelled data -- contributes to the parameter inference. Since I had only 29 labelled data points to work with, this really helped to improve the results.</p>
+
+<p>In the end, I added the <code>generated quantities</code> block in order to draw values for the missing labels <code>yp</code>. In other words, I can predict the manufacturer of an iPhone&#39;s SoC based on its battery test score. What I created can perhaps be described as a semi-supervised version of the common naive Bayes classifier.</p>
+
+<h2 id="acknowledgements">Acknowledgements</h2>
+
+<p>This analysis would not have been possible without the help of John Poole from Primate Labs, the software company behind Geekbench!</p>
+
+<hr>
+
+<h1 id="references">References</h1>
+
+<ol class="bibliography"><li><span id="2015StanReferenceManual"><i>Stan Modeling Language Users Guide and Reference Manual, Version 2.8.0</i>, 2015. Available at: http://mc-stan.org/.</span>
+
+<div id="2015StanReferenceManual-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#2015StanReferenceManual-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="2015StanReferenceManual-tabs-3">
+    <pre>@manual{2015StanReferenceManual,
+  date-added = {2015-10-14 06:17:46 +0000},
+  date-modified = {2015-10-14 06:18:05 +0000},
+  title = {Stan Modeling Language Users Guide and Reference Manual, Version 2.8.0},
+  url = {http://mc-stan.org/},
+  year = {2015},
+  bdsk-url-1 = {http://mc-stan.org/}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#2015StanReferenceManual-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li>
+<li><span id="Kass1996SelectionOfPriorDistributions">Kass, Robert E, and Larry Wasserman, 1996, “The Selection of Prior Distributions by Formal Rules,” Journal of the American Statistical Association <b>91</b> (Taylor &amp; Francis Group), 1343–1370.</span>
+
+<div id="Kass1996SelectionOfPriorDistributions-tabs">
+  View
+  <ul>
+    
+    
+    <li><a href="#Kass1996SelectionOfPriorDistributions-tabs-3">BibTeX entry</a>.</li>
+  </ul>
+  
+  
+  
+  <div id="Kass1996SelectionOfPriorDistributions-tabs-3">
+    <pre>@article{Kass1996SelectionOfPriorDistributions,
+  author = {Kass, Robert E and Wasserman, Larry},
+  date-added = {2015-10-14 05:42:46 +0000},
+  date-modified = {2015-10-14 05:43:15 +0000},
+  journal = {Journal of the American Statistical Association},
+  number = {435},
+  pages = {1343--1370},
+  publisher = {Taylor \& Francis Group},
+  title = {The selection of prior distributions by formal rules},
+  volume = {91},
+  year = {1996}
+}
+</pre>
+  </div>
+</div>
+<script>
+  $(function() {
+    $( "#Kass1996SelectionOfPriorDistributions-tabs" ).tabs({
+      collapsible: true,
+      active: false
+    });
+  });
+</script></li></ol>
+
+    </section>
+
+    
+
+    <footer class="post-footer">
+      <!-- If we want to display author's name and bio -->
+      
+        <figure class="author-image">
+          <a class="img" href="/" style="background-image: url(/assets/images/profile.png)">
+          <span class="hidden">that's me</span></a>
+        </figure>
+        <section class="author">
+          <!-- Author Name -->
+          <h4> Torsten Scholak </h4>
+          <!-- Author Bio -->
+          <p>
+            Postdoc at University of Toronto ⋅ Ph.D. in theoretical physics
+          </p>
+        </section>
+      
+
+      <!-- Share links section -->
+      <!-- <section class="share">
+  <h4>Share this post</h4>
+  <a class="icon-twitter" href="http://twitter.com/share?text=Chipgate&amp;url=http://tscholak.github.io/bayesianism/apple/chipgate/2015/10/13/chipgate.html"
+    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+    <span class="hidden">Twitter</span>
+  </a>
+  <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://tscholak.github.io/bayesianism/apple/chipgate/2015/10/13/chipgate.html"
+    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+    <span class="hidden">Facebook</span>
+  </a>
+  <a class="icon-google-plus" href="https://plus.google.com/share?url=http://tscholak.github.io/bayesianism/apple/chipgate/2015/10/13/chipgate.html"
+     onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+    <span class="hidden">Google+</span>
+  </a>
+</section> -->
+
+      <!-- Follow me section -->
+      <section class="follow">
+  <h4>Follow me</h4>
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Facebook');" class="facebook_follow" title="Follow on Facebook" href="http://www.facebook.com/tscholak" target="_blank"><i class="fa fa-lg fa-facebook-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Twitter');" class="twitter_follow" title="Follow on Twitter" href="https://twitter.com/tscholak" target="_blank"><i class="fa fa-lg fa-twitter-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on LinkedIn');" class="linkedin_follow" title="Follow on LinkedIn" href="http://www.linkedin.com/in/tscholak" target="_blank"><i class="fa fa-lg fa-linkedin-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on Google+');" class="googleplus_follow" title="Follow on LinkedIn" href="https://plus.google.com/u/0/+TorstenScholak" target="_blank"><i class="fa fa-lg fa-google-plus-square"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on StackOverflow');" class="stackoverflow_follow" title="Follow on StackOverflow" href="https://stackoverflow.com/users/700435" target="_blank"><i class="fa fa-lg fa-stack-exchange"></i></a>
+  
+  
+    <a onClick="ga('send', 'event', 'Social Follow', 'Follow on GitHub');" class="github_follow" title="Follow on GitHub" href="https://github.com/tscholak" target="_blank"><i class="fa fa-lg fa-github-square"></i></a>
+  
+</section>
+
+      <!-- Disqus comments -->
+      
+
+    </footer>
+
+  </article>
+
+</main>
+
+
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        Copyright &copy; 2017 <a href="/">Meticulous Disorder</a> &bull;
+        All rights reserved
+      </section>
+      <section class="poweredby">Made with Jekyll using
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+  </body>
+</html>
