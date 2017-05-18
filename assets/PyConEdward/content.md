@@ -1,17 +1,3 @@
-### A Few Announcements 
-
-There is a survey: [https://www.surveymonkey.com/r/pycon232](https://www.surveymonkey.com/r/pycon232).
-
-Morning Break will be at 10:15 a.m. in the lobby outside this room.
-
-Lunch will be at 12:20 p.m. in the Oregon Ballroom 201-204 upstairs.
-
-If you have requested a kosher meal, please let the server know.
-
-There should be enough power outlets at the tables, please share them.
-
-
-
 ## Abstract
 
 There has been uprising of probabilistic programming and Bayesian statistics. These techniques are tremendously useful, because they help us to understand, to explain, and to predict data through building a model that accounts for the data and is capable of synthesizing it. This is called the generative approach to statistical pattern recognition.
