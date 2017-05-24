@@ -11,6 +11,8 @@ These situations show what truly terrible decision makers we can be.
 What is true for us in daily life is also true for executives that have to make decisions that are critical to their business.
 Businesses have a lot of data, but what they typically lack are tools to utilize the data for rational decision making.
 
+<span class="more"></span>
+
 Probabilistic programming systems are software tools that can be used to make more rational decisions under uncertainty.
 These tools yield insight by solving the so-called inference problem -- 
 that is, updating a stated belief after considering new evidence.
