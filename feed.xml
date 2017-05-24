@@ -5,9 +5,35 @@
     <description>Sporadic musings and technical commentary from Torsten Scholak, a Canada-based theoretical physicist.</description>
     <link>http://tscholak.github.io//</link>
     <atom:link href="http://tscholak.github.io//feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Thu, 06 Apr 2017 13:11:45 -0400</pubDate>
-    <lastBuildDate>Thu, 06 Apr 2017 13:11:45 -0400</lastBuildDate>
+    <pubDate>Wed, 24 May 2017 15:56:17 -0400</pubDate>
+    <lastBuildDate>Wed, 24 May 2017 15:56:17 -0400</lastBuildDate>
     <generator>Jekyll v3.4.0</generator>
+    
+      <item>
+        <title>Bayesian Machine Learning -- Reasoning under Uncertainty with Edward</title>
+        
+          <dc:creator>Torsten Scholak</dc:creator>
+        
+        
+          <description>&lt;p&gt;People are faced daily with situations involving uncertain outcomes. 
+However, in these situations, we often make impulsive decisions, or risky decisions that are based solely on our past experience.
+These situations show what truly terrible decision makers we can be.
+What is true for us in daily life is also true for executives that have to make decisions that are critical to their business.
+Businesses have a lot of data, but what they typically lack are tools to utilize the data for rational decision making.&lt;/p&gt;
+</description>
+        
+        <pubDate>Wed, 24 May 2017 00:00:00 -0400</pubDate>
+        <link>http://tscholak.github.io//bayesianism/talk/edward/2017/05/24/Bayesian-machine-learning.html</link>
+        <guid isPermaLink="true">http://tscholak.github.io//bayesianism/talk/edward/2017/05/24/Bayesian-machine-learning.html</guid>
+        
+        
+          <category>Bayesianism</category>
+        
+          <category>Talk</category>
+        
+          <category>Edward</category>
+        
+      </item>
     
       <item>
         <title>Chipgate</title>
@@ -218,24 +244,6 @@
           <category>guide</category>
         
           <category>jekyll</category>
-        
-      </item>
-    
-      <item>
-        <title>Finding the right fonts</title>
-        
-          <dc:creator>Torsten Scholak</dc:creator>
-        
-        
-          <description>&lt;p&gt;Kasper, the theme that I am using for this web site, comes with three fonts: &lt;a href=&quot;http://www.google.com/fonts/specimen/Open+Sans&quot;&gt;Open Sans&lt;/a&gt;, &lt;a href=&quot;http://www.google.com/fonts/specimen/Merriweather&quot;&gt;Merriweather&lt;/a&gt;, and &lt;a href=&quot;https://www.google.com/fonts/specimen/Inconsolata&quot;&gt;Inconsolata&lt;/a&gt;. I did not like these very much, so I set out to find suitable replacements. &lt;/p&gt;
-</description>
-        
-        <pubDate>Sun, 01 Mar 2015 19:00:00 -0500</pubDate>
-        <link>http://tscholak.github.io//update/2015/03/01/finding-the-right-fonts.html</link>
-        <guid isPermaLink="true">http://tscholak.github.io//update/2015/03/01/finding-the-right-fonts.html</guid>
-        
-        
-          <category>update</category>
         
       </item>
     
