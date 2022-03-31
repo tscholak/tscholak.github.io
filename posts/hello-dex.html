@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>Hello Dex</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hello Dex">
+    <meta name="twitter:description" content="Torsten Scholak&#39;s personal website">
+        <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/bbe35c0">bbe35c0</a> (2022-03-31 09:47:01 -0400) Torsten Scholak: add disclaimer</p>
+
+
+        <h1>Hello Dex</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/dex">dex</a>
+        </p>
+        <p>Posted on Mar 10, 2022</p>
+        <p>1 min read</p>
+        <p>Say hello to Dex and see how Dex greets you.</p>
+        <pre class="dex"><code></code></pre>
+<p>This article is a small demonstration of <a
+href="https://github.com/tscholak/website/blob/main/app/Text/Pandoc/Readers/Dex.hs">Text.Pandoc.Readers.Dex</a>.</p>
+<p>First, two static type definitions:</p>
+<pre class="dex"><code>Height = Fin 3
+</code></pre>
+<pre class="dex"><code>Width = Fin 8
+</code></pre>
+<p>Let's make a rectangular array:</p>
+<pre class="dex"><code>x = for i:Height. for j:Width. 1.0
+</code></pre>
+<p>We can see the type of <code>x</code> with <code>:t</code>:</p>
+<pre class="dex"><code>:t x
+</code></pre>
+<blockquote>
+<pre><code>((Fin 3) =&gt; (Fin 8) =&gt; Float32)</code></pre>
+</blockquote>
+<p>We can print <code>x</code>, too:</p>
+<pre class="dex"><code>x
+</code></pre>
+<blockquote>
+<pre><code>[ [1., 1., 1., 1., 1., 1., 1., 1.]
+, [1., 1., 1., 1., 1., 1., 1., 1.]
+, [1., 1., 1., 1., 1., 1., 1., 1.] ]</code></pre>
+</blockquote>
+<p>That's all folks!</p>
+    </div>
+
+    <div>
+        <a href="/posts/Flattening.html">
+            <div>
+                <h1>Previous Post</h1>
+                <h2>How to Get from A Tree to A Flat Shape And Back Again</h2>
+                <p>Feb 2, 2022</p>
+                <p><p>The adventure continues in this "Unrecurse" sequel. Previously, we
+bravely faced turmoil and confusion in a cruel world in which Haskell
+suddenly stopped supporting recursive function calls. We barely escaped
+the wrath of the compiler. This time, we try to survive an even more
+extreme situation: Haskell without recursive data types! It is the
+ultimate test of our programming skills. Will we make it through the
+final challenge, or is all hope lost? Join us in this journey about
+tapes and tribulations.</p></p>
+            </div>
+        </a>
+    </div>
+
+    <footer>
+        <p>Copyright © 2022 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

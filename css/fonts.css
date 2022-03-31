@@ -1,0 +1,61 @@
+/**
+ * @license
+ * MyFonts Webfont Build ID 4322717, 2022-01-31T20:34:08-0500
+ * 
+ * The fonts listed in this notice are subject to the End User License
+ * Agreement(s) entered into by the website owner. All other parties are 
+ * explicitly restricted from using the Licensed Webfonts(s).
+ * 
+ * You may obtain a valid license at the URLs below.
+ * 
+ * Webfont: PragmataProLiga-Regular by FSD
+ * URL: https://www.myfonts.com/fonts/fsd/pragmata-pro/regular/
+ * 
+ * Webfont: PragmataProLiga-Italic by FSD
+ * URL: https://www.myfonts.com/fonts/fsd/pragmata-pro/italic/
+ * 
+ * Webfont: PragmataProLiga-Bold by FSD
+ * URL: https://www.myfonts.com/fonts/fsd/pragmata-pro/bold/
+ * 
+ * Webfont: PragmataProLiga-BoldItalic by FSD
+ * URL: https://www.myfonts.com/fonts/fsd/pragmata-pro/bold-italic/
+ * 
+ * 
+ * Webfonts copyright: Copyright (c) 2009 by Fabrizio Schiavi - https://www.fsd.it/. All rights reserved.
+ * 
+ * © 2022 MyFonts Inc
+*/
+
+
+/* @import must be at top of file, otherwise CSS will not work */
+@import url("//hello.myfonts.net/count/41f59d");
+  
+@font-face {
+  font-family: "PragmataPro";
+  font-style: italic;
+  font-weight: bold;
+  font-stretch: normal;
+  src: url('/fonts/PragmataPro/italic_normal_bold.woff2') format('woff2'), url('/fonts/PragmataPro/italic_normal_bold.woff') format('woff');
+}
+@font-face {
+  font-family: "PragmataPro";
+  font-style: normal;
+  font-weight: bold;
+  font-stretch: normal;
+  src: url('/fonts/PragmataPro/normal_normal_bold.woff2') format('woff2'), url('/fonts/PragmataPro/normal_normal_bold.woff') format('woff');
+}
+@font-face {
+  font-family: "PragmataPro";
+  font-style: normal;
+  font-weight: normal;
+  font-stretch: normal;
+  src: url('/fonts/PragmataPro/normal_normal_normal.woff2') format('woff2'), url('/fonts/PragmataPro/normal_normal_normal.woff') format('woff');
+}
+@font-face {
+  font-family: "PragmataPro";
+  font-style: italic;
+  font-weight: normal;
+  font-stretch: normal;
+  src: url('/fonts/PragmataPro/italic_normal_normal.woff2') format('woff2'), url('/fonts/PragmataPro/italic_normal_normal.woff') format('woff');
+}
+
