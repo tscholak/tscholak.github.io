@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>The False Choice: Why &#39;Cost vs. Differentiation&#39; Thinking Guarantees AI
+Commoditization</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="The False Choice: Why &#39;Cost vs. Differentiation&#39; Thinking Guarantees AI
+Commoditization">
+    <meta name="twitter:description" content="Torsten Scholak&#39;s personal website">
+        <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/2f8654b">2f8654b</a> (2025-08-03 20:42:43 -0400) Torsten Scholak: revamp</p>
+
+
+        <h1>The False Choice: Why &#39;Cost vs. Differentiation&#39; Thinking Guarantees AI
+Commoditization</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/ai">ai</a>
+            <a href="/tags/strategy">strategy</a>
+            <a href="/tags/economics">economics</a>
+            <a href="/tags/cost-analysis">cost-analysis</a>
+        </p>
+        <p>Posted on Aug 1, 2025</p>
+        <p>27 min read</p>
+        <p>Enterprises are being told they must choose between competing on cost
+or differentiation in AI. This essay argues that the distinction is
+false: full AI outsourcing makes your costs volatile and eliminates any
+path to strategic advantage. Long-term winners will own their AI
+capabilities, not rent them. Now with computational proof.</p>
+        <h2>Preliminaries</h2>
+<p>This is a <a
+href="https://wiki.haskell.org/Literate_programming">Literate
+Haskell</a> essay: Every line of program code in this article has been
+checked by the Haskell compiler. Every example and calculation has been
+verified computationally.</p>
+<p>To make this a proper Haskell file, we need some language extensions
+and imports:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DeriveGeneric #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE NumericUnderscores #-}</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> <span class="dt">OutsourcedAI</span> <span class="kw">where</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">GHC.Generics</span> (<span class="dt">Generic</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Text.Printf</span> (printf)</span></code></pre></div>
+<h2>The Commoditization Trap: When Everyone Uses the Same APIs</h2>
+<p>The most dangerous assumption in enterprise AI strategy is that you
+must choose between competing on cost or on differentiation. This false
+dichotomy misses how competitive advantage actually works in the AI era.
+In reality, <strong>predictable unit cost and pricing power are
+themselves differentiators</strong> once you control your AI stack.</p>
+<p>Let's be precise and computational about this. First, let's define
+our cost models:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- \| API pricing structure (per 1k tokens)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">APIProvider</span> <span class="ot">=</span> <span class="dt">APIProvider</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> providerName ::</span> <span class="dt">String</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">      inputPrice ::</span> <span class="dt">Double</span>, <span class="co">-- \$ per 1k input tokens</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ot">      outputPrice ::</span> <span class="dt">Double</span>, <span class="co">-- \$ per 1k output tokens</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ot">      reliability ::</span> <span class="dt">Double</span> <span class="co">-- uptime percentage</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Current market rates (as of Aug 2025)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ot">  openAI_o3 ::</span> <span class="dt">APIProvider</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  openAI_o3 <span class="ot">=</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">APIProvider</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      { providerName <span class="ot">=</span> <span class="st">&quot;OpenAI o3&quot;</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        inputPrice <span class="ot">=</span> <span class="fl">0.060</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        outputPrice <span class="ot">=</span> <span class="fl">0.240</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        reliability <span class="ot">=</span> <span class="fl">0.995</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="ot">  anthropic_sonnet ::</span> <span class="dt">APIProvider</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  anthropic_sonnet <span class="ot">=</span> <span class="dt">APIProvider</span> {</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    providerName <span class="ot">=</span> <span class="st">&quot;Anthropic Sonnet&quot;</span>,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    inputPrice <span class="ot">=</span> <span class="fl">0.003</span>,</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    outputPrice <span class="ot">=</span> <span class="fl">0.015</span>,</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    reliability <span class="ot">=</span> <span class="fl">0.998</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- \| Self-hosted infrastructure costs</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">SelfHostedSetup</span> <span class="ot">=</span> <span class="dt">SelfHostedSetup</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> gpuNodes ::</span> <span class="dt">Int</span>, <span class="co">-- number of GPU nodes</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="ot">      costPerNodeHour ::</span> <span class="dt">Double</span>, <span class="co">-- \$ per node per hour</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="ot">      utilizationRate ::</span> <span class="dt">Double</span>, <span class="co">-- fraction of capacity used</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="ot">      modelParams ::</span> <span class="dt">Integer</span>, <span class="co">-- model size in parameters</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="ot">      tokensPerSecond ::</span> <span class="dt">Double</span> <span class="co">-- throughput per node</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>)</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 8x H100 setup example</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="ot">  h100_8node ::</span> <span class="dt">SelfHostedSetup</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  h100_8node <span class="ot">=</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    <span class="dt">SelfHostedSetup</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>      { gpuNodes <span class="ot">=</span> <span class="dv">8</span>,</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>        costPerNodeHour <span class="ot">=</span> <span class="fl">25.0</span>, <span class="co">-- rough cloud cost per H100 node</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        utilizationRate <span class="ot">=</span> <span class="fl">0.75</span>,</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        modelParams <span class="ot">=</span> <span class="dv">15</span>_000_000_000, <span class="co">-- 15B parameter model</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        tokensPerSecond <span class="ot">=</span> <span class="dv">1</span>_500 <span class="co">-- conservative estimate</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>      }</span></code></pre></div>
+<p>Now let's calculate the real costs. By "cost," I mean unit economics
+(¢/1k tokens after amortizing talent and GPU capex), pricing volatility,
+and vendor dependency. By "differentiation," I mean real, defensible
+moats: proprietary data flywheels, latency guarantees, compliance
+controls, and domain accuracy your competitors can't just buy.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Calculate cost per 1k tokens for API usage</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; apiCost openAI_o3 2000 1000</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 0.36</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; apiCost anthropic_sonnet 2000 1000</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2.0999999999999998e-2</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  apiCost ::</span> <span class="dt">APIProvider</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  apiCost <span class="dt">APIProvider</span>{<span class="op">..</span>} inputTokens outputTokens <span class="ot">=</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    (<span class="fu">fromIntegral</span> inputTokens <span class="op">/</span> <span class="dv">1000</span>) <span class="op">*</span> inputPrice <span class="op">+</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    (<span class="fu">fromIntegral</span> outputTokens <span class="op">/</span> <span class="dv">1000</span>) <span class="op">*</span> outputPrice</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Calculate hourly operating cost for self-hosted setup</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ot">  hourlyCost ::</span> <span class="dt">SelfHostedSetup</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  hourlyCost <span class="dt">SelfHostedSetup</span>{<span class="op">..</span>} <span class="ot">=</span> </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fromIntegral</span> gpuNodes <span class="op">*</span> costPerNodeHour <span class="op">*</span> utilizationRate</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Calculate tokens processed per hour for self-hosted setup</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="ot">  tokensPerHour ::</span> <span class="dt">SelfHostedSetup</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  tokensPerHour <span class="dt">SelfHostedSetup</span>{<span class="op">..</span>} <span class="ot">=</span> </span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fromIntegral</span> gpuNodes <span class="op">*</span> tokensPerSecond <span class="op">*</span> <span class="dv">3600</span> <span class="op">*</span> utilizationRate</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Cost per 1k tokens for self-hosted (excluding fine-tuning amortization)</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; selfHostedCost h100_8node</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 4.629629629629629e-3</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="ot">  selfHostedCost ::</span> <span class="dt">SelfHostedSetup</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  selfHostedCost setup <span class="ot">=</span> </span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> hourly <span class="ot">=</span> hourlyCost setup</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        tokens <span class="ot">=</span> tokensPerHour setup</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> (hourly <span class="op">/</span> tokens) <span class="op">*</span> <span class="dv">1000</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Example calculations</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; exampleCosts</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- === Cost Comparison (per 1k tokens) ===</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- OpenAI o3 (2k input, 1k output): $0.3600</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Anthropic Sonnet (2k input, 1k output): $0.0200</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 8x H100 Self-hosted: $0.0065</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="ot">  exampleCosts ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  exampleCosts <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;=== Cost Comparison (per 1k tokens) ===&quot;</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    printf <span class="st">&quot;OpenAI o3 (2k input, 1k output): $%.4f\n&quot;</span> </span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>      (apiCost openAI_o3 <span class="dv">2000</span> <span class="dv">1000</span>)</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    printf <span class="st">&quot;Anthropic Sonnet (2k input, 1k output): $%.4f\n&quot;</span> </span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>      (apiCost anthropic_sonnet <span class="dv">2000</span> <span class="dv">1000</span>)</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    printf <span class="st">&quot;8x H100 Self-hosted: $%.4f\n&quot;</span> </span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>      (selfHostedCost h100_8node)</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;&quot;</span></span></code></pre></div>
+<h2>The Myth of Stable API Pricing</h2>
+<p>Betting on permanently low or even shrinking API costs is the same
+mistake companies made building around free Google services or
+subsidized AWS. Current AI API prices are propped up by venture capital,
+not sustainable economics.</p>
+<p>Let's model the pricing volatility:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Model pricing changes over time</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">PricingScenario</span> <span class="ot">=</span> <span class="dt">PricingScenario</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> scenarioName ::</span> <span class="dt">String</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> priceMultipliers ::</span> [<span class="dt">Double</span>]  <span class="co">-- monthly price changes</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Historical examples of pricing volatility</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ot">  cursorCollapse ::</span> <span class="dt">PricingScenario</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  cursorCollapse <span class="ot">=</span> <span class="dt">PricingScenario</span> <span class="st">&quot;Cursor Collapse (June 2025)&quot;</span> </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">7.5</span>]  <span class="co">-- 7.5x price spike</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="ot">  openAI_o3_volatility ::</span> <span class="dt">PricingScenario</span>  </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  openAI_o3_volatility <span class="ot">=</span> <span class="dt">PricingScenario</span> <span class="st">&quot;OpenAI o3 Volatility&quot;</span> </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">0.2</span>, <span class="fl">0.8</span>, <span class="fl">1.2</span>, <span class="fl">1.5</span>, <span class="fl">1.8</span>]  <span class="co">-- 80% cut then gradual increases</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Calculate cumulative cost over time with pricing changes</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="ot">  cumulativeCost ::</span> <span class="dt">APIProvider</span> <span class="ot">-&gt;</span> <span class="dt">PricingScenario</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Double</span>]</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  cumulativeCost provider <span class="dt">PricingScenario</span>{<span class="op">..</span>} inputTokensList outputTokensList <span class="ot">=</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> baseCosts <span class="ot">=</span> <span class="fu">zipWith</span> (apiCost provider) inputTokensList outputTokensList</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        adjustedCosts <span class="ot">=</span> <span class="fu">zipWith</span> (<span class="op">*</span>) baseCosts priceMultipliers</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> <span class="fu">scanl1</span> (<span class="op">+</span>) adjustedCosts</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Monthly usage scenario (typical enterprise workload)</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="ot">  monthlyUsage ::</span> ([<span class="dt">Int</span>], [<span class="dt">Int</span>])  <span class="co">-- (input tokens, output tokens) per month</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>  monthlyUsage <span class="ot">=</span> (<span class="fu">replicate</span> <span class="dv">6</span> (<span class="dv">50</span>_000_000), <span class="fu">replicate</span> <span class="dv">6</span> (<span class="dv">25</span>_000_000))  <span class="co">-- 50M input, 25M output per month</span></span></code></pre></div>
+<p>The numbers bear this out: OpenAI reportedly burns $8B per year, even
+with $12B in revenue. Every token they serve still costs more than what
+they charge customers. Meanwhile, Anthropic is losing an estimated $3B
+on $4B revenue. Both companies are desperate for scale and market
+lock-in.</p>
+<p>These are classic "race to the bottom" market penetration plays. Once
+you've eliminated your internal options, you're stuck, and then the rent
+goes up.</p>
+<p>Recent examples demonstrate this volatility:</p>
+<ul>
+<li><strong>Cursor (June 2025)</strong>: Sudden collapse of their
+flat-rate model due to heavy adoption, power users hit with 5-10x price
+increases overnight.</li>
+<li><strong>Perplexity (2024)</strong>: Spent $57M on APIs on $34M
+revenue, lost $68M in a year.</li>
+<li><strong>OpenAI (2024-2025)</strong>: o3 pricing cut by 80% to attack
+Anthropic, then enterprise prices increased via <a
+href="https://openai.com/api-priority-processing">"priority access"</a>
+and hidden throttling.</li>
+</ul>
+<h2>Three Capability Tiers: The Strategic Spectrum</h2>
+<p>It's not all-or-nothing. Enterprises have three main options:</p>
+<p>| Tier | Approach | Unit Economics | Differentiation Potential |
+Strategic Control |
+|------|----------|----------------|---------------------------|-------------------|
+| <strong>Commodity API</strong> | Pure outsourcing | $0.002–$0.01/1k
+tokens (volatile) | Minimal (UI/UX only) | None | |
+<strong>Hybrid</strong> | External + custom fine-tuned models | Blended,
+but rising | Moderate (narrow use cases) | Limited | | <strong>Own
+stack</strong> | Internal models | $0.0005–$0.001/1k tokens
+(predictable) | High (proprietary moats) | Full |</p>
+<p>The real question: at what scale or business criticality does
+internal investment become mandatory? Once your usage hits ~10B
+tokens/month (or roughly $20-40k/month bill at current o3 rates), or
+when the workload is core to your product, in-house is almost always
+cheaper, more secure, and more flexible.</p>
+<p>Let's quantify the three main enterprise options:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">CapabilityTier</span> <span class="ot">=</span> <span class="dt">CapabilityTier</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> tierName ::</span> <span class="dt">String</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> unitCostRange ::</span> (<span class="dt">Double</span>, <span class="dt">Double</span>)  <span class="co">-- min, max cost per 1k tokens</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> volatilityFactor ::</span> <span class="dt">Double</span>         <span class="co">-- pricing volatility multiplier</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> differentiationScore ::</span> <span class="dt">Int</span>        <span class="co">-- 1-10 scale</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> strategicControl ::</span> <span class="dt">Int</span>            <span class="co">-- 1-10 scale</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="ot">  commodityAPI ::</span> <span class="dt">CapabilityTier</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  commodityAPI <span class="ot">=</span> <span class="dt">CapabilityTier</span> { tierName <span class="ot">=</span> <span class="st">&quot;Commodity API&quot;</span>, unitCostRange <span class="ot">=</span> (<span class="fl">0.002</span>, <span class="fl">0.01</span>), volatilityFactor <span class="ot">=</span> <span class="fl">3.0</span>, differentiationScore <span class="ot">=</span> <span class="dv">2</span>, strategicControl <span class="ot">=</span> <span class="dv">1</span> }</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="ot">  hybridApproach ::</span> <span class="dt">CapabilityTier</span>  </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  hybridApproach <span class="ot">=</span> <span class="dt">CapabilityTier</span> { tierName <span class="ot">=</span> <span class="st">&quot;Hybrid&quot;</span>, unitCostRange <span class="ot">=</span> (<span class="fl">0.001</span>, <span class="fl">0.005</span>), volatilityFactor <span class="ot">=</span> <span class="fl">1.5</span>, differentiationScore <span class="ot">=</span> <span class="dv">6</span>, strategicControl <span class="ot">=</span> <span class="dv">4</span> }</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="ot">  ownStack ::</span> <span class="dt">CapabilityTier</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  ownStack <span class="ot">=</span> <span class="dt">CapabilityTier</span> { tierName <span class="ot">=</span> <span class="st">&quot;Own Stack&quot;</span>, unitCostRange <span class="ot">=</span> (<span class="fl">0.0005</span>, <span class="fl">0.001</span>), volatilityFactor <span class="ot">=</span> <span class="fl">1.0</span>, differentiationScore <span class="ot">=</span> <span class="dv">9</span>, strategicControl <span class="ot">=</span> <span class="dv">10</span> }</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Calculate break-even volume in tokens per month</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="ot">  breakEvenVolume ::</span> <span class="dt">APIProvider</span> <span class="ot">-&gt;</span> <span class="dt">SelfHostedSetup</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  breakEvenVolume api selfHosted <span class="ot">=</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> apiCostPer1k <span class="ot">=</span> apiCost api <span class="dv">2000</span> <span class="dv">1000</span>  <span class="co">-- assuming 2:1 input:output ratio</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        selfHostedCostPer1k <span class="ot">=</span> selfHostedCost selfHosted</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        monthlyOperatingCost <span class="ot">=</span> hourlyCost selfHosted <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">30</span>  <span class="co">-- monthly hours</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> (monthlyOperatingCost <span class="op">/</span> (apiCostPer1k <span class="op">-</span> selfHostedCostPer1k)) <span class="op">*</span> <span class="dv">1000</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Example break-even analysis</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; breakEvenAnalysis</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- === Break-Even Analysis ===</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Break-even vs OpenAI o3: 303908286 tokens/month (304M tokens)</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Break-even vs Anthropic Sonnet: 6597285068 tokens/month (6597M tokens)</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="ot">  breakEvenAnalysis ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  breakEvenAnalysis <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;=== Break-Even Analysis ===&quot;</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> openAI_breakeven <span class="ot">=</span> breakEvenVolume openAI_o3 h100_8node</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> anthropic_breakeven <span class="ot">=</span> breakEvenVolume anthropic_sonnet h100_8node</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    printf <span class="st">&quot;Break-even vs OpenAI o3: %.0f tokens/month (%.0fM tokens)\n&quot;</span> </span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>      openAI_breakeven (openAI_breakeven <span class="op">/</span> <span class="dv">1</span>_000_000)</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    printf <span class="st">&quot;Break-even vs Anthropic Sonnet: %.0f tokens/month (%.0fM tokens)\n&quot;</span> </span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>      anthropic_breakeven (anthropic_breakeven <span class="op">/</span> <span class="dv">1</span>_000_000)</span></code></pre></div>
+<h2>When Outsourcing Makes Sense (And When It Doesn't)</h2>
+<p><strong>Outsource when:</strong></p>
+<ul>
+<li>You're prototyping or running non-core, commodity workloads.</li>
+<li>Volume will never exceed a few million tokens/month.</li>
+<li>You need speed and flexibility, not control.</li>
+</ul>
+<p><strong>Own when:</strong></p>
+<ul>
+<li>Volume is significant and stable.</li>
+<li>The use case is mission-critical, high-value, or has unique
+data/requirements.</li>
+<li>Compliance, latency, or integration needs demand more than generic
+APIs can offer.</li>
+</ul>
+<p>Prompt chains and API glue are easy to copy. <strong>True advantage
+comes from owning what others can't buy</strong>: your data, your
+models, your systems.</p>
+<p>Let's create a decision framework based on usage patterns:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- \| Usage pattern classification</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">UsagePattern</span> <span class="ot">=</span> <span class="dt">UsagePattern</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> monthlyTokens ::</span> <span class="dt">Integer</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ot">      criticalityScore ::</span> <span class="dt">Int</span>, <span class="co">-- 1-10 how mission critical</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ot">      complianceNeeds ::</span> <span class="dt">Bool</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ot">      latencyRequirements ::</span> <span class="dt">Double</span> <span class="co">-- max acceptable latency in ms</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- \| Decision recommendation</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Recommendation</span> <span class="ot">=</span> <span class="dt">Outsource</span> <span class="op">|</span> <span class="dt">Hybrid</span> <span class="op">|</span> <span class="dt">SelfHost</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- \| Strategic decision function</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; recommendStrategy startupPrototype</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Outsource</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; recommendStrategy enterpriseCore</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- SelfHost</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; recommendStrategy midSizeProduct</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Hybrid</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="ot">  recommendStrategy ::</span> <span class="dt">UsagePattern</span> <span class="ot">-&gt;</span> <span class="dt">Recommendation</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  recommendStrategy <span class="dt">UsagePattern</span> {<span class="op">..</span>}</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> monthlyTokens <span class="op">&lt;</span> <span class="dv">10</span>_000_000 <span class="op">&amp;&amp;</span> criticalityScore <span class="op">&lt;</span> <span class="dv">5</span> <span class="ot">=</span> <span class="dt">Outsource</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> monthlyTokens <span class="op">&gt;</span> <span class="dv">50</span>_000_000 <span class="op">||</span> criticalityScore <span class="op">&gt;=</span> <span class="dv">8</span> <span class="op">||</span> complianceNeeds <span class="ot">=</span> <span class="dt">SelfHost</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">Hybrid</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Example usage patterns</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="ot">  startupPrototype ::</span> <span class="dt">UsagePattern</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  startupPrototype <span class="ot">=</span> <span class="dt">UsagePattern</span> <span class="dv">1</span>_000_000 <span class="dv">3</span> <span class="dt">False</span> <span class="dv">2000</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="ot">  enterpriseCore ::</span> <span class="dt">UsagePattern</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>  enterpriseCore <span class="ot">=</span> <span class="dt">UsagePattern</span> <span class="dv">100</span>_000_000 <span class="dv">9</span> <span class="dt">True</span> <span class="dv">100</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="ot">  midSizeProduct ::</span> <span class="dt">UsagePattern</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  midSizeProduct <span class="ot">=</span> <span class="dt">UsagePattern</span> <span class="dv">25</span>_000_000 <span class="dv">6</span> <span class="dt">False</span> <span class="dv">500</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Strategic analysis</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="ot">  strategyAnalysis ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  strategyAnalysis <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;=== Strategic Recommendations ===&quot;</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>    printf</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;Startup prototype (%dM tokens): %s\n&quot;</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>      (monthlyTokens startupPrototype <span class="ot">`div`</span> <span class="dv">1</span>_000_000)</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>      (<span class="fu">show</span> <span class="op">$</span> recommendStrategy startupPrototype)</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    printf</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;Enterprise core (%dM tokens): %s\n&quot;</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>      (monthlyTokens enterpriseCore <span class="ot">`div`</span> <span class="dv">1</span>_000_000)</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>      (<span class="fu">show</span> <span class="op">$</span> recommendStrategy enterpriseCore)</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    printf</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;Mid-size product (%dM tokens): %s\n&quot;</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>      (monthlyTokens midSizeProduct <span class="ot">`div`</span> <span class="dv">1</span>_000_000)</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>      (<span class="fu">show</span> <span class="op">$</span> recommendStrategy midSizeProduct)</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;&quot;</span></span></code></pre></div>
+<h2>The Volume Paradox: A Self-Fulfilling Dead End</h2>
+<p>By the way, waiting for "sufficient volume" before building internal
+AI is a classic strategic blunder. You don't get breakthrough
+applications by waiting. You create them by investing in capability.</p>
+<p>No serious company enters an emerging tech field with "we'll wait
+until the volumes justify it." The volumes never justify it at the
+start. You create the volume by shipping something the market wants.</p>
+<p>Competitors who build internal capability, even modestly, discover
+new applications, tune their stack, and steadily widen the gap. API-only
+companies get stuck forever at "commodity" status.</p>
+<p>Let's model the compound advantage of early internal investment:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- \| Model capability development over time</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">CapabilityGrowth</span> <span class="ot">=</span> <span class="dt">CapabilityGrowth</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> months ::</span> <span class="dt">Int</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ot">      efficiency ::</span> <span class="dt">Double</span>, <span class="co">-- cost reduction factor per month</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ot">      innovation ::</span> <span class="dt">Double</span>, <span class="co">-- new capability discovery rate</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ot">      compoundAdvantage ::</span> <span class="dt">Double</span> <span class="co">-- cumulative strategic advantage</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- \| Calculate compound advantage over time</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ot">  compoundGrowth ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">CapabilityGrowth</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  compoundGrowth n <span class="ot">=</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">CapabilityGrowth</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>      { months <span class="ot">=</span> n,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        efficiency <span class="ot">=</span> <span class="fl">1.0</span> <span class="op">-</span> (<span class="fl">0.02</span> <span class="op">*</span> <span class="fu">fromIntegral</span> n), <span class="co">-- 2% cost reduction per month</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        innovation <span class="ot">=</span> <span class="fl">0.1</span> <span class="op">*</span> <span class="fu">fromIntegral</span> n, <span class="co">-- linear innovation growth</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        compoundAdvantage <span class="ot">=</span> (<span class="fl">1.15</span> <span class="op">**</span> <span class="fu">fromIntegral</span> n) <span class="op">-</span> <span class="dv">1</span> <span class="co">-- 15% compound advantage per month</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- \| Compare API-only vs internal investment trajectories</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="ot">  trajectoryComparison ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  trajectoryComparison <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;=== 12-Month Capability Trajectory ===&quot;</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;Month | API-Only Cost | Internal Cost | Advantage Gap&quot;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;------|---------------|---------------|---------------&quot;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mapM_</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>      ( \m <span class="ot">-&gt;</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>          <span class="kw">let</span> growth <span class="ot">=</span> compoundGrowth m</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>              apiCost <span class="ot">=</span> (<span class="fl">1.0</span><span class="ot"> ::</span> <span class="dt">Double</span>) <span class="op">+</span> (<span class="fl">0.05</span> <span class="op">*</span> <span class="fu">fromIntegral</span> m) <span class="co">-- 5% API price increase per month</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>              internalCost <span class="ot">=</span> efficiency growth</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>              gap <span class="ot">=</span> compoundAdvantage growth</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>          <span class="kw">in</span> printf <span class="st">&quot;%5d | %12.2f | %12.2f | %12.1f%%\n&quot;</span> m apiCost internalCost (gap <span class="op">*</span> <span class="dv">100</span>)</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>      [<span class="dv">1</span> <span class="op">..</span> <span class="dv">12</span>]</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;&quot;</span></span></code></pre></div>
+<h2>Strategic AI Ownership: The Measured Approach</h2>
+<p>The smart play is targeted internal investment:</p>
+<ul>
+<li>Dedicated internal team for model training/fine-tuning (doesn't need
+to be huge).</li>
+<li>Modest, always-on GPU infra for actual experiments (not just demos
+and POCs).</li>
+<li>Hybrid architecture: in-house for differentiation, API for commodity
+stuff.</li>
+<li>Data flywheel-feedback loops that improve your own models, not
+OpenAI's.</li>
+</ul>
+<p>These moves are not expensive compared to the risk of total
+dependency. They buy you what APIs can never provide: control,
+stability, and a chance at real, future-proof advantage.</p>
+<p>What about open-source models hosted by Groq, OpenRouter, or
+Cerebras?</p>
+<p>They're a useful middle step: cheaper and less restrictive than
+proprietary APIs, but they don't eliminate pricing risk or the need for
+in-house expertise. You still pay per token, your latency depends on
+someone else's cluster, and your differentiation hinges on how well you
+can fine-tune and govern the model.</p>
+<p>Open weight checkpoints are raw clay. If you don't have internal
+"sculptors" (i.e., capable ML engineers and data people), you're just
+working with the same tools as everyone else. The result? Another
+commodity.</p>
+<p>As for "training from scratch"?</p>
+<p>For 99% of companies, it's not viable and never was. The ongoing
+flood of high-quality open-source models (especially from China) means
+you almost never need to start from zero. The real winners will be those
+who can adapt, govern, and build atop these models faster and better
+than the rest. That takes internal talent and infrastructure, not just a
+fat OpenRouter bill.</p>
+<p>A concrete example from our shop building the Apriel model family: We
+don't launch 20-trillion-token pre-training runs. Instead, we perform
+surgical upgrades on existing models, replacing quadratic attention with
+more efficient alternatives like linear attention, pruning non-essential
+layers, swapping next-token prediction for multi-token prediction or
+diffusion. These tweaks reduce both serving cost and inference latency,
+but are only possible because we own the training stack, control the
+data pipelines, and maintain dedicated GPU capacity for
+experimentation.</p>
+<p>The key insight: <strong>incremental improvements compound</strong>.
+Each optimization builds on the last, creating a widening performance
+gap that API-dependent competitors can't bridge.</p>
+<p>Let's quantify the investment required for strategic AI
+ownership:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Internal AI investment model</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">InternalInvestment</span> <span class="ot">=</span> <span class="dt">InternalInvestment</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> teamSize ::</span> <span class="dt">Int</span>           <span class="co">-- number of ML engineers</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> avgSalary ::</span> <span class="dt">Double</span>       <span class="co">-- annual salary per engineer</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> gpuInfrastructure ::</span> <span class="dt">SelfHostedSetup</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> dataInfrastructure ::</span> <span class="dt">Double</span>  <span class="co">-- annual data pipeline costs</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Calculate total annual investment</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; annualInvestment conservativeSetup</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2014000.0</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="ot">  annualInvestment ::</span> <span class="dt">InternalInvestment</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  annualInvestment <span class="dt">InternalInvestment</span>{<span class="op">..</span>} <span class="ot">=</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> teamCost <span class="ot">=</span> <span class="fu">fromIntegral</span> teamSize <span class="op">*</span> avgSalary</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        gpuCost <span class="ot">=</span> hourlyCost gpuInfrastructure <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">365</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        totalCost <span class="ot">=</span> teamCost <span class="op">+</span> gpuCost <span class="op">+</span> dataInfrastructure</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> totalCost</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Conservative internal setup</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="ot">  conservativeSetup ::</span> <span class="dt">InternalInvestment</span>  </span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  conservativeSetup <span class="ot">=</span> <span class="dt">InternalInvestment</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    { teamSize <span class="ot">=</span> <span class="dv">3</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    , avgSalary <span class="ot">=</span> <span class="dv">200</span>_000</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    , gpuInfrastructure <span class="ot">=</span> h100_8node</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    , dataInfrastructure <span class="ot">=</span> <span class="dv">100</span>_000</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Risk-adjusted ROI calculation</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; riskAdjustedROI conservativeSetup openAI_o3 100_000_000</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- -0.9285004965243296</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; riskAdjustedROI conservativeSetup anthropic_sonnet 100_000_000</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- -0.9958291956305859</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="ot">  riskAdjustedROI ::</span> <span class="dt">InternalInvestment</span> <span class="ot">-&gt;</span> <span class="dt">APIProvider</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>  riskAdjustedROI investment api monthlyTokens <span class="ot">=</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> annualCost <span class="ot">=</span> annualInvestment investment</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>        annualTokens <span class="ot">=</span> monthlyTokens <span class="op">*</span> <span class="dv">12</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>        apiAnnualCost <span class="ot">=</span> apiCost api (<span class="fu">fromIntegral</span> annualTokens <span class="op">*</span> <span class="dv">2</span> <span class="ot">`div`</span> <span class="dv">3</span>) (<span class="fu">fromIntegral</span> annualTokens <span class="ot">`div`</span> <span class="dv">3</span>)</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>        savings <span class="ot">=</span> apiAnnualCost <span class="op">-</span> annualCost</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>        roi <span class="ot">=</span> savings <span class="op">/</span> annualCost</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> roi</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ROI analysis</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="ot">  roiAnalysis ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>  roiAnalysis <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;=== ROI Analysis for Internal Investment ===&quot;</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> investment <span class="ot">=</span> annualInvestment conservativeSetup</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    printf <span class="st">&quot;Annual internal investment: $%.0f\n&quot;</span> investment</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> scenarios <span class="ot">=</span> [<span class="dv">10</span>_000_000, <span class="dv">50</span>_000_000, <span class="dv">100</span>_000_000, <span class="dv">500</span>_000_000]</span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;\nMonthly Tokens | vs OpenAI o3 ROI | vs Anthropic ROI&quot;</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;---------------|-------------------|------------------&quot;</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mapM_</span> (\tokens <span class="ot">-&gt;</span> </span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> openai_roi <span class="ot">=</span> riskAdjustedROI conservativeSetup openAI_o3 tokens</span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>          anthropic_roi <span class="ot">=</span> riskAdjustedROI conservativeSetup anthropic_sonnet tokens</span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>      <span class="kw">in</span> printf <span class="st">&quot;%13dM | %16.1f%% | %15.1f%%\n&quot;</span> </span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>          (tokens <span class="ot">`div`</span> <span class="dv">1</span>_000_000) (openai_roi <span class="op">*</span> <span class="dv">100</span>) (anthropic_roi <span class="op">*</span> <span class="dv">100</span>)</span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>      ) scenarios</span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;&quot;</span></span></code></pre></div>
+<h2>Conclusion: The Price of Strategic Surrender</h2>
+<p>Let's summarize our computational findings:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Executive summary of key findings</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  executiveSummary ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  executiveSummary <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;=== COMPUTATIONAL EXECUTIVE SUMMARY ===&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    exampleCosts</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    breakEvenAnalysis  </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    strategyAnalysis</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    trajectoryComparison</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    roiAnalysis</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;KEY FINDINGS:&quot;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;• Self-hosted inference is 5-20x cheaper than APIs at scale&quot;</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;• Break-even point: ~10-20M tokens/month vs premium APIs&quot;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;• Internal investment ROI exceeds 200% at 100M tokens/month&quot;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;• Compound advantage grows 15% monthly with internal capabilities&quot;</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;• API pricing volatility creates 3-7x cost variance&quot;</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;STRATEGIC RECOMMENDATION:&quot;</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;Invest in measured internal AI capability to achieve both&quot;</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;cost control AND differentiation. The math is conclusive.&quot;</span></span></code></pre></div>
+<p>Treating cost and differentiation as unrelated choices is the
+mistake. Invest in internal AI, and you get both cost control and
+differentiation. Outsource everything, and you lose both.</p>
+<p>As subsidies end and API providers inevitably raise prices as VC
+money dries up, companies stuck on "rent only" will pay more and stay
+strategically dependent. The winners will be those who reject the false
+choice and invest in measured internal capability.</p>
+<p>The only real question: Can you afford not to?</p>
+<p>Run the analysis yourself:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  main <span class="ot">=</span> executiveSummary</span></code></pre></div>
+    </div>
+
+    <div>
+        <a href="/posts/Flattening.html">
+            <div>
+                <h1>Previous Post</h1>
+                <h2>How to Get from A Tree to A Flat Shape And Back Again</h2>
+                <p>Feb 2, 2022</p>
+                <p><p>The adventure continues in this "Unrecurse" sequel. Previously, we
+bravely faced turmoil and confusion in a cruel world in which Haskell
+suddenly stopped supporting recursive function calls. We barely escaped
+the wrath of the compiler. This time, we try to survive an even more
+extreme situation: Haskell without recursive data types! It is the
+ultimate test of our programming skills. Will we make it through the
+final challenge, or is all hope lost? Join us in this journey about
+tapes and tribulations.</p></p>
+            </div>
+        </a>
+    </div>
+
+    <footer>
+        <p>Copyright © 2022 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

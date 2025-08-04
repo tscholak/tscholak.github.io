@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>UnifiedSKG: Unifying and Multi-Tasking Structured Knowledge Grounding
+with Text-to-Text Language Models</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="[&quot;Tianbao Xie&quot;,&quot;Chen Henry Wu&quot;,&quot;Peng Shi&quot;,&quot;Ruiqi Zhong&quot;,&quot;Torsten Scholak&quot;,&quot;Michihiro Yasunaga&quot;,&quot;Chien-Sheng Wu&quot;,&quot;Ming Zhong&quot;,&quot;Pengcheng Yin&quot;,&quot;Sida I. Wang&quot;,&quot;Victor Zhong&quot;,&quot;Bailin Wang&quot;,&quot;Chengzu Li&quot;,&quot;Connor Boyle&quot;,&quot;Ansong Ni&quot;,&quot;Ziyu Yao&quot;,&quot;Dragomir Radev&quot;,&quot;Caiming Xiong&quot;,&quot;Lingpeng Kong&quot;,&quot;Rui Zhang&quot;,&quot;Noah A. Smith&quot;,&quot;Luke Zettlemoyer&quot;,&quot;Tao Yu&quot;]">
+    <meta name="keywords" content="Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="UnifiedSKG: Unifying and Multi-Tasking Structured Knowledge Grounding
+with Text-to-Text Language Models">
+    <meta name="twitter:description" content="Torsten Scholak&#39;s personal website">
+    <meta name="twitter:image" content="/images/unified-skg.png">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/8337134">8337134</a> (2022-01-23 09:56:47 -0500) Torsten Scholak: treat lists as maybe + nonempty</p>
+
+        <p><img src="/images/unified-skg.png"></p>
+
+        <h1>UnifiedSKG: Unifying and Multi-Tasking Structured Knowledge Grounding
+with Text-to-Text Language Models</h1>
+        <p>
+            <div id="csl">
+                <span>Tianbao Xie</span>
+                <span>Chen Henry Wu</span>
+                <span>Peng Shi</span>
+                <span>Ruiqi Zhong</span>
+                <span>Torsten Scholak</span>
+                <span>Michihiro Yasunaga</span>
+                <span>Chien-Sheng Wu</span>
+                <span>Ming Zhong</span>
+                <span>Pengcheng Yin</span>
+                <span>Sida I. Wang</span>
+                <span>Victor Zhong</span>
+                <span>Bailin Wang</span>
+                <span>Chengzu Li</span>
+                <span>Connor Boyle</span>
+                <span>Ansong Ni</span>
+                <span>Ziyu Yao</span>
+                <span>Dragomir Radev</span>
+                <span>Caiming Xiong</span>
+                <span>Lingpeng Kong</span>
+                <span>Rui Zhang</span>
+                <span>Noah A. Smith</span>
+                <span>Luke Zettlemoyer</span>
+                <span>Tao Yu</span>
+            </div>
+        </p>
+        <p><em>arXiv:2201.05966 [cs.CL]</em></p>
+        <p>Published on Jan 16, 2022</p>
+        <p>Official link: <a href="https://arxiv.org/abs/2201.05966">https://arxiv.org/abs/2201.05966</a></p>
+        <p>
+            <a href="https://arxiv.org/pdf/2201.05966">PDF</a>
+            <a href="https://github.com/hkunlp/unifiedskg">Code</a>
+        </p>
+        <p>
+            Tagged as:
+            <a href="/tags/research">research</a>
+        </p>
+        <p>TL;DR: Let&#39;s unify all structured-knowledge grounded tasks into the same
+text-to-text framework!</p>
+        <p>Structured knowledge grounding (SKG) leverages structured knowledge
+to complete user requests, such as semantic parsing over databases and
+question answering over knowledge bases. Since the inputs and outputs of
+SKG tasks are heterogeneous, they have been studied separately by
+different communities, which limits systematic and compatible research
+on SKG. In this paper, we overcome this limitation by proposing the SKG
+framework, which unifies 21 SKG tasks into a text-to-text format, aiming
+to promote systematic SKG research, instead of being exclusive to a
+single task, domain, or dataset. We use UnifiedSKG to benchmark T5 with
+different sizes and show that T5, with simple modifications when
+necessary, achieves state-of-the-art performance on almost all of the 21
+tasks. We further demonstrate that multi-task prefix-tuning improves the
+performance on most tasks, largely improving the overall performance.
+UnifiedSKG also facilitates the investigation of zero-shot and few-shot
+learning, and we show that T0, GPT-3, and Codex struggle in zero-shot
+and few-shot learning for SKG. We also use UnifiedSKG to conduct a
+series of controlled experiments on structured knowledge encoding
+variants across SKG tasks. UnifiedSKG is easily extensible to more
+tasks, and it is open-sourced.</p>
+    </div>
+
+    <div>
+        <a href="/publications/neural-interpreters.html">
+            <div>
+                <h1>Previous Publication</h1>
+                <h2>Towards Neural Functional Program Evaluation</h2>
+                <p>Dec 9, 2021</p>
+                <p>Are neural models bad at interpreting programs? For the AIPLANS NeurIPS
+workshop in 2021, we created a dataset of functional programs, and
+trained T5 to reduce them to their normal forms. Turns out it works even
+for challenging data splits!</p>
+            </div>
+        </a>
+    </div>
+
+    <footer>
+        <p>Copyright © 2022 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>
