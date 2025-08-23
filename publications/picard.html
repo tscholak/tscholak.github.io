@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>PICARD: Parsing Incrementally for Constrained Auto-Regressive Decoding
+from Language Models</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="[&quot;Torsten Scholak&quot;,&quot;Nathan Schucher&quot;,&quot;Dzmitry Bahdanau&quot;]">
+    <meta name="keywords" content="Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PICARD: Parsing Incrementally for Constrained Auto-Regressive Decoding
+from Language Models">
+    <meta name="twitter:description" content="Torsten Scholak&#39;s personal website">
+    <meta name="twitter:image" content="/images/picard.jpg">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/37e35de">37e35de</a> (2022-01-24 21:38:57 -0500) Torsten Scholak: fix link to repo</p>
+
+        <p><img src="/images/picard.jpg"></p>
+
+        <h1>PICARD: Parsing Incrementally for Constrained Auto-Regressive Decoding
+from Language Models</h1>
+        <p>
+            <div id="csl">
+                <span>Torsten Scholak</span>
+                <span>Nathan Schucher</span>
+                <span>Dzmitry Bahdanau</span>
+            </div>
+        </p>
+        <p><em>Proceedings of the 2021 Conference on Empirical Methods in Natural
+Language Processing</em></p>
+        <p>Published on Nov 1, 2021</p>
+        <p>Official link: <a href="https://aclanthology.org/2021.emnlp-main.779">https://aclanthology.org/2021.emnlp-main.779</a></p>
+        <p>
+            <a href="https://arxiv.org/pdf/2109.05093">PDF</a>
+            <a href="https://github.com/ElementAI/picard">Code</a>
+            <a href="https://youtu.be/kTpixsr-37w">Talk</a>
+        </p>
+        <p>
+            Tagged as:
+            <a href="/tags/research">research</a>
+            <a href="/tags/haskell">haskell</a>
+        </p>
+        <p>TL;DR: Introducing PICARD - a simple and effective constrained beam search
+algorithm for any language model. PICARD helps to generate valid code,
+which is useful for program synthesis and semantic parsing. We achieve
+SoTA on both Spider and CoSQL.</p>
+        <p>Large pre-trained language models for textual data have an
+unconstrained output space; at each decoding step, they can produce any
+of 10,000s of sub-word tokens. When fine-tuned to target constrained
+formal languages like SQL, these models often generate invalid code,
+rendering it unusable. We propose PICARD, a method for constraining
+auto-regressive decoders of language models through incremental parsing.
+PICARD helps to find valid output sequences by rejecting inadmissible
+tokens at each decoding step. On the challenging Spider and CoSQL
+text-to-SQL translation tasks, we show that PICARD transforms fine-tuned
+T5 models with passable performance into state-of-the-art solutions.
+Code and trained models are available <a
+href="https://github.com/ElementAI/picard">here</a>.</p>
+    </div>
+
+    <div>
+        <a href="/publications/neural-interpreters.html">
+            <div>
+                <h1>Next Publication</h1>
+                <h2>Towards Neural Functional Program Evaluation</h2>
+                <p>Dec 9, 2021</p>
+                <p>Are neural models bad at interpreting programs? For the AIPLANS NeurIPS
+workshop in 2021, we created a dataset of functional programs, and
+trained T5 to reduce them to their normal forms. Turns out it works even
+for challenging data splits!</p>
+            </div>
+        </a>
+        <a href="/publications/duorat.html">
+            <div>
+                <h1>Previous Publication</h1>
+                <h2>DuoRAT: Towards Simpler Text-to-SQL Models</h2>
+                <p>Jun 1, 2021</p>
+                <p>It&#39;s like RAT-SQL, but simpler and faster.</p>
+            </div>
+        </a>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>
