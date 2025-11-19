@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>Stop Renting Moat: The Computational Proof</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Stop Renting Moat: The Computational Proof">
+    <meta property="og:description" content="WIP">
+    <meta property="og:url" content="https://tscholak.github.io/posts/OutsourcedAI.html">
+    <meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="Stop Renting Moat: The Computational Proof">
+    <meta name="twitter:description" content="WIP">
+        <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/c0f603c">c0f603c</a> (2025-10-20 17:32:51 -0400) Torsten Scholak: Simplify JSON instances and refactor publication fields with type-safe GADTs</p>
+
+
+        <h1>Stop Renting Moat: The Computational Proof</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/ai">ai</a>
+            <a href="/tags/strategy">strategy</a>
+            <a href="/tags/economics">economics</a>
+            <a href="/tags/cost-analysis">cost-analysis</a>
+        </p>
+        <p>31 min read</p>
+        WIP
+        <h2 id="preliminaries">Preliminaries</h2>
+<p>This is a computational essay about enterprise AI strategy and the
+commoditization trap. It uses code to model the economics of AI
+outsourcing and internal capability development. Code snippets are
+executable examples that demonstrate the concepts discussed.</p>
+<p>Below some boilerplate code for this module that you can skip over if
+you just want to read the essay:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DataKinds #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DeriveGeneric #-}</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DerivingStrategies #-}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE KindSignatures #-}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE NumericUnderscores #-}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE TypeSynonymInstances #-}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE FlexibleInstances #-}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE MultiParamTypeClasses #-}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE ScopedTypeVariables #-}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> <span class="dt">OutsourcedAI</span> <span class="kw">where</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">GHC.Generics</span> (<span class="dt">Generic</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Text.Printf</span> (printf)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Ratio</span> (<span class="dt">Ratio</span>, (%))</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Quantity</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Quantity</span> (<span class="dt">Q</span>, magnitude, units),</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>      unQ,</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Unit</span>,</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>      convert,</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>      one,</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>      inUnit,</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>      scalar,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>      qCeiling,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>      qFromIntegral,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>      second,</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>      hour,</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>      month,</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>      year,</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>      dollar,</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>      unit,</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>      (<span class="op">*@</span>),</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>      (<span class="op">./</span>),</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>      qExp,</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>      qScale,</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>      qClamp,</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Ord</span> (clamp)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Graphics.Rendering.Chart.Easy</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Graphics.Rendering.Chart.Backend.Diagrams</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad</span> (forM_)</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Scalar</span> <span class="ot">=</span> <span class="dt">Double</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- import System.Directory   (getTemporaryDirectory)</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- import System.FilePath    ((&lt;/&gt;))</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- import qualified Data.Text.IO as T</span></span></code></pre></div>
+<h2 id="the-commoditization-trap-when-everyone-uses-the-same-apis">The
+Commoditization Trap: When Everyone Uses the Same APIs</h2>
+<p>The most dangerous assumption in enterprise AI strategy is that you
+must choose between competing on cost or on differentiation. This false
+dichotomy misses how competitive advantage actually works in the AI era.
+In reality, <strong>predictable unit cost and pricing power are
+themselves differentiators</strong> once you control your AI stack.</p>
+<h2 id="economic-rationale-and-goals">Economic Rationale And Goals</h2>
+<p>We are comparing two deployment strategies for enterprise use:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Deployment</span> <span class="ot">=</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>      <span class="dt">External</span> <span class="co">-- Use third-party APIs (OpenAI, Anthropic, etc.)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Internal</span> <span class="co">-- Build and serve models in-house</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span></code></pre></div>
+<p>Our primary goal is a simple, clear economic comparison:</p>
+<blockquote>
+<p>Which deployment strategy delivers greater long-term
+profitability?</p>
+</blockquote>
+<p>To answer this, we use a simple macroeconomic model that balances two
+key quantities:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Expected revenue (from successfully completed AI tasks)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Revenue</span> <span class="ot">=</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Operational cost (to perform AI tasks)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Cost</span> <span class="ot">=</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span></code></pre></div>
+<p>A task is an abstract unit of AI work (e.g., a completed chat
+interaction, a document processed, typical of your business use
+case):</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  task ::</span> <span class="dt">Unit</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  task <span class="ot">=</span> unit <span class="st">&quot;task&quot;</span></span></code></pre></div>
+<p>For our macroeconomic treatment of platform AI economics, we make
+simplifying assumptions:</p>
+<ol>
+<li><strong>Abstracted task semantics</strong>: All model completions
+are represented as a generic unit of work, <code>TaskUnit</code>.
+Complexity, structure, and purpose are absorbed into this abstract
+type.</li>
+<li><strong>Implicit customer dynamics</strong>: Instead of explicitly
+modeling customer behavior, we assume higher-quality tasks raise
+expected revenue per task, reflecting better conversion and retention,
+thus indirectly capturing improved Customer Lifetime Value (CLV).
+Therefore, expected revenue per task implicitly encodes platform
+economics and all customer-quality interactions.</li>
+<li><strong>Success rate as strategic level</strong>: The critical
+difference between external APIs and in-house models is how success rate
+(the probability of successful task completion) evolves:</li>
+</ol>
+<ul>
+<li>API models start stronger but plateau sooner.</li>
+<li>Internal models start weaker, but (due to data flywheel effects)
+improve more rapidly and plateau at a higher level.</li>
+</ul>
+<ol>
+<li><strong>Cost structure simplification</strong>: Operational cost per
+task reflects the marginal cost of AI work:</li>
+</ol>
+<ul>
+<li>Token-based billing for APIs.</li>
+<li>Infrastructure and R&amp;D costs for internal models.</li>
+</ul>
+<p>The key economic differentiator between strategies is how the success
+rate and the cost structure evolve over time. We model this evolution
+explicitly as a time series:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">SuccessRate</span> <span class="ot">=</span> <span class="dt">Scalar</span> <span class="co">-- dimensionless, between 0 and 1 (0% to 100%)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">DataAdvantage</span> <span class="ot">=</span> <span class="dt">Scalar</span> <span class="co">-- dimensionless, between 0 and 1 (0% to 100%)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Throughput</span> <span class="ot">=</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span> <span class="co">-- tasks per time unit</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Usage is the number of tasks per time unit</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Usage</span> <span class="ot">=</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">State</span> <span class="ot">=</span> <span class="dt">State</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> deployment ::</span> <span class="op">!</span><span class="dt">Deployment</span> <span class="co">-- ^ current deployment strategy</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> usage ::</span> <span class="op">!</span><span class="dt">Usage</span> <span class="co">-- ^ current usage in tasks per time unit</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> successRate ::</span> <span class="op">!</span><span class="dt">SuccessRate</span>  <span class="co">-- ^ current success rate (0 to 1)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> dataAdvantage ::</span> <span class="op">!</span><span class="dt">DataAdvantage</span> <span class="co">-- ^ current data advantage (0 to 1)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
+<p>A deployment strategy is a function that cleanly decouples
+decision-making from the simulation dynamics. This allows us to write
+strategies without touching the core engine.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">DeploymentStrategy</span> <span class="ot">=</span> <span class="dt">Exogenous</span> <span class="ot">-&gt;</span> <span class="dt">State</span> <span class="ot">-&gt;</span> <span class="dt">Deployment</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Exogenous</span> <span class="ot">=</span> <span class="dt">Exogenous</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    { <span class="co">-- external</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ot">      externalCost ::</span> <span class="op">!</span><span class="dt">Cost</span>  <span class="co">-- ^ $ / task for external API</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> externalSuccessRateCeiling ::</span> <span class="op">!</span><span class="dt">SuccessRate</span> <span class="co">-- ^ success rate for external API (at asymptote)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> externalImprovementRate ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ improvement rate for external API (1 / time unit)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- internal cost structure</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> internalFixedCost ::</span> <span class="op">!</span><span class="dt">Cost</span> <span class="co">-- ^ internal fixed cost / time unit (R&amp;D, baseline infra)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> internalVariableCost ::</span> <span class="op">!</span><span class="dt">Cost</span> <span class="co">-- ^ cost / time unit / active node</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> internalThroughput ::</span> <span class="op">!</span><span class="dt">Throughput</span> <span class="co">-- ^ tasks / time unit / node</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> internalBaseNodes ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ minimum nodes kept warm</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> internalSuccessRateCeiling ::</span> <span class="op">!</span><span class="dt">SuccessRate</span> <span class="co">-- ^ success rate for internal model (at asymptote)</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> internalLearningRate ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ demand increase due to learning effects (1 / time unit)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> internalDataAccumulationRate ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ data accumulation rate (1 / task)</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- demand side</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> marketCapacity ::</span> <span class="op">!</span><span class="dt">Usage</span> <span class="co">-- ^ maximum market size in tasks / time unit</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> qualitySensitivity ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ demand increase due to quality improvements (1 / time unit)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> qualitySuccessRateThreshold ::</span> <span class="op">!</span><span class="dt">SuccessRate</span> <span class="co">-- ^ success rate threshold for demand increase</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> profitabilitySensitivity ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ demand increase due to profitability improvements (task / $ / time unit)</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> profitabilityMarginCap ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ cap on margin effect to prevent runaway growth (1 / time unit)</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> crowdingOutPressure ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ demand reduction due to market saturation (1 / time unit)</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- cost drift</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> driftExternalCost ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ external cost drift (1 / time unit)</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> driftInternalFixedCost ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ internal fixed cost drift (1 / time unit)</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> driftInternalVariableCost ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>) <span class="co">-- ^ internal variable cost drift (1 / time unit)</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- financial</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> discountPerStep ::</span> <span class="op">!</span><span class="dt">Scalar</span> <span class="co">-- ^ discount rate for NPV calculations </span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Expected revenue per successful task.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Calibrate to a concrete use case.</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Here: piecewise toy curve: 0 until 0.6, then linear; bonus after 0.9.</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  expectedRevenue ::</span> <span class="dt">SuccessRate</span> <span class="ot">-&gt;</span> <span class="dt">Revenue</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  expectedRevenue successRate <span class="ot">=</span> (retention successRate) <span class="op">*@</span> dollar <span class="op">./</span> task</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>      retention sr <span class="op">|</span> sr <span class="op">&lt;</span> <span class="fl">0.6</span>   <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>                   <span class="op">|</span> sr <span class="op">&lt;</span> <span class="fl">0.9</span>   <span class="ot">=</span> <span class="dv">5</span> <span class="op">*</span> (sr <span class="op">-</span> <span class="fl">0.6</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>                   <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="fl">1.5</span> <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> (sr <span class="op">-</span> <span class="fl">0.9</span>)</span></code></pre></div>
+<h2 id="quality-driven-demand">Quality-Driven Demand</h2>
+<p>Demand increase due to quality improvements models the idea that
+better outcomes directly attract more usage. When the success rate rises
+above a baseline threshold, customers are more likely to adopt the
+service, stick with it, and recommend it, which drives future demand.
+Below the threshold, improvements may have little effect on adoption, as
+the product is still perceived as unreliable.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Demand increase due to quality improvements</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  qualityDrivenDemand ::</span> <span class="dt">Exogenous</span> <span class="ot">-&gt;</span> <span class="dt">SuccessRate</span> <span class="ot">-&gt;</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  qualityDrivenDemand <span class="dt">Exogenous</span>{<span class="op">..</span>} successRate <span class="ot">=</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    (successRate <span class="op">-</span> qualitySuccessRateThreshold) <span class="ot">`qScale`</span> qualitySensitivity</span></code></pre></div>
+<p>The exogenous <code>qualitySensitivity</code> constant determines how
+strongly usage grows as success rate improves beyond the
+<code>qualitySuccessRateThreshold</code>. Above this threshold (set near
+the point where the product delivers consistently acceptable results,
+i.e. <code>0.6</code> to <code>0.7</code> for probabilistic AI systems)
+each <code>0.1</code> improvement in success rate typically yields an
+additional 1 to 3 percent annual usage growth if
+<code>qualitySensitivity</code> is in the <code>0.1</code> to
+<code>0.3</code> range.</p>
+<h2 id="profitability-driven-demand">Profitability-Driven Demand</h2>
+<p>Usage change due to profitability captures the idea that healthy unit
+economics create both the means and the incentive to scale. When each
+unit of work generates a positive margin, a business can reinvest in
+marketing, infrastructure, and customer acquisition, which increases
+future usage. Conversely, negative margins force contraction, either by
+actively limiting work to high-value cases or through customer churn as
+prices rise or quality drops. In this way, profitability directly
+influences the rate at which demand grows or shrinks over time.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Demand change due to profitability</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  profitabilityDrivenDemand ::</span> <span class="dt">Exogenous</span> <span class="ot">-&gt;</span> <span class="dt">Usage</span> <span class="ot">-&gt;</span> <span class="dt">Deployment</span> <span class="ot">-&gt;</span> <span class="dt">SuccessRate</span> <span class="ot">-&gt;</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  profitabilityDrivenDemand exogenous<span class="op">@</span><span class="dt">Exogenous</span>{<span class="op">..</span>} usage deployment successRate <span class="ot">=</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    qClamp (<span class="op">-</span> profitabilityMarginCap, profitabilityMarginCap) <span class="op">$</span> profitabilitySensitivity <span class="op">*</span> margin</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      cost <span class="ot">=</span> <span class="kw">case</span> deployment <span class="kw">of</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">External</span> <span class="ot">-&gt;</span> externalCost</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Internal</span> <span class="ot">-&gt;</span> internalCost exogenous usage <span class="op">/</span> processingCapacity exogenous usage</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>      margin <span class="ot">=</span> expectedRevenue successRate <span class="op">-</span> cost</span></code></pre></div>
+<p>The exogenous <code>profitabilitySensitivity</code> constant controls
+how strongly margins translate into usage growth: if one step represents
+a year, values in the <code>0.05</code> to <code>0.2</code> range for
+USD 0.01 per task margin are typical. The
+<code>profitabilityMarginCap</code> constant should be low enough (e.g.,
+<code>0.1</code> for plus/minus 10 percent per year) to avoid
+implausibly large swings from a single year's profitability spike. With
+<code>0.1</code>, extreme margins (e.g., USD 0.05 per task) still only
+change usage 10 percent per year, which is reasonable for a mature
+enterprise platform.</p>
+<h2 id="market-saturation-effects">Market Saturation Effects</h2>
+<p>Demand reduction due to market saturation reflects the slowdown that
+occurs as usage approaches the total addressable capacity of the market.
+Early growth is easy when there are many untapped customers, but as
+adoption nears the market's limit, each additional unit of demand is
+harder to capture. This "crowding out" effect models the natural
+tapering of growth under saturation, where further expansion requires
+disproportionate effort and yields diminishing returns.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Demand reduction due to market saturation</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  crowdingOut ::</span> <span class="dt">Exogenous</span> <span class="ot">-&gt;</span> <span class="dt">Usage</span> <span class="ot">-&gt;</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  crowdingOut <span class="dt">Exogenous</span>{<span class="op">..</span>} usage <span class="ot">=</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    crowdingOutPressure <span class="op">*</span> usage <span class="op">/</span> marketCapacity</span></code></pre></div>
+<p>The exogenous <code>crowdingOutPressure</code> constant sets the
+strength of this drag: a value near <code>1.0</code> ensures that growth
+falls to zero as we hit <code>marketCapacity</code>, producing a
+realistic plateau. Smaller values let growth continue even past nominal
+capacity, and the plateau will be softer. Choosing
+<code>marketCapacity</code> so that the initial usage is only a few
+percent of capacity ensures saturation effects appear later in the
+simulation, not immediately.</p>
+<h2 id="usage-update-rule">Usage Update Rule</h2>
+<p>Putting this all together, we can define the usage update rule as
+follows:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Usage update</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  updateUsage ::</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Duration</span> <span class="ot">-&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Exogenous</span> <span class="ot">-&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">State</span> <span class="ot">-&gt;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Usage</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  updateUsage dt exogenous<span class="op">@</span><span class="dt">Exogenous</span> {<span class="op">..</span>} <span class="dt">State</span> {<span class="op">..</span>} <span class="ot">=</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>      q <span class="ot">=</span> qualityDrivenDemand exogenous successRate</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>      p <span class="ot">=</span> profitabilityDrivenDemand exogenous usage deployment successRate</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>      c <span class="ot">=</span> crowdingOut exogenous usage</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>      factor <span class="ot">=</span> qExp <span class="op">$</span> (q <span class="op">+</span> p <span class="op">-</span> c) <span class="op">*</span> dt</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> qClamp (<span class="dv">0</span> <span class="op">*@</span> task <span class="op">./</span> second, marketCapacity) <span class="op">$</span> factor <span class="ot">`qScale`</span> usage</span></code></pre></div>
+<h2 id="learning-dynamics">Learning Dynamics</h2>
+<p>We distinguish two deployment modes:</p>
+<ol>
+<li><p><strong>External (exogenous improvement).</strong>: Vendors do
+not learn from <em>our</em> traffic. Their models improve through global
+R&amp;D, independent of our usage. We model this as a drift toward an
+asymptote <code>externalSuccessRateCeiling</code>, closing a fixed
+fraction of the remaining gap each time step to model diminishing
+returns. The <code>externalImprovementRate</code> controls how quickly
+this happens. This leads to a rapid initial improvement that slows as we
+approach the vendor's success rate. There is no
+<code>dataAdvantage</code> term here since external vendors do not learn
+from our data.</p></li>
+<li><p><strong>Internal (data flywheel).</strong>: In-house deployment
+compounds proprietary signal. Each step, completed tasks contribute to a
+<code>dataAdvantage</code>. The more successful tasks are served, the
+more proprietary data is accumulated. This data advantage then
+accelerates improvements in success rate, with diminishing returns as we
+approach the upper bound <code>1</code>. This captures the slow start,
+rapid mid-phase, and natural plateau characteristic of internal learning
+curves.</p></li>
+</ol>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Learning update</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  updateLearning ::</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Duration</span> <span class="ot">-&gt;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Exogenous</span> <span class="ot">-&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">State</span> <span class="ot">-&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">SuccessRate</span>, <span class="dt">DataAdvantage</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  updateLearning dt <span class="dt">Exogenous</span>{<span class="op">..</span>} <span class="dt">State</span>{<span class="op">..</span>} <span class="ot">=</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> deployment <span class="kw">of</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">External</span> <span class="ot">-&gt;</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- asymptotic drift toward vendor&#39;s success rate</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> improve <span class="ot">=</span> <span class="dv">1</span> <span class="op">-</span> qExp (<span class="op">-</span> externalImprovementRate <span class="op">*</span> dt)</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>            successRate&#39; <span class="ot">=</span> clamp (<span class="dv">0</span>,<span class="dv">1</span>) <span class="op">$</span> successRate <span class="op">+</span> improve <span class="op">*</span> (externalSuccessRateCeiling <span class="op">-</span> successRate)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">in</span> (successRate&#39;, dataAdvantage) <span class="co">-- no data advantage growth</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Internal</span> <span class="ot">-&gt;</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- saturating growth driven by accumulated advantage</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> delta <span class="ot">=</span> clamp (<span class="dv">0</span>,<span class="dv">1</span>) <span class="op">$</span> scalar (internalDataAccumulationRate <span class="op">*</span> usage <span class="op">*</span> dt) <span class="op">*</span> successRate</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>            dataAdvantage&#39; <span class="ot">=</span> clamp (<span class="dv">0</span>,<span class="dv">1</span>) <span class="op">$</span> dataAdvantage <span class="op">+</span> (<span class="dv">1</span> <span class="op">-</span> dataAdvantage) <span class="op">*</span> delta</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>            improve <span class="ot">=</span> <span class="dv">1</span> <span class="op">-</span> qExp (<span class="op">-</span> internalLearningRate <span class="op">*</span> dt)</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>            successRate&#39; <span class="ot">=</span> clamp (<span class="dv">0</span>,<span class="dv">1</span>) <span class="op">$</span> successRate <span class="op">+</span> improve <span class="op">*</span> dataAdvantage&#39; <span class="op">*</span> (internalSuccessRateCeiling <span class="op">-</span> successRate)</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">in</span> (successRate&#39;, dataAdvantage&#39;)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Update the exogenous parameters over time (due to cost reductions)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  updateExogenous ::</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Duration</span> <span class="ot">-&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Exogenous</span> <span class="ot">-&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Exogenous</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  updateExogenous dt exogenous<span class="op">@</span><span class="dt">Exogenous</span> {<span class="op">..</span>} <span class="ot">=</span> </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> fec <span class="ot">=</span> qExp (driftExternalCost <span class="op">*</span> dt)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        fifc <span class="ot">=</span> qExp (driftInternalFixedCost <span class="op">*</span> dt)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        fivc <span class="ot">=</span> qExp (driftInternalVariableCost <span class="op">*</span> dt)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">in</span> exogenous</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>          { externalCost <span class="ot">=</span> fec <span class="ot">`qScale`</span> externalCost</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>          , internalFixedCost <span class="ot">=</span> fifc <span class="ot">`qScale`</span> internalFixedCost</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>          , internalVariableCost <span class="ot">=</span> fivc <span class="ot">`qScale`</span> internalVariableCost</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>          }</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Time</span> <span class="ot">=</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Duration</span> <span class="ot">=</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Clock</span> <span class="ot">=</span> <span class="dt">Clock</span> {<span class="ot"> now ::</span> <span class="op">!</span><span class="dt">Time</span>,<span class="ot"> dt ::</span> <span class="op">!</span><span class="dt">Duration</span> }</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Update the state by one time step</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  step ::</span> <span class="dt">Clock</span> <span class="ot">-&gt;</span> <span class="dt">Exogenous</span> <span class="ot">-&gt;</span> <span class="dt">State</span> <span class="ot">-&gt;</span> (<span class="dt">Exogenous</span>, <span class="dt">State</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  step <span class="dt">Clock</span>{<span class="op">..</span>} exogenous state<span class="op">@</span><span class="dt">State</span>{<span class="op">..</span>} <span class="ot">=</span> </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>      exogenous&#39; <span class="ot">=</span> updateExogenous dt exogenous</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>      usage&#39; <span class="ot">=</span> updateUsage dt exogenous&#39; state</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>      (successRate&#39;, dataAdvantage&#39;) <span class="ot">=</span> updateLearning dt exogenous&#39; state</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>      state&#39; <span class="ot">=</span> state { usage <span class="ot">=</span> usage&#39;, successRate <span class="ot">=</span> successRate&#39;, dataAdvantage <span class="ot">=</span> dataAdvantage&#39; }</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> (exogenous&#39;, state&#39;)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>  alwaysExternal,<span class="ot"> alwaysInternal ::</span> <span class="dt">DeploymentStrategy</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  alwaysExternal _ _ <span class="ot">=</span> <span class="dt">External</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  alwaysInternal _ _ <span class="ot">=</span> <span class="dt">Internal</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Break-even strategy: start external; switch to internal when (rev - c_int) &gt; (rev - c_ext) + eps AND usage above threshold</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Problem: you need to know the future to do this optimally</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Problem: you may never break even if no investment in internal capabilities</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="ot">  breakEven ::</span> <span class="dt">DeploymentStrategy</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  breakEven exogenous<span class="op">@</span><span class="dt">Exogenous</span>{<span class="op">..</span>} <span class="dt">State</span>{<span class="op">..</span>}</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> usage <span class="op">&lt;</span> thresholdUsage <span class="ot">=</span> <span class="dt">External</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> marginInternal <span class="op">&gt;</span> marginExternal <span class="op">+</span> epsilonPerTime <span class="ot">=</span> <span class="dt">Internal</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">External</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>      thresholdUsage <span class="ot">=</span> <span class="fl">1.0e7</span> <span class="op">*@</span> task <span class="op">./</span> second <span class="co">-- minimum usage to consider</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>      epsilonPerTask <span class="ot">=</span> <span class="fl">0.01</span> <span class="op">*@</span> dollar <span class="op">./</span> task <span class="co">-- minimum margin improvement to switch</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>      epsilonPerTime <span class="ot">=</span> epsilonPerTask <span class="op">*</span> usage</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>      revenue <span class="ot">=</span> expectedRevenue successRate <span class="op">*</span> usage</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>      marginInternal <span class="ot">=</span> revenue <span class="op">-</span> internalCost exogenous usage</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>      marginExternal <span class="ot">=</span> revenue <span class="op">-</span> externalCost <span class="op">*</span> usage</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- total number of nodes needed to handle the given usage</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="ot">  totalNodes ::</span> <span class="dt">Exogenous</span> <span class="ot">-&gt;</span> <span class="dt">Usage</span> <span class="ot">-&gt;</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>  totalNodes <span class="dt">Exogenous</span> {<span class="op">..</span>} usage <span class="ot">=</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> neededNodes <span class="ot">=</span> qFromIntegral <span class="op">.</span> qCeiling <span class="op">$</span> usage <span class="op">/</span> internalThroughput</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>      <span class="kw">in</span> <span class="fu">max</span> internalBaseNodes neededNodes</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- total processing capacity in tasks per time unit</span></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a><span class="ot">  processingCapacity ::</span> <span class="dt">Exogenous</span> <span class="ot">-&gt;</span> <span class="dt">Usage</span> <span class="ot">-&gt;</span> <span class="dt">Quantity</span> <span class="dt">Scalar</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>  processingCapacity exogenous<span class="op">@</span><span class="dt">Exogenous</span>{<span class="op">..</span>} usage <span class="ot">=</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>    internalThroughput <span class="op">*</span> totalNodes exogenous usage</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- internal cost per time unit</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a><span class="ot">  internalCost ::</span> <span class="dt">Exogenous</span> <span class="ot">-&gt;</span> <span class="dt">Usage</span> <span class="ot">-&gt;</span> <span class="dt">Cost</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>  internalCost exogenous<span class="op">@</span><span class="dt">Exogenous</span> {<span class="op">..</span>} usage <span class="ot">=</span></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>    internalFixedCost <span class="op">+</span> totalNodes exogenous usage <span class="op">*</span> internalVariableCost</span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a><span class="ot">  baseState ::</span> <span class="dt">State</span></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>  baseState <span class="ot">=</span> <span class="dt">State</span> {</span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>    deployment <span class="ot">=</span> <span class="dt">External</span>,</span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>    usage <span class="ot">=</span> <span class="fl">5.0e8</span> <span class="op">*@</span> task <span class="op">./</span> second,</span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>    successRate <span class="ot">=</span> <span class="fl">0.65</span>,</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>    dataAdvantage <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a><span class="ot">  baseExogenousFor ::</span> <span class="dt">Duration</span> <span class="ot">-&gt;</span> <span class="dt">Exogenous</span></span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>  baseExogenousFor dt <span class="ot">=</span></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Exogenous</span></span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>      { externalCost <span class="ot">=</span> <span class="fl">0.02</span> <span class="op">*@</span> dollar <span class="op">./</span> task,</span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>        externalSuccessRateCeiling <span class="ot">=</span> <span class="fl">0.75</span>,</span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>        externalImprovementRate <span class="ot">=</span> <span class="fl">0.01</span> <span class="op">*@</span> one <span class="op">./</span> month,</span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>        internalFixedCost <span class="ot">=</span> <span class="dv">120</span>_000 <span class="op">*@</span> dollar <span class="op">./</span> month,</span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a>        internalVariableCost <span class="ot">=</span> <span class="fl">1.0e2</span> <span class="op">*@</span> dollar <span class="op">./</span> hour <span class="op">./</span> node,</span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>        internalThroughput <span class="ot">=</span> <span class="fl">1.0e6</span> <span class="op">*@</span> task <span class="op">./</span> second <span class="op">./</span> node,</span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>        internalBaseNodes <span class="ot">=</span> <span class="dv">1</span> <span class="op">*@</span> node,</span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>        internalSuccessRateCeiling <span class="ot">=</span> <span class="fl">0.90</span>,</span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>        internalLearningRate <span class="ot">=</span> <span class="fl">0.05</span> <span class="op">*@</span> one <span class="op">./</span> month,</span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>        internalDataAccumulationRate <span class="ot">=</span> <span class="fl">0.01</span> <span class="op">*@</span> one <span class="op">./</span> task,</span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>        marketCapacity <span class="ot">=</span> <span class="fl">1.0e10</span> <span class="op">*@</span> task <span class="op">./</span> second,</span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>        qualitySensitivity <span class="ot">=</span> <span class="fl">0.2</span> <span class="op">*@</span> one <span class="op">./</span> month,</span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>        qualitySuccessRateThreshold <span class="ot">=</span> <span class="fl">0.6</span>,</span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>        profitabilitySensitivity <span class="ot">=</span> <span class="dv">5</span> <span class="op">*@</span> task <span class="op">./</span> dollar <span class="op">./</span> month,</span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>        profitabilityMarginCap <span class="ot">=</span> <span class="fl">0.1</span> <span class="op">*@</span> one <span class="op">./</span> month,</span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a>        crowdingOutPressure <span class="ot">=</span> <span class="fl">0.5</span> <span class="op">*@</span> one <span class="op">./</span> month,</span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>        driftExternalCost <span class="ot">=</span> <span class="fu">log</span> <span class="fl">0.99</span> <span class="op">*@</span> one <span class="op">./</span> month,</span>
+<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a>        driftInternalFixedCost <span class="ot">=</span> <span class="fu">log</span> <span class="fl">1.005</span> <span class="op">*@</span> one <span class="op">./</span> month,</span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>        driftInternalVariableCost <span class="ot">=</span> <span class="fu">log</span> <span class="fl">0.995</span> <span class="op">*@</span> one <span class="op">./</span> month,</span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>        discountPerStep <span class="ot">=</span> <span class="kw">let</span> annualDiscountRate <span class="ot">=</span> <span class="fl">0.08</span> <span class="kw">in</span> <span class="fu">exp</span> (<span class="op">-</span>annualDiscountRate <span class="op">*</span> (inUnit dt year))</span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a><span class="ot">  node ::</span> <span class="dt">Unit</span></span>
+<span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a>  node <span class="ot">=</span> unit <span class="st">&quot;node&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Row</span> <span class="ot">=</span> <span class="dt">Row</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> time ::</span> <span class="op">!</span><span class="dt">Time</span>,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ot">      deploymentBeforeStep ::</span> <span class="op">!</span><span class="dt">Deployment</span>,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | tasks / time</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ot">      usageBeforeStep ::</span> <span class="op">!</span><span class="dt">Usage</span>,</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | 0..1</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="ot">      successRateBeforeStep ::</span> <span class="op">!</span><span class="dt">SuccessRate</span>,</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | 0..1</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="ot">      dataAdvantageBeforeStep ::</span> <span class="op">!</span><span class="dt">DataAdvantage</span>,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | \$ / task</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="ot">      unitCostPerTask ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>),</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | \$ / time</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="ot">      revenueRate ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>),</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | \$ / time</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="ot">      costRate ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>),</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | \$ / time</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="ot">      profitRate ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>),</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | \$ over this dt</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="ot">      cashFlowForPeriod ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>),</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | discounted $</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="ot">      presentValueOfCashFlowForPeriod ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>),</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- | discounted $, cumulative</span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a><span class="ot">      cumulativePresentValueOfCashFlow ::</span> <span class="op">!</span>(<span class="dt">Quantity</span> <span class="dt">Scalar</span>)</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  simulate ::</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">DeploymentStrategy</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Clock</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Exogenous</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">State</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    [<span class="dt">Row</span>]</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  simulate strategy clock0 exogenous0 state0 <span class="ot">=</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    go (<span class="dv">0</span> <span class="op">*@</span> dollar) clock0 <span class="dv">1</span> exogenous0 state0</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="ot">      go ::</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Quantity</span> <span class="dt">Scalar</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Clock</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Scalar</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Exogenous</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        <span class="dt">State</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        [<span class="dt">Row</span>]</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>      go cumulativePresentValueBeforeStep clockBeforeStep<span class="op">@</span><span class="dt">Clock</span> {<span class="op">..</span>} discountMultiplierBeforeStep exogenousBeforeStep stateBeforeStep <span class="ot">=</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="co">-- decide deployment for this step. state is still &quot;before step&quot;</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>            deploymentBeforeStep <span class="ot">=</span> strategy exogenousBeforeStep stateBeforeStep</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>            stateBeforeStep&#39; <span class="ot">=</span> stateBeforeStep {deployment <span class="ot">=</span> deploymentBeforeStep}</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>            <span class="co">-- snapshot some &quot;before step&quot; observables we want to emit in the Row</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>            time <span class="ot">=</span> now</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>            usageBeforeStep <span class="ot">=</span> usage stateBeforeStep&#39;</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>            successRateBeforeStep <span class="ot">=</span> successRate stateBeforeStep&#39;</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>            dataAdvantageBeforeStep <span class="ot">=</span> dataAdvantage stateBeforeStep&#39;</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>            <span class="co">-- per-time economics for this step</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>            revenueRate <span class="ot">=</span> expectedRevenue successRateBeforeStep <span class="op">*</span> usageBeforeStep</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>            costRate <span class="ot">=</span> <span class="kw">case</span> deploymentBeforeStep <span class="kw">of</span></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>              <span class="dt">External</span> <span class="ot">-&gt;</span> externalCost exogenousBeforeStep <span class="op">*</span> usageBeforeStep</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>              <span class="dt">Internal</span> <span class="ot">-&gt;</span> internalCost exogenousBeforeStep usageBeforeStep</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>            profitRate <span class="ot">=</span> revenueRate <span class="op">-</span> costRate</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>            <span class="co">-- cash flow and NPV for this step</span></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>            cashFlowForPeriod <span class="ot">=</span> profitRate <span class="op">*</span> dt</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>            averageDiscountWithinStep <span class="ot">=</span> (<span class="dv">1</span> <span class="op">-</span> discountPerStep exogenousBeforeStep) <span class="op">/</span> (<span class="op">-</span> <span class="fu">log</span> (discountPerStep exogenousBeforeStep))</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>            presentValueOfCashFlowForPeriod <span class="ot">=</span> (discountMultiplierBeforeStep <span class="op">*</span> averageDiscountWithinStep) <span class="ot">`qScale`</span> cashFlowForPeriod</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>            cumulativePresentValueOfCashFlow <span class="ot">=</span> cumulativePresentValueBeforeStep <span class="op">+</span> presentValueOfCashFlowForPeriod</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>            <span class="co">-- unit cost snapshot for this step</span></span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>            unitCostPerTask <span class="ot">=</span> <span class="kw">case</span> deploymentBeforeStep <span class="kw">of</span></span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>              <span class="dt">External</span> <span class="ot">-&gt;</span> externalCost exogenousBeforeStep</span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>              <span class="dt">Internal</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>                internalCost exogenousBeforeStep usageBeforeStep</span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>                  <span class="op">/</span> processingCapacity exogenousBeforeStep usageBeforeStep</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>            row <span class="ot">=</span> <span class="dt">Row</span> {<span class="op">..</span>}</span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>            (exogenousNextStep, stateNextStep) <span class="ot">=</span> step clockBeforeStep exogenousBeforeStep stateBeforeStep&#39;</span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>            clockNextStep <span class="ot">=</span> clockBeforeStep {now <span class="ot">=</span> now <span class="op">+</span> dt}</span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>            discountMultiplierNextStep <span class="ot">=</span> discountMultiplierBeforeStep <span class="op">*</span> discountPerStep exogenousBeforeStep</span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>        <span class="kw">in</span> row <span class="op">:</span> go cumulativePresentValueOfCashFlow clockNextStep discountMultiplierNextStep exogenousNextStep stateNextStep</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  pointsSuccessRateBeforeStep ::</span> [<span class="dt">Row</span>] <span class="ot">-&gt;</span> [(<span class="dt">Scalar</span>, <span class="dt">Scalar</span>)]</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  pointsSuccessRateBeforeStep <span class="ot">=</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map</span> (\<span class="dt">Row</span>{<span class="op">..</span>} <span class="ot">-&gt;</span> (inUnit time month, successRateBeforeStep))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="ot">  pointsUnitCostPerTask ::</span> [<span class="dt">Row</span>] <span class="ot">-&gt;</span> [(<span class="dt">Scalar</span>, <span class="dt">Scalar</span>)]</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  pointsUnitCostPerTask <span class="ot">=</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map</span> (\<span class="dt">Row</span>{<span class="op">..</span>} <span class="ot">-&gt;</span> (inUnit time month, inUnit unitCostPerTask (dollar <span class="op">./</span> task)))</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="ot">  pointsCumulativePresentValueOfCashFlow ::</span> [<span class="dt">Row</span>] <span class="ot">-&gt;</span> [(<span class="dt">Scalar</span>, <span class="dt">Scalar</span>)]</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  pointsCumulativePresentValueOfCashFlow <span class="ot">=</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map</span> (\<span class="dt">Row</span>{<span class="op">..</span>} <span class="ot">-&gt;</span> (inUnit time month, inUnit cumulativePresentValueOfCashFlow dollar))</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="ot">  main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  main <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> strategies <span class="ot">=</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>          [ (<span class="st">&quot;alwaysExternal&quot;</span>, alwaysExternal)</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>          , (<span class="st">&quot;alwaysInternal&quot;</span>, alwaysInternal)</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>          , (<span class="st">&quot;breakEven&quot;</span>,      breakEven)</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>          ]</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>        monthlyClock <span class="ot">=</span> <span class="dt">Clock</span> { now <span class="ot">=</span> <span class="dv">0</span> <span class="op">*@</span> month, dt <span class="ot">=</span> <span class="dv">1</span> <span class="op">*@</span> month }</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>        horizonMonths <span class="ot">=</span> <span class="dv">60</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>        baseExogenous <span class="ot">=</span> baseExogenousFor (dt monthlyClock)</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>        takeH (name, strat) <span class="ot">=</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>          (name, <span class="fu">take</span> horizonMonths (simulate strat monthlyClock baseExogenous baseState))</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>        runs <span class="ot">=</span> <span class="fu">map</span> takeH strategies</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>        fileOptions <span class="ot">=</span> <span class="dt">FileOptions</span> { _fo_size <span class="ot">=</span> (<span class="dv">800</span>, <span class="dv">600</span>), _fo_format <span class="ot">=</span> <span class="dt">SVG</span>, _fo_fonts <span class="ot">=</span> loadSansSerifFonts }</span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Success rate plot</span></span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>    toFile fileOptions <span class="st">&quot;success_rate.svg&quot;</span> <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>      layout_title <span class="op">.=</span> <span class="st">&quot;Success Rate over Time&quot;</span></span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>      layout_x_axis <span class="op">.</span> laxis_title <span class="op">.=</span> <span class="st">&quot;Month&quot;</span></span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>      layout_y_axis <span class="op">.</span> laxis_title <span class="op">.=</span> <span class="st">&quot;Success rate&quot;</span></span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>      forM_ runs <span class="op">$</span> \(name, rows) <span class="ot">-&gt;</span></span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a>        plot (line name [pointsSuccessRateBeforeStep rows])</span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Unit cost plot</span></span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>    toFile fileOptions <span class="st">&quot;unit_cost_per_task.svg&quot;</span> <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>      layout_title <span class="op">.=</span> <span class="st">&quot;Unit Cost per Task ($)&quot;</span></span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>      layout_x_axis <span class="op">.</span> laxis_title <span class="op">.=</span> <span class="st">&quot;Month&quot;</span></span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a>      layout_y_axis <span class="op">.</span> laxis_title <span class="op">.=</span> <span class="st">&quot;USD per task&quot;</span></span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a>      forM_ runs <span class="op">$</span> \(name, rows) <span class="ot">-&gt;</span></span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>        plot (line name [pointsUnitCostPerTask rows])</span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cumulative NPV plot</span></span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a>    toFile fileOptions <span class="st">&quot;cumulative_present_value_of_profit.svg&quot;</span> <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a>      layout_title <span class="op">.=</span> <span class="st">&quot;Cumulative Present Value of Profit ($)&quot;</span></span>
+<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a>      layout_x_axis <span class="op">.</span> laxis_title <span class="op">.=</span> <span class="st">&quot;Month&quot;</span></span>
+<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a>      layout_y_axis <span class="op">.</span> laxis_title <span class="op">.=</span> <span class="st">&quot;USD&quot;</span></span>
+<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a>      forM_ runs <span class="op">$</span> \(name, rows) <span class="ot">-&gt;</span></span>
+<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a>        plot (line name [pointsCumulativePresentValueOfCashFlow rows])</span></code></pre></div>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original. Code blocks are BSD-3-Clause unless noted.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

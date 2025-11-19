@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>How to Get from A Tree to A Flat Shape And Back Again</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Get from A Tree to A Flat Shape And Back Again">
+    <meta property="og:description" content="&lt;p&gt;The adventure continues in this &quot;Unrecurse&quot; sequel. Previously, we
+bravely faced turmoil and confusion in a cruel world in which Haskell
+suddenly stopped supporting recursive function calls. We barely escaped
+the wrath of the compiler. This time, we try to survive an even more
+extreme situation: Haskell without recursive data types! It is the
+ultimate test of our programming skills. Will we make it through the
+final challenge, or is all hope lost? Join us in this journey about
+tapes and tribulations.&lt;/p&gt;">
+    <meta property="og:url" content="https://tscholak.github.io/posts/Flattening.html">
+    <meta property="og:image" content="https://tscholak.github.io/images/tape.gif">
+<meta property="og:image:alt" content="How to Get from A Tree to A Flat Shape And Back Again">
+<meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="How to Get from A Tree to A Flat Shape And Back Again">
+    <meta name="twitter:description" content="&lt;p&gt;The adventure continues in this &quot;Unrecurse&quot; sequel. Previously, we
+bravely faced turmoil and confusion in a cruel world in which Haskell
+suddenly stopped supporting recursive function calls. We barely escaped
+the wrath of the compiler. This time, we try to survive an even more
+extreme situation: Haskell without recursive data types! It is the
+ultimate test of our programming skills. Will we make it through the
+final challenge, or is all hope lost? Join us in this journey about
+tapes and tribulations.&lt;/p&gt;">
+    <meta name="twitter:image" content="https://tscholak.github.io/images/tape.gif">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/c0f603c">c0f603c</a> (2025-10-20 17:32:51 -0400) Torsten Scholak: Simplify JSON instances and refactor publication fields with type-safe GADTs</p>
+
+        <p><img src="/images/tape.gif"></p>
+
+        <h1>How to Get from A Tree to A Flat Shape And Back Again</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/haskell">haskell</a>
+            <a href="/tags/recursion">recursion</a>
+            <a href="/tags/generics">generics</a>
+            <a href="/tags/parsing">parsing</a>
+        </p>
+        <p>Posted on Feb 2, 2022</p>
+        <p>49 min read</p>
+        <p>The adventure continues in this "Unrecurse" sequel. Previously, we
+bravely faced turmoil and confusion in a cruel world in which Haskell
+suddenly stopped supporting recursive function calls. We barely escaped
+the wrath of the compiler. This time, we try to survive an even more
+extreme situation: Haskell without recursive data types! It is the
+ultimate test of our programming skills. Will we make it through the
+final challenge, or is all hope lost? Join us in this journey about
+tapes and tribulations.</p>
+        <h2 id="preliminaries">Preliminaries</h2>
+<p>This is a <a
+href="https://wiki.haskell.org/Literate_programming">Literate
+Haskell</a> essay: Every line of program code in this article has been
+checked by the Haskell compiler. Every example and property in the
+Haddock comments has been tested by the doctest tool. I thank the <a
+href="https://wiki.haskell.org/Haskell">Haskell community</a> for making
+this possible.</p>
+<p>To make this a proper Haskell file, it needs a header. There are
+several language extensions we need to enable:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE GADTs #-}</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DeriveTraversable #-}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE TemplateHaskell #-}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE TypeFamilies #-}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE ScopedTypeVariables #-}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE BangPatterns #-}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE FlexibleContexts #-}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE MultiParamTypeClasses #-}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DefaultSignatures #-}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE FlexibleInstances #-}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE TypeOperators #-}</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE UndecidableInstances #-}</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DeriveGeneric #-}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DerivingVia #-}</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE StandaloneDeriving #-}</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE LambdaCase #-}</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE InstanceSigs #-}</span></span></code></pre></div>
+<p>Nice, this is more looking like your typical fancy Haskell file now.
+We will also need to import a meager handful of libraries, functions,
+and types:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> <span class="dt">Flattening</span> <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Applicative</span> (<span class="dt">Alternative</span> (empty, (&lt;|&gt;)))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Lens</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Cons</span> (_Cons),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      cons,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      prism,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      uncons,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      withPrism,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      zoom,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      _1,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      _2,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad</span> (<span class="dt">MonadPlus</span>, mfilter)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad.State</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">MonadState</span> (get, put),</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">StateT</span> (runStateT),</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      evalStateT,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad.Trans</span> (<span class="dt">MonadTrans</span> (lift))</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad.Writer</span> (<span class="dt">Writer</span>, execWriter, tell)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Coerce</span> (coerce)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Functor.Foldable</span> (<span class="dt">Base</span>, <span class="dt">Corecursive</span> (embed), <span class="dt">Recursive</span> (cata, project))</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Functor.Foldable.TH</span> (makeBaseFunctor)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Kind</span> (<span class="dt">Type</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Maybe</span> (fromJust)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Monoid</span> (<span class="dt">Sum</span> (..))</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Vector</span> (<span class="dt">Vector</span>)</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">GHC.Generics</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Generic</span> (<span class="dt">Rep</span>, from, to),</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">K1</span> (<span class="dt">K1</span>, unK1),</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>      <span class="dt">M1</span> (<span class="dt">M1</span>, unM1),</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>      <span class="dt">U1</span> (<span class="dt">U1</span>),</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>      <span class="dt">V1</span>,</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>      <span class="kw">type</span> (<span class="op">:*:</span>) ((<span class="op">:*:</span>)),</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>      <span class="kw">type</span> (<span class="op">:+:</span>) (<span class="dt">L1</span>, <span class="dt">R1</span>),</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Unrecurse</span> (<span class="dt">Continue</span> (..), <span class="dt">Kont</span> (..), <span class="dt">Stack</span>, <span class="dt">Tree</span> (..), exampleTree, pop, push, while)</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Prelude</span> <span class="kw">hiding</span> (even, odd)</span></code></pre></div>
+<p>You will notice that we are importing definitions from the
+<code>Unrecurse</code> module, which belongs to the <a
+href="/posts/Unrecurse.html">previous article</a> in this series.</p>
+<p>For the <code>Tree</code> type from the <code>Unrecurse</code>
+module, we need a QuickCheck random generator to run property tests with
+<code>doctest</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- $setup</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; import Test.QuickCheck</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; :{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">--   arbTree :: Arbitrary a =&gt; Int -&gt; Gen (Tree a)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">--   arbTree 0 = pure Nil</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">--   arbTree n =</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">--     frequency</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">--       [ (1, pure Nil),</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">--         ( 3,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">--           Node</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">--             &lt;$&gt; arbTree (div n 2)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">--             &lt;*&gt; arbitrary</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">--             &lt;*&gt; arbTree (div n 2)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">--         )</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">--       ]</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- :}</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">--</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; instance Arbitrary a =&gt; Arbitrary (Tree a) where arbitrary = sized arbTree</span></span></code></pre></div>
+<p>This should create random binary trees with a frequency distribution
+that is exponentially decreasing in the number of constructors.</p>
+<p>Ok, enough beating around the bush. Now we can start with the actual
+content of the essay.</p>
+<h2 id="the-flattening-of-a-tree">The Flattening of A Tree</h2>
+<p><a href="/posts/Unrecurse.html">Last time</a> on this channel, we
+have seen how one can remove recursive calls from a function. We learned
+about continuations, defunctionalization, and monadic <code>State</code>
+effects. We used these techniques to reimplement two simple recursive
+functions, <code>printTree</code> and <code>accumTree</code>, using only
+iteration. These functions are both specific examples of a
+<code>fold</code>. They consume a value of type <code>Tree</code>, a
+data type for binary trees with two constructors, <code>Nil</code> and
+<code>Node</code>. <code>printTree</code> reduces the tree node by node
+in depth-first, left-to-right order to an effect: leaf values are
+printed to <code>stdout</code> as they are encountered. On the other
+hand, <code>accumTree</code> reduces the tree to value, that is, the sum
+of all leaf values.</p>
+<p>Even though we worked very hard to remove all recursion from these
+functions, we still have a problem. The definition of the
+<code>Tree</code> type was and remains self-referential: its
+<code>Node</code> constructor takes two <code>Tree</code> values as
+arguments. That makes <code>Tree</code> a <em>recursive data type</em>,
+and that is FORBIDDEN in recursion-free Haskell. Sorry, I don't make the
+rules. So far, we did not dare to remove recursion from the
+<code>Tree</code> data type. This time, we are more ambitious!</p>
+<p>The high-level idea is that we are going to store our
+<code>Tree</code> in a linear data structure we call a
+<code>Tape</code>. This will be done in a fashion that allows us to zoom
+in on subtrees by slicing the <code>Tape</code>.</p>
+<p>As usual, we need a few ingredients:</p>
+<ul>
+<li><code>Token</code>s, which are a set of values that are going to
+represent different pieces of a <code>Tree</code>.</li>
+<li>The <code>Tape</code>, which is a linear data structure that can be
+written to and read from and that can be used to represent a whole
+<code>Tree</code> or parts of it.</li>
+<li>A linearizer that can convert a <code>Tree</code> to a
+<code>Tape</code> of <code>Token</code>s.</li>
+<li>A parser that can convert a <code>Tape</code> of <code>Token</code>s
+to a <code>Tree</code>.</li>
+<li>A base functor for the <code>Tree</code> type that can be used to
+construct or deconstruct a tree iteratively.</li>
+<li>Lots and lots of boilerplaty Haskell <code>Generic</code> code.</li>
+</ul>
+<p>We will cover these ingredients in detail in the following sections.
+It will take some time to go through all of them. The slow pace will
+help you to can get a feel for all this stuff. We shall now start by
+defining the <code>Token</code> and <code>Tape</code> types. Chocks
+away!</p>
+<h2 id="token-tapes">Token Tapes</h2>
+<p>We define our tape as a <code>newtype</code> wrapper around an
+underlying type constructor, <code>t :: Type -&gt; Type</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">newtype</span> <span class="dt">Tape</span> t a <span class="ot">=</span> <span class="dt">Tape</span> {<span class="ot">unTape ::</span> t a}</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> stock (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> <span class="kw">newtype</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">Semigroup</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Monoid</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Functor</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Applicative</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Monad</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Alternative</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Foldable</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      )</span></code></pre></div>
+<p>The type <code>t</code> could be <code>[]</code>, <code>Seq</code>,
+<code>Vector</code>, <code>Deque</code>, etc. It doesn't matter, we
+won't make a choice at this point. The only requirement is that there is
+a way to attach or detach elements on the left side of <code>t</code>.
+The <code>Cons</code> data class provides a way to formalize this
+requirement, and the following code propagates this requirement to the
+<code>Tape</code> type by means of coercion:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Cons</span> (t a) (t b) a b <span class="ot">=&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Cons</span> (<span class="dt">Tape</span> t a) (<span class="dt">Tape</span> t b) a b</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    _Cons <span class="ot">=</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      withPrism _Cons <span class="op">$</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        \(<span class="ot">review&#39; ::</span> (b, t b) <span class="ot">-&gt;</span> t b)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>         (<span class="ot">preview&#39; ::</span> t a <span class="ot">-&gt;</span> <span class="dt">Either</span> (t b) (a, t a)) <span class="ot">-&gt;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            prism (coerce review&#39;) (coerce preview&#39;)</span></code></pre></div>
+<p>This class instance gives us a <a
+href="https://hackage.haskell.org/package/lens-5.1/docs/Control-Lens-Prism.html#t:Prism">prism</a>
+that can be used to build or deconstruct a <code>Tape</code> via the
+<code>cons</code> and <code>uncons</code> functions from <a
+href="https://hackage.haskell.org/package/lens-5.1/docs/Control-Lens-Cons.html">Control.Lens.Cons</a>.
+They basically work like <code>(:)</code> and <code>uncons</code> from
+<code>Data.List</code>, but they are polymorphic in the type
+<code>t</code> and thus can be used with any <code>t</code> that
+satisfies the <code>Cons</code> requirement.</p>
+<p>Let's now talk about what we are going to put on the tape. Our tapes
+will be made up entirely of <code>Token</code>s, to be defined
+momentarily. Because of that homogeneity, it is a good idea to save us
+some keystrokes and forge a handy type synonym:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | A tape of tokens.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">TTape</span> t <span class="ot">=</span> <span class="dt">Tape</span> t <span class="dt">Token</span></span></code></pre></div>
+<p>Each <code>Token</code> will be used to represent a piece of
+information about a particular <code>Tree</code>. For trees with integer
+leaf nodes, i.e. <code>Tree Int</code>, we will only ever need four
+<code>Token</code>s:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Token</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="co">-- | Represent a recursive call to an abstract data type.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Rec</span> <span class="dt">Int</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="co">-- | Represent a left choice between two constructors.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">L</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="co">-- | Represent a right choice between two constructors.</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">R</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="co">-- | Represent an integer leaf node.</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">I</span> <span class="dt">Int</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> stock (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span></code></pre></div>
+<p>I will explain each of these tokens in more detail in a bit. Their
+function will become clear as we go along.</p>
+<h2 id="linearization">Linearization</h2>
+<p>Now, how do we turn a tree into a token tape?</p>
+<p>In general, we want a function -- let's call it
+<code>linearize</code> -- that turns a value of some type <code>a</code>
+into a tape of tokens, <code>TTape t</code>, without losing any
+information. <code>a</code> could be any type, but we explicitly want
+this to work for <code>a ~ Tree Int</code> in the end.</p>
+<p>Let's give <code>linearize</code> a type signature:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">To</span> t a <span class="ot">=</span> a <span class="ot">-&gt;</span> <span class="dt">TTape</span> t</span></code></pre></div>
+<p>And, because we like to keep things formal, a formal definition:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">class</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokens</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">t ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">a ::</span> <span class="dt">Type</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- | Convert a value of type `a` into a tape of tokens.</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    linearize ::</span> <span class="dt">To</span> t a</span></code></pre></div>
+<p>This is Haskell. And, in case you haven't noticed, the way of Haskell
+is to make things as general as possible, sometimes until it hurts. For
+that reason, this class is parameterized not only by the type of the
+values we are going to encode, <code>a</code>, but also by the tape's
+type parameter, <code>t</code>.</p>
+<p>To annoy you further, I will give <code>linearize</code> an arcane
+<code>default</code> implementation:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>    default<span class="ot"> linearize ::</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">Recursive</span> a,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">ToTokensStep</span> t (<span class="dt">Base</span> a)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>      ) <span class="ot">=&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">To</span> t a</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    linearize <span class="ot">=</span> cata linearizeStep</span></code></pre></div>
+<p>This definition uses the accurately named yet mysterious
+<code>Recursive</code> class. <code>Recursive</code> gives us
+<code>cata</code>. Both of these are defined in <a
+href="https://hackage.haskell.org/package/recursion-schemes-5.2.2.2/docs/Data-Functor-Foldable.html">Data.Functor.Foldable</a>.
+The <code>cata</code> function is a generalization of <code>fold</code>
+and takes two arguments:</p>
+<ul>
+<li>A function that performs one step of a recursive computation. For
+us, that function is <code>linearizeStep</code> that is doing the actual
+work. It has the type <code>Base a (TTape t) -&gt; TTape t</code>.</li>
+<li>The value that needs to be worked on. That value has the type
+<code>a</code>.</li>
+</ul>
+<p>With these, <code>cata</code> is recursively chewing up the value
+<code>a</code> and turning it into a <code>TTape t</code>. I admit, this
+machinery is a wee opaque. I will try my best to explain what is going
+on. Stay with me.</p>
+<h2 id="base-functors">Base Functors</h2>
+<p>Let's first zoom in on the cryptic type of
+<code>linearizeStep</code>. This is a function that takes a value of
+type <code>Base a (TTape t)</code> and gives us back a value of type
+<code>TTape t</code>. I guess it's clear what comes out of this function
+(a tape of tokens), but what in tarnation are we passing here? What's
+<code>Base</code>, and why is it parameterized by both <code>a</code>
+and our trusty token tape type?</p>
+<p><code>Base :: Type -&gt; (Type -&gt; Type)</code>, as it turns out,
+is also coming from <a
+href="https://hackage.haskell.org/package/recursion-schemes-5.2.2.2/docs/Data-Functor-Foldable.html">Data.Functor.Foldable</a>.
+It is an open type family and can be thought of as a type-level registry
+of so-called "base functors". A registered base functor,
+<code>Base a r</code>, is a non-recursive data type that is derived for
+a specific recursive data type, <code>a</code>. The type parameter
+<code>r</code> is used to represent recursion in <code>a</code>. How?
+Think of it in the following way: <code>Base a r</code> is structurally
+equal to <code>a</code> except that <code>r</code> takes the place of
+all recursive occurrences of <code>a</code> in <code>a</code>.</p>
+<p>For instance, the base functor of our <code>Kont</code> type from the
+<a href="/posts/Unrecurse.html">previous installment</a> of this series
+is:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | A base functor for `Kont`.</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">KontF</span> next r</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="co">-- | Terminate a computation</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">FinishedF</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="co">-- | Continue a computation with `next`</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">MoreF</span> next r</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> stock (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Functor</span>)</span></code></pre></div>
+<p>The <code>r</code> type parameter appears exactly where
+<code>Kont next</code> appears in the original <code>More</code>
+constructor of <code>Kont next</code>. Go back to the definition of
+<code>Kont next</code> and check for yourself if you don't believe me.
+Off you pop.</p>
+<p>Quick side node on naming. It is customary to name the base functor
+and its constructors after the recursive data type they are associated
+with (in this case, <code>Kont</code>) except for appending the letter
+<code>F</code> for "functor". Like the name suggests, a base functor is
+always a functor in the type parameter <code>r</code>, and Haskell can
+derive that instance for us. Neat.</p>
+<p>Now, with <code>KontF</code> in hand, we can write the following type
+family instance:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="kw">instance</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Base</span> (<span class="dt">Kont</span> next) <span class="ot">=</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">KontF</span> next</span></code></pre></div>
+<p>This tells Haskell that the base functor of <code>Kont</code> is
+<code>KontF</code>.</p>
+<p>How is all this going to help us?</p>
+<p>Like we said before, the argument of <code>linearizeStep</code> is of
+type <code>Base a r</code> with <code>r ~ TTape t</code>. If
+<code>a</code> were <code>Kont next</code>, then <code>Base a r</code>
+would be <code>KontF next (TTape t)</code>. And, likewise, if
+<code>a</code> were <code>Tree Int</code>, then <code>Base a r</code>
+would be <code>TreeF Int (TTape t)</code>. That means that
+<code>linearizeStep</code> always works on a version of <code>a</code>
+where recursive constructors are replaced with token tapes,
+<code>r ~ TTape t</code>.</p>
+<p>We now understand that <code>linearizeStep</code> takes a special
+non-recursive version of <code>a</code> and that it is supposed to
+produce a token tape. But how should this transformation look like?</p>
+<h2 id="linearization-example">Linearization Example</h2>
+<p>Let's dive into a concrete example and try to understand how things
+should play out for <code>a ~ Kont Int</code>. This is a bit easier than
+reaching immediately for trees.</p>
+<p>First, consider the base case. For a finished continuation,
+<code>FinishedF</code>, our encoding should look like this:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | A linearized finished continuation.</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearizedFinished</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [L]}</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  linearizedFinished ::</span> <span class="dt">TTape</span> []</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  linearizedFinished <span class="ot">=</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span><span class="ot"> finished ::</span> <span class="dt">KontF</span> <span class="dt">Int</span> (<span class="dt">TTape</span> []) <span class="ot">=</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>          <span class="dt">FinishedF</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> linearizeStep finished</span></code></pre></div>
+<p>This base case is particularly easy to deal with since the
+<code>FinishedF</code> constructor has no arguments. The only
+information we need to encode is the constructor itself. I use the token
+<code>L</code> (for "left") to represent <code>FinishedF</code>, because
+it appears on the left side in the sum type <code>KontF</code>. Thus,
+the <code>linearizedFinished</code> tape should have one element: the
+token <code>L</code>.</p>
+<p>Now, let's take a look at the recursive case: For a continuation with
+one more step, <code>MoreF</code>, the situation is more complicated,
+but only slightly so. I propose the following encoding:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | A linearized continuation with one more step.</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearizedMore linearizedFinished</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,I 0,Rec 1,L]}</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearizedMore (linearizedMore linearizedFinished)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,I 0,Rec 4,R,I 0,Rec 1,L]}</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearizedMore (linearizedMore (linearizedMore linearizedFinished))</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,I 0,Rec 7,R,I 0,Rec 4,R,I 0,Rec 1,L]}</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="ot">  linearizedMore ::</span> <span class="dt">TTape</span> [] <span class="ot">-&gt;</span> <span class="dt">TTape</span> []</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  linearizedMore previousTape <span class="ot">=</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span><span class="ot"> more ::</span> <span class="dt">KontF</span> <span class="dt">Int</span> (<span class="dt">TTape</span> []) <span class="ot">=</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>          <span class="dt">MoreF</span> <span class="dv">0</span> previousTape</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> linearizeStep more</span></code></pre></div>
+<p>I hope the examples make it clear enough that in this encoding:</p>
+<ol>
+<li><code>R</code> (for "right") is the token for
+<code>MoreF</code>.</li>
+<li><code>I 0</code> (for "integer") is the token for the first argument
+of <code>MoreF</code>. That argument is always <code>0 :: Int</code> in
+this contrived example.</li>
+<li><code>Rec _</code> is the token for the recursive case. Its argument
+counts the number of tokens needed to encode it. Effectively, this just
+measures the length of the previous tape we pass to the
+<code>linearizedMore</code> function.</li>
+</ol>
+<p>Note how, in the above examples, calls to <code>linearizedMore</code>
+are nested to create a tape that encodes progressively more recursive
+calls to the <code>MoreF</code> constructor. What I have done here
+manually will in the end be done for us automatically by
+<code>linearize</code> thanks to the <code>Recursive</code> type class
+and <code>cata</code>:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- |</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearize (Finished :: Kont Int) :: TTape []</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [L]}</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearize (More 0 $ Finished :: Kont Int) :: TTape []</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,I 0,Rec 1,L]}</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearize (More 0 $ More 0 $ Finished :: Kont Int) :: TTape []</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,I 0,Rec 4,R,I 0,Rec 1,L]}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearize (More 0 $ More 0 $ More 0 $ Finished :: Kont Int) :: TTape []</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,I 0,Rec 7,R,I 0,Rec 4,R,I 0,Rec 1,L]}</span></span></code></pre></div>
+<p>If we had a working implementation of <code>linearizeStep</code>
+already, then the only thing we would need to do to get this behaviour
+is to define an instance of the <code>Recursive</code> type class for
+<code>Kont next</code>, like so:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span> <span class="dt">Recursive</span> (<span class="dt">Kont</span> next) <span class="kw">where</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    project ::</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Kont</span> next <span class="ot">-&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">KontF</span> next (<span class="dt">Kont</span> next)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    project (<span class="dt">More</span> n k) <span class="ot">=</span> <span class="dt">MoreF</span> n k</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    project <span class="dt">Finished</span> <span class="ot">=</span> <span class="dt">FinishedF</span></span></code></pre></div>
+<p>This implementation of <code>project</code> tells Haskell how a
+single layer of a <code>Kont next</code> value is unrolled into a
+<code>KontF next (Kont next)</code> value. The rest is taken care of by
+the <code>cata</code> function. I can recommend you to read the newly
+revised <a
+href="https://hackage.haskell.org/package/recursion-schemes-5.2.2.2#readme-container">documentation</a>
+of the recursion schemes package to get an even better understanding of
+the principles behind this approach.</p>
+<p>Good, we have a more or less clear picture of how
+<code>linearizeStep</code> is supposed to work. What's missing is an
+implementation. Next up: an implementation.</p>
+<h2 id="generic-stepwise-linearization">Generic Stepwise
+Linearization</h2>
+<p>We can formally introduce <code>linearizeStep</code> like this:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">class</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokensStep</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">t ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">base ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- | A stepwise linearization of a value of type `base (TTape t)`.</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    linearizeStep ::</span> <span class="dt">To</span> t (base (<span class="dt">TTape</span> t))</span></code></pre></div>
+<p>Like <code>ToTokens</code>, the <code>ToTokensStep</code> type class
+is parameterized by the type of the token tape, <code>t</code>. But
+instead of the <code>a</code> type, we've got another parameter,
+<code>base</code>, for its base functor.</p>
+<p>I promised oodles of boilerplate code, and I am happy to announce
+that the waiting is over. We will use <a
+href="https://downloads.haskell.org/ghc/latest/docs/html/users_guide/exts/generics.html">datatype-generic
+programming</a> to implement this class!</p>
+<p>Have a look at the following <code>default</code> implementation:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>    default<span class="ot"> linearizeStep ::</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">Alternative</span> t,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Foldable</span> t,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Generic</span> (base (<span class="dt">TTape</span> t)),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">GToTokensStep</span> t (<span class="dt">Rep</span> (base (<span class="dt">TTape</span> t)))</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>      ) <span class="ot">=&gt;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">To</span> t (base (<span class="dt">TTape</span> t))</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    linearizeStep <span class="ot">=</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>      gLinearizeStep</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> GHC.Generics.from</span></code></pre></div>
+<p>Of course, that's just a wrapper around <code>gLinearizeStep</code>,
+defined below:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">class</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GToTokensStep</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">t ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">rep ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- | A generic implementation of `linearizeStep`.</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    gLinearizeStep ::</span> <span class="kw">forall</span> a<span class="op">.</span> <span class="dt">To</span> t (rep a)</span></code></pre></div>
+<p>This follows <a
+href="https://wiki.haskell.org/GHC.Generics#More_general_default_methods">the</a>
+<a
+href="https://hackage.haskell.org/package/base-4.16.0.0/docs/GHC-Generics.html#g:13">usual</a>
+<a
+href="https://hackage.haskell.org/package/binary-0.8.9.0/docs/Data-Binary.html#t:Binary">pattern</a>
+for datatype-generic programming in Haskell. In particular, this says
+that, if our base functor has a <code>Generic</code> instance with
+generic representation <code>Rep (base r)</code>, then we can obtain a
+<code>ToTokensStep</code> instance (and thus <code>linearizeStep</code>)
+for free. Free is very cheap.</p>
+<p><code>GHC.Generics.from</code> will convert a <code>base r</code>
+value into a <code>Rep (base r)</code> value. The latter represents
+<code>base r</code> using only generic primitive types. These types are
+defined in the <code>GHC.Generics</code> module and are:</p>
+<ul>
+<li><code>V1</code> for impossible values (<code>Void</code>). This is
+used for types that have no constructors. We can't represent
+<code>Void</code> in our token tape.</li>
+<li><code>U1</code> for constructors without arguments like
+<code>()</code> or <code>Finished</code>.</li>
+<li><code>K1</code> for constants like <code>True</code> or
+<code>1</code>. This is used for constructor arguments. These could be
+recursive values.</li>
+<li><code>M1</code> for meta data. This is a wrapper and used to encode
+constructor or data type names.</li>
+<li><code>(:*:)</code> for product types. This is used to separate
+constructor arguments.</li>
+<li><code>(:+:)</code> for sum types. This is used to encode a choice
+between two constructors.</li>
+</ul>
+<p>If you have never seen these types before, you may want to read some
+of the <a
+href="https://hackage.haskell.org/package/base-4.16.0.0/docs/GHC-Generics.html">documentation</a>
+in the <code>GHC.Generics</code> module. There are some examples that
+will help you understand the types better than I can in this
+tutorial.</p>
+<p>We only need to specify once what should happen for the six generic
+types. For <code>V1</code>, we can't do anything:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span> <span class="dt">GToTokensStep</span> t <span class="dt">V1</span> <span class="kw">where</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    gLinearizeStep v <span class="ot">=</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>      v <span class="ot">`seq`</span> <span class="fu">error</span> <span class="st">&quot;GToTokensStep.V1&quot;</span></span></code></pre></div>
+<p>For <code>U1</code>, we can just ignore it and return an empty token
+tape:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Alternative</span> t <span class="ot">=&gt;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GToTokensStep</span> t <span class="dt">U1</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    gLinearizeStep _ <span class="ot">=</span> <span class="dt">Tape</span> empty</span></code></pre></div>
+<p>For <code>K1</code>, we can just delegate to
+<code>linearize</code>:</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokens</span> t c <span class="ot">=&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GToTokensStep</span> t (<span class="dt">K1</span> i c)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    gLinearizeStep <span class="ot">=</span> linearize <span class="op">.</span> unK1</span></code></pre></div>
+<p>When specialized to <code>K1 i Int</code>, this instance is used to
+convert an <code>Int</code> constant appearing in
+<code>KontF Int r</code> into a tape of a single <code>I</code>
+token:</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Alternative</span> t <span class="ot">=&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokens</span> t <span class="dt">Int</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    linearize i <span class="ot">=</span> <span class="fu">pure</span> (<span class="dt">I</span> i)</span></code></pre></div>
+<p>Moreover, when specialized to <code>K1 i (TTape t)</code>, the
+<code>K1</code> instance defines what should happen for the
+<code>TTape t</code> constants in <code>KontF next (TTape t)</code>.
+This is the trick that allows us to deal with recursive constructor
+arguments:</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Alternative</span> t, <span class="dt">Foldable</span> t) <span class="ot">=&gt;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokens</span> t (<span class="dt">TTape</span> t)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    linearize tape <span class="ot">=</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">pure</span> (<span class="dt">Rec</span> <span class="op">$</span> <span class="fu">length</span> tape) <span class="op">&lt;|&gt;</span> tape</span></code></pre></div>
+<p>Here we use <code>length</code> to measure the length of the tape. We
+store that length in a <code>Rec</code> token that we prepend to the
+tape using <code>(&lt;|&gt;)</code>. This length information will be
+helpful later when we want to decode the tape back into a value.</p>
+<p>For <code>M1</code>, we can just unwrap the constructor:</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GToTokensStep</span> t f <span class="ot">=&gt;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GToTokensStep</span> t (<span class="dt">M1</span> i c f)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    gLinearizeStep <span class="ot">=</span> gLinearizeStep <span class="op">.</span> unM1</span></code></pre></div>
+<p>For the product <code>(f :*: g)</code>, we can delegate to the
+<code>GToTokensStep</code> instances of <code>f</code> and
+<code>g</code>:</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Alternative</span> t,</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Foldable</span> t,</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">GToTokensStep</span> t f,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">GToTokensStep</span> t g</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GToTokensStep</span> t (f <span class="op">:*:</span> g)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    gLinearizeStep (x <span class="op">:*:</span> y) <span class="ot">=</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>      gLinearizeStep x <span class="op">&lt;|&gt;</span> gLinearizeStep y</span></code></pre></div>
+<p>The tapes of the two <code>x :: f a</code> and <code>y :: g a</code>
+values are concatenated using <code>(&lt;|&gt;)</code>.</p>
+<p>Finally, we can define an instance for the sum
+<code>(f :+: g)</code>:</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Applicative</span> t,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Alternative</span> t,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Foldable</span> t,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">GToTokensStep</span> t f,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">GToTokensStep</span> t g</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GToTokensStep</span> t (f <span class="op">:+:</span> g)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    gLinearizeStep (<span class="dt">L1</span> x) <span class="ot">=</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">pure</span> <span class="dt">L</span> <span class="op">&lt;|&gt;</span> gLinearizeStep x</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    gLinearizeStep (<span class="dt">R1</span> x) <span class="ot">=</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">pure</span> <span class="dt">R</span> <span class="op">&lt;|&gt;</span> gLinearizeStep x</span></code></pre></div>
+<p>We use <code>pure L</code> and <code>pure R</code> to encode the left
+and right constructor.</p>
+<p>This concludes the definition of <code>GToTokensStep</code> and the
+boilerplaty datatype-generic programming exercise for
+<code>ToTokensStep</code>. Wasn't that fun? There is more to come.</p>
+<h2 id="auto-generating-totokens-instances">Auto-Generating
+<code>ToTokens</code> Instances</h2>
+<p>Perhaps this was lost in the noise, but we can now automatically
+generate <code>ToTokens</code> instances!</p>
+<p>For the <code>Kont</code> data type, this is done in three steps:</p>
+<p>Step 1: Ask Haskell to generate a <code>Generic</code> instance for
+<code>Kont</code>'s base functor, <code>KontF</code>.</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> stock <span class="kw">instance</span> <span class="dt">Generic</span> (<span class="dt">KontF</span> next r)</span></code></pre></div>
+<p>Step 2: Obtain a <code>ToTokensStep</code> instance from the default
+implementation.</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Alternative</span> t, <span class="dt">Foldable</span> t, <span class="dt">ToTokens</span> t next) <span class="ot">=&gt;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokensStep</span> t (<span class="dt">KontF</span> next)</span></code></pre></div>
+<p>Step 3: Earn a <code>ToTokens</code> instance.</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokensStep</span> t (<span class="dt">KontF</span> next) <span class="ot">=&gt;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokens</span> t (<span class="dt">Kont</span> next)</span></code></pre></div>
+<p>With these we can convert a <code>Kont next</code> value into a
+<code>TTape t</code> value (if we also happen to have a
+<code>ToTokens</code> instance for <code>next</code>). And we know that
+this is true because this is a literate Haskell article, and all
+previously seen examples were in fact already working. Surprise!</p>
+<p>Originally, we were interested in values of type
+<code>Tree Int</code>. Perhaps you remember. Are we any closer to
+linearizing those, too? We are. We can automagically generate now
+everything we need.</p>
+<p>We defined the base functor <code>KontF</code> for the
+<code>Kont</code> data type manually. This was a bit tedious, but it
+helped us understand base functor types. Now, rather than going through
+the trouble of writing our own base functor for <code>Tree</code> (or
+any other data type <code>a</code>), we can use
+<code>makeBaseFunctor</code> to do this for us.
+<code>makeBaseFunctor</code> is a <a
+href="https://en.wikipedia.org/wiki/Template_Haskell">Template
+Haskell</a> function that generates the base functor for the
+<code>Tree</code> type and calls it <code>TreeF</code>.</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>  makeBaseFunctor &#39;<span class="dt">&#39;Tree</span></span></code></pre></div>
+<p>This little trick also generates <code>Base</code> and
+<code>Recursive</code> instances for <code>Tree</code>, among a few
+other things that we don't need to worry about right now.</p>
+<p>However, we don't get a <code>Show</code> or <code>Generic</code>
+instance for <code>TreeF</code>, so let's quickly add those:</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> stock <span class="kw">instance</span> (<span class="dt">Show</span> a, <span class="dt">Show</span> r) <span class="ot">=&gt;</span> <span class="dt">Show</span> (<span class="dt">TreeF</span> a r)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> stock <span class="kw">instance</span> <span class="dt">Generic</span> (<span class="dt">TreeF</span> a r)</span></code></pre></div>
+<p>The <code>Generic</code> instance opens up the possibility of
+auto-generating the <code>ToTokens</code> instance for
+<code>Tree</code>:</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Alternative</span> t, <span class="dt">Foldable</span> t, <span class="dt">ToTokens</span> t a) <span class="ot">=&gt;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokensStep</span> t (<span class="dt">TreeF</span> a)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokensStep</span> t (<span class="dt">TreeF</span> a) <span class="ot">=&gt;</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokens</span> t (<span class="dt">Tree</span> a)</span></code></pre></div>
+<p>And that's it! Let's see what we can do with this:</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearize (Nil :: Tree Int) :: TTape []</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [L]}</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearize (Node Nil 0 Nil :: Tree Int) :: TTape []</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,Rec 1,L,I 0,Rec 1,L]}</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearize (Node (Node Nil 0 Nil) 1 (Node Nil 2 Nil) :: Tree Int) :: TTape []</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,Rec 6,R,Rec 1,L,I 0,Rec 1,L,I 1,Rec 6,R,Rec 1,L,I 2,Rec 1,L]}</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; linearize exampleTree :: TTape []</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Tape {unTape = [R,Rec 16,R,Rec 6,R,Rec 1,L,I 1,Rec 1,L,I 2,Rec 6,R,Rec 1,L,I 3,Rec 1,L,I 4,Rec 16,R,Rec 6,R,Rec 1,L,I 5,Rec 1,L,I 6,Rec 6,R,Rec 1,L,I 7,Rec 1,L]}</span></span></code></pre></div>
+<p>There you have it, we can flatten binary trees and store them in
+tapes of tokens. Cool stuff!</p>
+<h2 id="parsing-tapes-of-tokens">Parsing Tapes of Tokens</h2>
+<p>How can we go back from a <code>TTape t</code> value to a
+<code>Tree</code> value?</p>
+<p>The answer is <em>parsing</em>. <a
+href="https://hackage.haskell.org/package/parsec">Many</a> <a
+href="https://hackage.haskell.org/package/megaparsec">parsing</a> <a
+href="https://hackage.haskell.org/package/attoparsec">libraries</a> <a
+href="https://hackage.haskell.org/package/trifecta">exist</a> for
+Haskell, but we will use none of them, because we need a lot less than
+what they offer. Instead, we will use a minimal approach to parsing
+based on the good old state monad transformer, <code>StateT</code>. We
+know it well from the <a href="/posts/Unrecurse.html">previous
+article</a>.</p>
+<p>It is a little-known fact that <code>StateT</code> already provides
+all that we need to implement a <a
+href="http://www.cs.nott.ac.uk/~pszgmh/pearl.pdf">monadic parser</a>. It
+even supports backtracking. This may be surprising, since
+<code>StateT s b a</code> is just a <code>newtype</code> wrapper around
+<code>s -&gt; b (a, s)</code>, where <code>s</code> is the state's type,
+and <code>b</code> is the type of some inner monad. Why should this
+matter for parsing? Well, that's because, at its most fundamental level,
+<em>a parser for things <code>a</code> is a function from strings
+<code>s</code> to lists <code>b ~ []</code> of pairs <code>(a, s)</code>
+of things and strings</em>. That's a little Seussian rhyme I borrowed
+from <a
+href="http://www.willamette.edu/~fruehr/haskell/seuss.html">Fritz
+Ruehr</a>. It means that if we have a string <code>s</code> and a parser
+<code>StateT s b a</code> with <code>b ~ []</code>, then running the
+parser on <code>s</code> will return:</p>
+<ul>
+<li>an empty list if there is no way to create an <code>a</code> from
+any prefix of the input string <code>s</code> (including the empty
+string) or</li>
+<li>a non-empty list of full and/or partial parses of <code>s</code>,
+where each pair in the list belongs to one alternative parse of
+<code>s</code>. The first part of a pair is the parsing result,
+<code>a</code>, and the second part is the unconsumed remainder of the
+input string.</li>
+</ul>
+<p>There may be a very long list of alternatives, but for
+<code>b ~ []</code> those are lazily evaluated. This is why we can think
+of <code>StateT s [] a</code> as a parser with backtracking. If we don't
+want backtracking, we can use <code>StateT s Maybe a</code> instead.
+Then we will only ever get zero or one parse. If we get
+<code>Nothing</code>, the parse failed. If we get <code>Just</code>, the
+parse succeeded. For <code>b ~ Maybe</code>, we can never explore more
+than one alternative. We are greedily parsing, and committing to the
+first alternative that succeeds is a final decision. <code>b</code> (for
+"backtracking") should always be a monad with a <code>MonadPlus</code>
+instance for supporting choice (<code>mplus</code>) and failure
+(<code>mzero</code>). <code>[]</code>, <code>Maybe</code>, and
+<code>LogicT</code> from <a
+href="https://hackage.haskell.org/package/logict">Control.Monad.Logic</a>
+fulfil this requirement, but there are many monads that do not.</p>
+<p>In Haskell, a string is a list of characters. Here, we have a tape of
+tokens. If we want to parse a tape of tokens, then we should be able to
+do that with this state monad transformer:</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">From</span> b t a <span class="ot">=</span> <span class="dt">StateT</span> (<span class="dt">TTape</span> t) b a</span></code></pre></div>
+<p>This is the counterpart to <code>To t a</code> that we have been
+using to flatten trees into tapes of tokens. To go the other way, we
+need to define a value of type <code>From b t a</code>. It will need to
+be made such that it is compatible with how we defined
+<code>To t a</code> above and undoes the flattening we engineered there.
+We will build this value from the ground up starting with the simplest
+parser we can write down:</p>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | A parser that consumes a single token from the tape and returns it.</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  token ::</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> b t<span class="op">.</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">MonadFail</span> b,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Cons</span> (<span class="dt">TTape</span> t) (<span class="dt">TTape</span> t) <span class="dt">Token</span> <span class="dt">Token</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">From</span> b t <span class="dt">Token</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  token <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    t <span class="ot">&lt;-</span> get</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> uncons t <span class="kw">of</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="fu">fail</span> <span class="st">&quot;unexpected end of input&quot;</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Just</span> (x, xs) <span class="ot">-&gt;</span> put xs <span class="op">&gt;&gt;</span> <span class="fu">pure</span> x</span></code></pre></div>
+<p>This parser just tries to take the first token from the tape and
+yields it, no matter what the token is. If there are no tokens left, it
+fails. The <code>MonadFail</code> constraint is needed for the
+<code>fail</code> function, and the <code>Cons</code> constraint is
+needed for the <code>uncons</code> function.</p>
+<p>The second most simple parser we can write is one that consumes a
+single token and returns it if and only if it matches a given
+predicate:</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | A parser that matches a given token and returns it.</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  isToken ::</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> b t<span class="op">.</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">MonadFail</span> b,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">MonadPlus</span> b,</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Cons</span> (<span class="dt">TTape</span> t) (<span class="dt">TTape</span> t) <span class="dt">Token</span> <span class="dt">Token</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Token</span> <span class="ot">-&gt;</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">From</span> b t <span class="dt">Token</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  isToken t <span class="ot">=</span> mfilter (<span class="op">==</span> t) token</span></code></pre></div>
+<p>The <code>mfilter</code> function is a monadic version of
+<code>filter</code> and provided by the <code>MonadPlus</code>
+requirement.</p>
+<p>These two parsers, <code>token</code> and <code>isToken</code>, will
+turn out to be everything we need. We will use <em>combinator
+functions</em> to compose them again and again until we get to the final
+parser that solves our problem. The combinators will mostly be provided
+by the <code>Alternative</code> and <code>MonadPlus</code> instances for
+<code>From b t</code>. This will become much clearer in the next
+section. It's all about the combinators from here. There is <a
+href="https://en.wikibooks.org/wiki/Haskell/Alternative_and_MonadPlus">documentation</a>
+on the subject for those who are interested, but it should not be
+necessary to read this to understand the rest of this article.</p>
+<h2 id="there-and-back-again">There And Back Again</h2>
+<p>We'd like to be able to go back and forth between token tapes and
+<code>Tree</code> values:</p>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | `parse` is the inverse of `linearize`.</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- prop&gt; \tree -&gt; evalStateT parse (linearize @[] tree) == Just (tree :: Tree Int)</span></span></code></pre></div>
+<p>This is a <em>there-and-back-again</em> property. It says that, if we
+have a <code>Tree Int</code> value, then we can first linearize it into
+a token tape, and then parse it back into the same <code>Tree Int</code>
+value we started with. No treasure is lost or gained by this process.
+Not even a small chest.</p>
+<p>The function <code>parse</code> returns the parser we need. A formal
+definition of <code>parse</code> is:</p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">class</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FromTokens</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">b ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">t ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">a ::</span> <span class="dt">Type</span>)</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- | Parse a value of type `a` from a list of tokens.</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="ot">    parse ::</span> <span class="dt">From</span> b t a</span></code></pre></div>
+<p>We parameterize <code>FromTokens</code> on the backtracking monad,
+<code>b</code>, the tape type, <code>t</code>, and the type of the value
+we want to parse, <code>a</code>. Like <code>linearize</code>,
+<code>parse</code> has an annoyingly opaque <code>default</code>
+implementation:</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>    default<span class="ot"> parse ::</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">Corecursive</span> a,</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Monad</span> b,</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Traversable</span> (<span class="dt">Base</span> a),</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">FromTokensStep</span> b t (<span class="dt">Base</span> a)</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>      ) <span class="ot">=&gt;</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">From</span> b t a</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    parse <span class="ot">=</span> go</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>      <span class="kw">where</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>        go <span class="ot">=</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>          <span class="fu">fmap</span> embed <span class="op">$</span></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>            parseStep</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>              <span class="op">&gt;&gt;=</span> <span class="fu">traverse</span> (resetParse go)</span></code></pre></div>
+<p>Let's take this apart, and see what it does. The helper
+<code>go</code> replaces <code>cata</code> in the <code>default</code>
+implementation of <code>linearize</code> from before. <code>go</code> is
+a recursive descent parser that repeatedly calls the stepwise parser
+<code>parseStep</code>. This parser comes from the
+<code>FromTokensStep</code> constraint and has the type:
+<code>parseStep :: From b t (Base a (TTape t))</code>. We haven't
+defined <code>parseStep</code> and <code>FromTokensStep</code> yet, but
+we will shortly. <code>parseStep</code> is a parser that returns a base
+functor for the type <code>a</code>, where unused tokens are wrapped in
+token tapes <code>TTape t</code> that appear in the recursive positions
+of <code>a</code> in <code>a</code>. Those tapes are then parsed by
+<code>parseStep</code> again and again, until we get a base functor
+value that contains no token tapes (for <code>TreeF</code>, that would
+be <code>NilF</code>). If we naively glued the base functors coming out
+of this recursion together, we would get a value of type
+<code>Base a (Base a (Base a (Base ... )))</code>. However, we cannot
+work with this type directly, because it would depend on the runtime
+value of the token tape: the more nested the encoded value, the more
+nested the type. Instead, we need to incrementally roll the functors up
+into an <code>a</code> value. We can do this by using the
+<code>Corecursive</code> constraint, which is the counterpart to
+<code>Recursive</code> from before. <code>Corecursive</code> gives us
+<code>embed :: Base a a -&gt; a</code>, the inverse of
+<code>project</code>, which is exactly what we need.</p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Run a parser on a tape, and</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- lift the result(s) into the parent parsing scope.</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Unused tokens are discarded.</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  resetParse ::</span> <span class="dt">Monad</span> b <span class="ot">=&gt;</span> </span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">From</span> b t a <span class="ot">-&gt;</span> <span class="dt">TTape</span> t <span class="ot">-&gt;</span> <span class="dt">From</span> b t a</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  resetParse m <span class="ot">=</span> lift <span class="op">.</span> evalStateT m</span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">class</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FromTokensStep</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">b ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">t ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">base ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- | A stepwise parser of a value of type `base (TTape t)`.</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="ot">    parseStep ::</span> <span class="dt">From</span> b t (base (<span class="dt">TTape</span> t))</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>    default<span class="ot"> parseStep ::</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">Functor</span> b,</span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Generic</span> (base (<span class="dt">TTape</span> t)),</span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">GFromTokensStep</span> b t (<span class="dt">Rep</span> (base (<span class="dt">TTape</span> t)))</span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>      ) <span class="ot">=&gt;</span></span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">From</span> b t (base (<span class="dt">TTape</span> t))</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>    parseStep <span class="ot">=</span> to <span class="op">&lt;$&gt;</span> gParseStep</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">class</span></span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GFromTokensStep</span></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">b ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">t ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>      (<span class="ot">rep ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>)</span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- | A generic implementation of `parseStep`.</span></span>
+<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a><span class="ot">    gParseStep ::</span> <span class="kw">forall</span> a<span class="op">.</span> <span class="dt">From</span> b t (rep a)</span>
+<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-26"><a href="#cb42-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb42-27"><a href="#cb42-27" aria-hidden="true" tabindex="-1"></a>    <span class="dt">MonadFail</span> b <span class="ot">=&gt;</span></span>
+<span id="cb42-28"><a href="#cb42-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GFromTokensStep</span> b t <span class="dt">V1</span></span>
+<span id="cb42-29"><a href="#cb42-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb42-30"><a href="#cb42-30" aria-hidden="true" tabindex="-1"></a>    gParseStep <span class="ot">=</span> <span class="fu">fail</span> <span class="st">&quot;GFromTokensStep.V1&quot;</span></span>
+<span id="cb42-31"><a href="#cb42-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-32"><a href="#cb42-32" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb42-33"><a href="#cb42-33" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Monad</span> b <span class="ot">=&gt;</span></span>
+<span id="cb42-34"><a href="#cb42-34" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GFromTokensStep</span> b t <span class="dt">U1</span></span>
+<span id="cb42-35"><a href="#cb42-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb42-36"><a href="#cb42-36" aria-hidden="true" tabindex="-1"></a>    gParseStep <span class="ot">=</span> <span class="fu">pure</span> <span class="dt">U1</span></span>
+<span id="cb42-37"><a href="#cb42-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-38"><a href="#cb42-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb42-39"><a href="#cb42-39" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">MonadFail</span> b,</span>
+<span id="cb42-40"><a href="#cb42-40" aria-hidden="true" tabindex="-1"></a>      <span class="dt">MonadPlus</span> b,</span>
+<span id="cb42-41"><a href="#cb42-41" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Cons</span> (<span class="dt">TTape</span> t) (<span class="dt">TTape</span> t) <span class="dt">Token</span> <span class="dt">Token</span>,</span>
+<span id="cb42-42"><a href="#cb42-42" aria-hidden="true" tabindex="-1"></a>      <span class="dt">GFromTokensStep</span> b t f,</span>
+<span id="cb42-43"><a href="#cb42-43" aria-hidden="true" tabindex="-1"></a>      <span class="dt">GFromTokensStep</span> b t g</span>
+<span id="cb42-44"><a href="#cb42-44" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb42-45"><a href="#cb42-45" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GFromTokensStep</span> b t (f <span class="op">:+:</span> g)</span>
+<span id="cb42-46"><a href="#cb42-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb42-47"><a href="#cb42-47" aria-hidden="true" tabindex="-1"></a>    gParseStep <span class="ot">=</span></span>
+<span id="cb42-48"><a href="#cb42-48" aria-hidden="true" tabindex="-1"></a>      (isToken <span class="dt">L</span> <span class="op">&gt;&gt;</span> <span class="dt">L1</span> <span class="op">&lt;$&gt;</span> gParseStep)</span>
+<span id="cb42-49"><a href="#cb42-49" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;|&gt;</span> (isToken <span class="dt">R</span> <span class="op">&gt;&gt;</span> <span class="dt">R1</span> <span class="op">&lt;$&gt;</span> gParseStep)</span>
+<span id="cb42-50"><a href="#cb42-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-51"><a href="#cb42-51" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb42-52"><a href="#cb42-52" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">MonadFail</span> b,</span>
+<span id="cb42-53"><a href="#cb42-53" aria-hidden="true" tabindex="-1"></a>      <span class="dt">MonadPlus</span> b,</span>
+<span id="cb42-54"><a href="#cb42-54" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Cons</span> (<span class="dt">TTape</span> t) (<span class="dt">TTape</span> t) <span class="dt">Token</span> <span class="dt">Token</span>,</span>
+<span id="cb42-55"><a href="#cb42-55" aria-hidden="true" tabindex="-1"></a>      <span class="dt">GFromTokensStep</span> b t f,</span>
+<span id="cb42-56"><a href="#cb42-56" aria-hidden="true" tabindex="-1"></a>      <span class="dt">GFromTokensStep</span> b t g</span>
+<span id="cb42-57"><a href="#cb42-57" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb42-58"><a href="#cb42-58" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GFromTokensStep</span> b t (f <span class="op">:*:</span> g)</span>
+<span id="cb42-59"><a href="#cb42-59" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb42-60"><a href="#cb42-60" aria-hidden="true" tabindex="-1"></a>    gParseStep <span class="ot">=</span></span>
+<span id="cb42-61"><a href="#cb42-61" aria-hidden="true" tabindex="-1"></a>      (<span class="op">:*:</span>)</span>
+<span id="cb42-62"><a href="#cb42-62" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;$&gt;</span> gParseStep</span>
+<span id="cb42-63"><a href="#cb42-63" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;*&gt;</span> gParseStep</span>
+<span id="cb42-64"><a href="#cb42-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-65"><a href="#cb42-65" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb42-66"><a href="#cb42-66" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Monad</span> b, <span class="dt">FromTokens</span> b t c) <span class="ot">=&gt;</span></span>
+<span id="cb42-67"><a href="#cb42-67" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GFromTokensStep</span> b t (<span class="dt">K1</span> i c)</span>
+<span id="cb42-68"><a href="#cb42-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb42-69"><a href="#cb42-69" aria-hidden="true" tabindex="-1"></a>    gParseStep <span class="ot">=</span> <span class="dt">K1</span> <span class="op">&lt;$&gt;</span> parse</span>
+<span id="cb42-70"><a href="#cb42-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-71"><a href="#cb42-71" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb42-72"><a href="#cb42-72" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Functor</span> b, <span class="dt">GFromTokensStep</span> b t f) <span class="ot">=&gt;</span></span>
+<span id="cb42-73"><a href="#cb42-73" aria-hidden="true" tabindex="-1"></a>    <span class="dt">GFromTokensStep</span> b t (<span class="dt">M1</span> i c f)</span>
+<span id="cb42-74"><a href="#cb42-74" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb42-75"><a href="#cb42-75" aria-hidden="true" tabindex="-1"></a>    gParseStep <span class="ot">=</span> <span class="dt">M1</span> <span class="op">&lt;$&gt;</span> gParseStep</span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">MonadFail</span> b,</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">MonadPlus</span> b,</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Cons</span> (t <span class="dt">Token</span>) (t <span class="dt">Token</span>) <span class="dt">Token</span> <span class="dt">Token</span>,</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Alternative</span> t,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">FromTokens</span> b t a</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FromTokensStep</span> b t (<span class="dt">TreeF</span> a)</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Monad</span> b, <span class="dt">FromTokensStep</span> b t (<span class="dt">TreeF</span> a)) <span class="ot">=&gt;</span></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FromTokens</span> b t (<span class="dt">Tree</span> a)</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">MonadFail</span> b,</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Cons</span> (<span class="dt">TTape</span> t) (<span class="dt">TTape</span> t) <span class="dt">Token</span> <span class="dt">Token</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FromTokens</span> b t <span class="dt">Int</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    parse <span class="ot">=</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>      token <span class="op">&gt;&gt;=</span> \<span class="kw">case</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">I</span> i <span class="ot">-&gt;</span> <span class="fu">pure</span> i</span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>        _ <span class="ot">-&gt;</span> <span class="fu">fail</span> <span class="st">&quot;expected Int&quot;</span></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">MonadFail</span> b,</span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Alternative</span> t,</span>
+<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Cons</span> (<span class="dt">TTape</span> t) (<span class="dt">TTape</span> t) <span class="dt">Token</span> <span class="dt">Token</span></span>
+<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FromTokens</span> b t (<span class="dt">TTape</span> t)</span>
+<span id="cb44-18"><a href="#cb44-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb44-19"><a href="#cb44-19" aria-hidden="true" tabindex="-1"></a>    parse <span class="ot">=</span></span>
+<span id="cb44-20"><a href="#cb44-20" aria-hidden="true" tabindex="-1"></a>      token <span class="op">&gt;&gt;=</span> \<span class="kw">case</span></span>
+<span id="cb44-21"><a href="#cb44-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Rec</span> n <span class="ot">-&gt;</span> go n</span>
+<span id="cb44-22"><a href="#cb44-22" aria-hidden="true" tabindex="-1"></a>          <span class="kw">where</span></span>
+<span id="cb44-23"><a href="#cb44-23" aria-hidden="true" tabindex="-1"></a><span class="ot">            go ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">From</span> b t (<span class="dt">TTape</span> t)</span>
+<span id="cb44-24"><a href="#cb44-24" aria-hidden="true" tabindex="-1"></a>            go <span class="dv">0</span> <span class="ot">=</span> <span class="fu">pure</span> empty</span>
+<span id="cb44-25"><a href="#cb44-25" aria-hidden="true" tabindex="-1"></a>            go n&#39; <span class="ot">=</span> cons <span class="op">&lt;$&gt;</span> token <span class="op">&lt;*&gt;</span> go (n&#39; <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb44-26"><a href="#cb44-26" aria-hidden="true" tabindex="-1"></a>        _ <span class="ot">-&gt;</span> <span class="fu">fail</span> <span class="st">&quot;expected Rec&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">NextF</span> a r <span class="ot">=</span> <span class="dt">FirstF</span> r <span class="op">|</span> <span class="dt">SecondF</span> a <span class="op">|</span> <span class="dt">ThirdF</span> r</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  accumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39;&#39; ::</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> t a<span class="op">.</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Alternative</span> t,</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Foldable</span> t,</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Monoid</span> a,</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">ToTokens</span> t a,</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">FromTokens</span> <span class="dt">Maybe</span> t a,</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Cons</span> (t <span class="dt">Token</span>) (t <span class="dt">Token</span>) <span class="dt">Token</span> <span class="dt">Token</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">StateT</span> (<span class="dt">TTape</span> t, <span class="dt">Stack</span> (<span class="dt">NextF</span> a (<span class="dt">TTape</span> t))) (<span class="dt">Writer</span> a) ()</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>  accumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39;&#39; <span class="ot">=</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>    while <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>      treeF <span class="ot">&lt;-</span> fromJust <span class="op">.</span> evalStateT parseStep <span class="op">&lt;$&gt;</span> zoom _1 get</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>      <span class="kw">case</span> treeF <span class="kw">of</span></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>        <span class="dt">NilF</span> <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>          c <span class="ot">&lt;-</span> zoom _2 pop</span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>          <span class="kw">case</span> c <span class="kw">of</span></span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">FirstF</span> leftF) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put leftF</span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">SecondF</span> contentF) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a>              lift (tell contentF)</span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put (linearizeStep <span class="op">$</span> <span class="dt">NilF</span> <span class="op">@</span>a)</span>
+<span id="cb46-24"><a href="#cb46-24" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb46-25"><a href="#cb46-25" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">ThirdF</span> rightF) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb46-26"><a href="#cb46-26" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put rightF</span>
+<span id="cb46-27"><a href="#cb46-27" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb46-28"><a href="#cb46-28" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="fu">pure</span> <span class="dt">Break</span></span>
+<span id="cb46-29"><a href="#cb46-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">NodeF</span> {<span class="op">..</span>} <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb46-30"><a href="#cb46-30" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">ThirdF</span> rightF)</span>
+<span id="cb46-31"><a href="#cb46-31" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">SecondF</span> contentF)</span>
+<span id="cb46-32"><a href="#cb46-32" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">FirstF</span> leftF)</span>
+<span id="cb46-33"><a href="#cb46-33" aria-hidden="true" tabindex="-1"></a>          zoom _1 <span class="op">$</span> put (linearizeStep <span class="op">$</span> <span class="dt">NilF</span> <span class="op">@</span>a)</span>
+<span id="cb46-34"><a href="#cb46-34" aria-hidden="true" tabindex="-1"></a>          <span class="fu">pure</span> <span class="dt">Continue</span></span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>  makeBaseFunctor &#39;<span class="dt">&#39;Sum</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> stock <span class="kw">instance</span> (<span class="dt">Show</span> a, <span class="dt">Show</span> r) <span class="ot">=&gt;</span> <span class="dt">Show</span> (<span class="dt">SumF</span> a r)</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> stock <span class="kw">instance</span> <span class="dt">Generic</span> (<span class="dt">SumF</span> a r)</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Alternative</span> t,</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Foldable</span> t,</span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">ToTokens</span> t a</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokensStep</span> t (<span class="dt">SumF</span> a)</span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokensStep</span> t (<span class="dt">SumF</span> a) <span class="ot">=&gt;</span></span>
+<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ToTokens</span> t (<span class="dt">Sum</span> a)</span>
+<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>    ( <span class="dt">Monad</span> b,</span>
+<span id="cb47-20"><a href="#cb47-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Alternative</span> t,</span>
+<span id="cb47-21"><a href="#cb47-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Foldable</span> t,</span>
+<span id="cb47-22"><a href="#cb47-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">FromTokens</span> b t a</span>
+<span id="cb47-23"><a href="#cb47-23" aria-hidden="true" tabindex="-1"></a>    ) <span class="ot">=&gt;</span></span>
+<span id="cb47-24"><a href="#cb47-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FromTokensStep</span> b t (<span class="dt">SumF</span> a)</span>
+<span id="cb47-25"><a href="#cb47-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-26"><a href="#cb47-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">instance</span></span>
+<span id="cb47-27"><a href="#cb47-27" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Monad</span> b, <span class="dt">FromTokensStep</span> b t (<span class="dt">SumF</span> a)) <span class="ot">=&gt;</span></span>
+<span id="cb47-28"><a href="#cb47-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FromTokens</span> b t (<span class="dt">Sum</span> a)</span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Calculate the sum of the content values of the linearized example tree.</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; sumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39;&#39;</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Sum {getSum = 28}</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  sumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39;&#39; ::</span> <span class="dt">Sum</span> <span class="dt">Int</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  sumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39;&#39; <span class="ot">=</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    execWriter <span class="op">$</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>      runStateT</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>        (accumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39;&#39; <span class="op">@</span><span class="dt">Vector</span>)</span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>        (linearize <span class="op">$</span> <span class="dt">Sum</span> <span class="op">&lt;$&gt;</span> exampleTree, [])</span></code></pre></div>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original. Code blocks are BSD-3-Clause unless noted.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

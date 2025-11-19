@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>Everyone&#39;s Arguing About the Wrong Abstraction Layer</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Everyone&#39;s Arguing About the Wrong Abstraction Layer">
+    <meta property="og:description" content="&lt;p&gt;OpenAI &lt;a
+href=&quot;https://openai.com/index/introducing-agentkit/&quot;&gt;shipped AgentKit
+this week&lt;/a&gt;, a platform with a visual workflow editor, versioned
+agents, governed connectors, and evals infrastructure. The internet
+immediately split into two camps: people dunking on it (&quot;this isn&#39;t
+AGI!&quot;) and people defending visual editors as necessary for
+non-technical users. Both camps are arguing about the wrong thing.&lt;/p&gt;">
+    <meta property="og:url" content="https://tscholak.github.io/posts/agentkit.html">
+    <meta property="og:image" content="https://tscholak.github.io/images/agentkit.png">
+<meta property="og:image:alt" content="Everyone&#39;s Arguing About the Wrong Abstraction Layer">
+<meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="Everyone&#39;s Arguing About the Wrong Abstraction Layer">
+    <meta name="twitter:description" content="&lt;p&gt;OpenAI &lt;a
+href=&quot;https://openai.com/index/introducing-agentkit/&quot;&gt;shipped AgentKit
+this week&lt;/a&gt;, a platform with a visual workflow editor, versioned
+agents, governed connectors, and evals infrastructure. The internet
+immediately split into two camps: people dunking on it (&quot;this isn&#39;t
+AGI!&quot;) and people defending visual editors as necessary for
+non-technical users. Both camps are arguing about the wrong thing.&lt;/p&gt;">
+    <meta name="twitter:image" content="https://tscholak.github.io/images/agentkit.png">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/c0f603c">c0f603c</a> (2025-10-20 17:32:51 -0400) Torsten Scholak: Simplify JSON instances and refactor publication fields with type-safe GADTs</p>
+
+        <p><img src="/images/agentkit.png"></p>
+
+        <h1>Everyone&#39;s Arguing About the Wrong Abstraction Layer</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/ai">ai</a>
+            <a href="/tags/agents">agents</a>
+        </p>
+        <p>Posted on Oct 8, 2025</p>
+        <p>7 min read</p>
+        <p>OpenAI <a
+href="https://openai.com/index/introducing-agentkit/">shipped AgentKit
+this week</a>, a platform with a visual workflow editor, versioned
+agents, governed connectors, and evals infrastructure. The internet
+immediately split into two camps: people dunking on it ("this isn't
+AGI!") and people defending visual editors as necessary for
+non-technical users. Both camps are arguing about the wrong thing.</p>
+        <p>Harrison Chase from LangChain wrote <a
+href="https://blog.langchain.com/not-another-workflow-builder/">a
+thoughtful piece called "Not Another Workflow Builder,"</a> arguing that
+visual workflow builders are getting squeezed from both directions:
+simple agents (prompt &amp; tools) are handling low-complexity tasks,
+while code-based workflows (like LangGraph) win at high complexity. His
+conclusion: the middle ground is dying, focus on better no-code agents
+and better code generation instead.</p>
+<p>It's a clean thesis. Unfortunately, it's also missing the forest for
+the trees.</p>
+<h2 id="the-abstraction-confusion">The Abstraction Confusion</h2>
+<p>Here's what's actually happening: we are watching three different
+communities argue past each other because they are each solving for
+different constraints.</p>
+<ul>
+<li><p>The "simple agents win" crowd sees frontier models getting better
+and concludes that explicit orchestration becomes unnecessary. Just
+throw GPT-5 at the problem with some tools and let emergence handle the
+rest. They are right that many workflows are just prompt engineering in
+disguise. They look at complex systems and see overengineering.</p></li>
+<li><p>The "visual workflow necessary" crowd needs to ship products with
+non-technical stakeholders, wants observability baked in, and needs
+governance that works at the organizational level. They are right that
+code doesn't easily surface what's running and why. They look at
+code-first approaches and see gatekeeping.</p></li>
+<li><p>The "visual workflow bad" crowd wants composability, types, and
+the ability to reason about systems explicitly and even formally. They
+are right that dragging boxes around in a canvas doesn't give us
+algebraic properties or type safety. They look at AgentKit's visual
+editor and see toy-like systems that won't scale.</p></li>
+</ul>
+<p>All three are correct about what they're optimizing for. All three
+are wrong about what the actual problem is.</p>
+<h2 id="what-agentkit-actually-represents">What AgentKit Actually
+Represents</h2>
+<p>Strip away the visual editor for a moment. What did OpenAI actually
+release?</p>
+<p>They released a platform for building, deploying, and iterating on
+multi-agent systems with the following key primitives: versioned
+workflows, a governed connector registry (where admins manage how data
+and tools connect), guardrails, evaluation infrastructure, and
+reinforcement fine-tuning (RFT) integration. The visual canvas is
+actually the least interesting part of the release.</p>
+<p>OpenAI understands that the real problem isn't how users specify what
+they want (visual vs code vs natural language), but how we build systems
+that compose, verify, observe, and improve.</p>
+<p>Harrison's squeeze thesis argues that visual workflow builders are
+losing from both ends. But this assumes the primary value of visual
+builders is specification, i.e. helping people define workflows. That's
+not actually their killer feature. When done right, visual builders are
+primarily about operational visibility. They make implicit logic
+explicit, they create artifacts that stakeholders can review, they
+enable governance at the right granularity, and they provide
+observability by default. These are organizational problems, not
+individual productivity problems.</p>
+<p>I don't see AgentKit's pitch as "drag boxes instead of writing code."
+I see it as "version your agents, govern your data connectors, evaluate
+systematically, and iterate with RFT." The visual editor is merely how
+OpenAI is packaging that infrastructure for adoption.</p>
+<h2 id="the-compositional-substrate-nobodys-building">The Compositional
+Substrate Nobody's Building</h2>
+<p>Here's my contrarian take: both visual builders and natural language
+prompts are failing at scale for the same reason, and it has nothing to
+do with their interface paradigm.</p>
+<p>I had a long conversation with <a
+href="https://pchiusano.github.io">Paul Chiusano</a> from Unison
+Computing about this last week. Paul is a functional programming
+language designer and a big advocate for types and formal methods. He
+says:</p>
+<blockquote>
+<p>"I am pretty uninterested in all these WYSIWYG type workflow engines,
+even with some AI sauce sprinkled on top. I want types and higher-order
+functions and all the niceties of a modern programming language."</p>
+</blockquote>
+<p>Is he a snob for wanting that? No. He's pointing at tools for
+managing complexity with a proven track record. Type systems catch
+errors before runtime. Higher-order abstractions let programmers build
+big things from small things with clear interfaces. Referential
+transparency lets people reason locally about global properties.</p>
+<p>Neither visual workflow builders nor natural language prompts provide
+these properties. They both scale terribly once a certain complexity
+threshold is crossed, for the same underlying reason: they don't provide
+compositional guarantees.</p>
+<p>A visual workflow with 50 nodes and complex branching is
+unmaintainable not because it's visual, but because the edges between
+nodes carry no semantic contracts. You can't compose workflows safely
+because there's no type system preventing you from wiring incompatible
+things together. You can't refactor with confidence because there's no
+way to verify that your changes preserve behavior.</p>
+<p>Similarly, a complex prompt-based agent scales poorly not because
+natural language is inherently bad, but because prompts have no formal
+composition semantics. You can't build a library of reusable "prompt
+modules" with clear interfaces. You can't verify that chaining two
+prompts preserves invariants. You can't reason about what happens when
+an agent calls a tool that calls another agent.</p>
+<p>The problem is not the interface. It's that neither provides
+compositional abstractions with formal semantics.</p>
+<h2 id="what-code-actually-gives-you">What Code Actually Gives You</h2>
+<p>Harrison is right that code wins at the high-complexity end. But it's
+worth being precise about why.</p>
+<p>Code doesn't win because developers are special or because typing
+text is inherently better than dragging boxes. It wins because it's the
+only common representation that provides formal semantics we can reason
+about, composability through functions and types, verification via type
+checkers and tests, versioning and diffing as first-class operations,
+and -- critically -- an artifact that is the ground truth of
+execution.</p>
+<p>This last point is often missed: even if AI always generates perfect
+code from natural language descriptions, you still need the code because
+the code is the specification of what you actually built and run.
+Natural language is for intent, code is for commitment. It's like the
+difference between a contract and a conversation. You need both. They
+are complementary.</p>
+<h2 id="stop-arguing-about-interfaces">Stop Arguing About
+Interfaces</h2>
+<p>We need to stop conflating the construction interface with the
+operational model. The answer isn't choosing between visual, code, or
+natural language. We need all three serving different purposes:</p>
+<p><strong>Natural language</strong> for expressing human intent and
+constraints. <strong>Formal contracts</strong> (types, schemas,
+invariants) that specify interfaces and composition rules.
+<strong>Code</strong> that implements logic within those contracts,
+whether written by humans or generated by AI. <strong>Observability
+infrastructure</strong> (traces, evals, guardrails) that shows what
+actually happened and feeds back into intent and contracts.</p>
+<p>Visual builders try to be all of these simultaneously. That's why
+they break. Natural language prompts pretend formal contracts don't
+exist. That's why they don't compose. Code-first approaches often skip
+observability or treat intent as separate from the system. That's why
+they struggle with alignment.</p>
+<p>AgentKit is interesting because it's actually trying to build
+multiple layers: typed connectors, visual composition as an interface to
+implementation, execution with guardrails, and evals infrastructure.
+Whether their specific implementation works is TBD, but the architecture
+is pointing in the right direction.</p>
+<h2 id="what-happens-if-we-get-this-wrong">What Happens If We Get This
+Wrong</h2>
+<p>Here's what's at stake: we're about to build multi-agent systems that
+make consequential decisions at scale. Process invoices. Route customer
+support. Manage infrastructure. Screen resumes. Handle medical
+triage.</p>
+<p>If we build these systems without compositional guarantees, we get
+brittle towers of duct tape that work until they catastrophically don't.
+If we build them without observability, we get black boxes that fail in
+inexplicable ways. If we build them without formal contracts, we can't
+verify they preserve the properties we care about. And if we skip the
+natural language layer, we've built something only five people in the
+world can understand and maintain.</p>
+<p>The teams currently arguing about visual vs code vs prompts are
+missing the point. The only important question is: can we build systems
+that are simultaneously verifiable (formal contracts), understandable
+(operational visibility), and accessible (natural language intent)?</p>
+<p>I believe the answer is yes, but only if we stop arguing about
+interfaces and start building the compositional substrate underneath. We
+need strong types and formal semantics, visual projection for operations
+and governance, natural language for intent and constraints, and
+continuous eval for alignment.</p>
+<p>The team that figures out how to integrate all of these coherently
+will win.</p>
+<p>I'm watching closely.</p>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

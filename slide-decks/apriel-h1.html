@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Apriel-H1</title>
+    <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/js/reveal/dist/reset.css">
+    <link rel="stylesheet" href="/js/reveal/dist/reveal.css">
+    <!-- Custom theme matching site aesthetic -->
+    <link rel="stylesheet" href="/css/reveal-custom.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="title-slide" data-background-color="#000">
+                <div class="title-slide-image"><img src="/images/apriel-h.png" alt="Apriel-H1"></div>
+                <h1>Apriel-H1</h1>
+                <h2>Why efficiency-optimized reasoning matters now</h2>
+                <p><strong>Torsten Scholak — Lead Research Scientist</strong></p>
+                <p><strong>SLAM Lab — ServiceNow</strong></p>
+                <p>November 2025</p>
+            </section>
+            <section id="efficiency--capability" class="slide level2">
+<h2>Efficiency = Capability</h2>
+<p><strong>Apriel matches frontier reasoning at 15B.</strong><br />
+But full attention pays the quadratic tax → long ctx throughput is now
+the bottleneck.</p>
+<p><strong>Speed creates capability:</strong></p>
+<ul>
+<li><strong>Agents keep full tickets/logs in memory</strong> → fewer
+compactions</li>
+<li><strong>More tools per turn</strong> at same latency</li>
+<li><strong>Deeper reasoning chains</strong> with more steps → better
+accuracy</li>
+<li><strong>Larger RAG contexts</strong> stay in-context</li>
+<li><strong>Higher req/s on existing fleet</strong> → lower unit cost,
+better UX</li>
+</ul>
+<p><strong>That's why we're building efficient hybrids.</strong></p>
+<aside class="notes">
+<p>60s</p>
+<p>Sathwik showed Apriel matches much bigger frontier models at 15B
+parameters.</p>
+<p>But it runs full attention - every token sees every token, cost
+scales quadratically.</p>
+<p>That quadratic cost is now the ceiling: how long can a reasoning
+chain run? How many tools can an agent call? How much context fits
+before we truncate?</p>
+<p>Efficiency determines what's possible inside a latency budget. That's
+the strategic shift.</p>
+<p>The path is hybrid architectures - that's Apriel-H.</p>
+</aside>
+</section>
+<section id="how-hybrids-work" class="slide level2">
+<h2>How Hybrids Work</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Full Attention</strong></th>
+<th><strong>Efficient (Linear/Sparse)</strong></th>
+<th><strong>Hybrid</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Complexity</strong></td>
+<td>O(n²)</td>
+<td>O(n) or sub-quadratic</td>
+<td>Mixed</td>
+</tr>
+<tr>
+<td><strong>KV cache</strong></td>
+<td>Large, grows with n²</td>
+<td>Small or none</td>
+<td>Reduced ~50-75%</td>
+</tr>
+<tr>
+<td><strong>Global fidelity</strong></td>
+<td>Perfect</td>
+<td>Limited</td>
+<td>Preserved in key layers</td>
+</tr>
+<tr>
+<td><strong>Throughput gain</strong></td>
+<td>1×</td>
+<td>2-10× (but quality risk)</td>
+<td>2-10× at minimal Δ</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pattern:</strong> Keep ~20-30% full attention for global
+reasoning,<br />
+replace rest with Mamba/linear/sparse mechanisms.</p>
+<aside class="notes">
+<p>45s</p>
+<p>Here's the trade-off table.</p>
+<p>Full attention: it's great but expensive. Efficient mechanisms: fast
+but risky. Hybrids: keep 20 to 30 percent of layers as full attention to
+preserve global patterns, replace the rest with efficient
+mechanisms.</p>
+<p>Result: 2 to 10 times throughput with quality deltas you can
+ship.</p>
+<p>And there's research that shows that hybrids can beat full attention
+in some cases, i.e. they might be pareto-optimal. The detail is in how
+you design them, what the ratio is, and how you distill them.</p>
+</aside>
+</section>
+<section id="hybrids-are-shipping-at-scale" class="slide level2">
+<h2>Hybrids Are Shipping at Scale</h2>
+<ul>
+<li><p><strong>Apr</strong>: <a
+href="https://arxiv.org/abs/2504.03624">NVIDIA Nemotron-H-47B</a><br />
+<strong>9:1 Mamba-2:FA</strong> hybrid, <strong>≈3× faster</strong> vs
+dense 70B at long ctx</p></li>
+<li><p><strong>May</strong>: <a
+href="https://falcon-lm.github.io/blog/falcon-h1/">Falcon-H1-34B</a><br />
+Parallel Mamba-2 + FA hybrid, <strong>4× prefill</strong>, <strong>8×
+decode</strong> at long ctx</p></li>
+<li><p><strong>Jun</strong>: <a
+href="https://arxiv.org/abs/2506.13585">MiniMax-M1</a><br />
+<strong>7:1 Lightning:FA</strong> hybrid, <strong>≈3–4× faster
+decode</strong> @100k tokens</p></li>
+<li><p><strong>Aug</strong>: <a
+href="https://arxiv.org/abs/2508.14444">Nemotron-Nano-9B-v2</a><br />
+<strong>7:1 Mamba-2:FA</strong> hybrid, <strong>up to 6×
+throughput</strong> vs Qwen3-8B</p></li>
+<li><p><strong>Sep</strong>: <a
+href="https://qwen.ai/blog?id=4074cca80393150c248e508aa62983f9cb7d27cd&amp;from=research.latest-advancements-list">Qwen3-Next-80B-A3B</a><br />
+<strong>3:1</strong> Gated-DeltaNet:FA hybrid, <strong>&gt;10×
+throughput</strong> vs Qwen3-32B @&gt;32k</p></li>
+<li><p><strong>Sep</strong>: <a
+href="https://api-docs.deepseek.com/news/news250929">DeepSeek
+V3.2-Exp</a><br />
+<strong>MLA+DSA</strong> sparse, 1:64 attended:total tokens @128k,
+<strong>3× faster</strong> at long ctx</p></li>
+<li><p><strong>Oct</strong>: <a
+href="https://arxiv.org/abs/2510.26692">Kimi-Linear-48B-A3B</a><br />
+<strong>3:1</strong> KLA:FA hybrid, <strong>75% KV↓</strong>, <strong>up
+to 6× decode</strong> @1M</p></li>
+</ul>
+<aside class="notes">
+<p>50s</p>
+<p>The industry is converging on hybrids.</p>
+<p>April: Nemotron-H, 3× faster.</p>
+<p>May: Falcon-H1, 4-8× gains.</p>
+<p>June: MiniMax Lightning Attention, 3-4× at 100k tokens.</p>
+<p>August-September: Nemotron-Nano v2 and Qwen3-Next in the 3:1 to 7:1
+range, pushing 6-10× throughput.</p>
+<p>Then DeepSeek and most recently Kimi with production-grade sparse and
+linear hybrids.</p>
+<p>Hybrids and efficient attention are becoming the new normal for long
+context and agentic workloads.</p>
+</aside>
+</section>
+<section id="apriel-h1" class="slide level2">
+<h2>Apriel-H1</h2>
+<section id="what-you-get" class="level3">
+<h3>What You Get</h3>
+<p><img data-src="/images/apriel-h.png" width="250"
+alt="Apriel-H" /></p>
+<p>Today we release <strong>Apriel-H1</strong>:</p>
+<ul>
+<li><strong>Hybrid reasoner</strong> distilled from Apriel-15B</li>
+<li><strong>~2× throughput</strong> in vLLM with <strong>minimal quality
+deltas</strong></li>
+<li><strong>Runs today</strong> in vLLM</li>
+</ul>
+<aside class="notes">
+<p>60s</p>
+<p>So what happens when we apply this? Apriel-H1 30 - thirty Mamba-2
+layers, twenty full attention layers.</p>
+<p>About 2× throughput in vLLM - meaning you can serve twice as many
+requests on the same hardware, or cut latency in half for the same
+load.</p>
+</aside>
+</section>
+<section id="proof-it-works" class="level3">
+<h3>Proof It Works</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Apriel 15B</th>
+<th><strong>Apriel-H1 30</strong></th>
+<th>Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Throughput (vLLM)</strong></td>
+<td>1×</td>
+<td><strong>~2×</strong></td>
+<td><strong>+2×</strong></td>
+</tr>
+<tr>
+<td>MATH500</td>
+<td>90</td>
+<td><strong>92</strong></td>
+<td>+2</td>
+</tr>
+<tr>
+<td>GSM8k</td>
+<td>97</td>
+<td><strong>95</strong></td>
+<td>−2</td>
+</tr>
+<tr>
+<td>AIME'24</td>
+<td>70</td>
+<td><strong>65</strong></td>
+<td>−5</td>
+</tr>
+<tr>
+<td>GPQA-D</td>
+<td>59</td>
+<td><strong>55</strong></td>
+<td>−4</td>
+</tr>
+<tr>
+<td>MBPP</td>
+<td>86</td>
+<td><strong>85</strong></td>
+<td>−1</td>
+</tr>
+<tr>
+<td>MT-Bench</td>
+<td>8.30</td>
+<td><strong>8.58</strong></td>
+<td>+0.28</td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<p>Here are the numbers. 2× throughput. Benchmark quality nearly flat -
+MATH500 actually goes up, GSM8k down 2 points, AIME down 5. The hardest
+reasoning tasks dip slightly but well within recoverable range via
+tuning.</p>
+<p>Our hybrids are production-grade and can ship today.</p>
+</aside>
+</section>
+<section id="evaluation-results" class="level3">
+<h3>Evaluation Results</h3>
+<p><img
+data-src="/images/apriel-h-vs-apriel-15b-eval-thrput-comparison.png"
+alt="Apriel-H1 Evaluation Results" /></p>
+<aside class="notes">
+<p>Here's the side-by-side comparison showing the quality-throughput
+trade.</p>
+</aside>
+</section>
+</section>
+<section id="how-apriel-h1-works" class="slide level2">
+<h2>How Apriel-H1 Works</h2>
+<section id="architecture--h1-30" class="level3">
+<h3>Architecture — H1-30</h3>
+<ul>
+<li>Start: Apriel-15B teacher (50 FA layers)</li>
+<li>Replace least-critical FA layers with <strong>Mamba</strong> (no KV
+cache, linear time)</li>
+<li>Keep <strong>20 FA layers</strong> to preserve global patterns</li>
+</ul>
+<aside class="notes">
+<p>20s</p>
+<p>The architecture is straightforward: start with Apriel-15B - 50
+full-attention layers.</p>
+<p>We identify which layers are least critical for reasoning, replace
+them with Mamba blocks - no KV cache, linear time complexity.</p>
+<p>Keep 20 full-attention layers to preserve the global reasoning
+patterns.</p>
+<p>That's the H1-30 configuration.</p>
+</aside>
+</section>
+<section id="distillation--3-steps" class="level3">
+<h3>Distillation — 3 steps</h3>
+<ol>
+<li><strong>Score layer importance</strong> (LOO perf drop + MMR distill
+loss)</li>
+<li><strong>Swap</strong> low-importance FA → Mamba (MIL-style init from
+attention)</li>
+<li><strong>Stage &amp; gate</strong>: H1-25 → H1-27 →
+<strong>H1-30</strong> (… H1-34/37/40) with reverse-KL; ship at best
+quality/throughput trade</li>
+</ol>
+<pre><code>Teacher (50L): [FA][FA][FA][FA][FA][FA][FA][FA][FA][FA] ...
+H1-30:         [FA][FA][FA][M ][FA][M ][M ][M ][M ][FA] ...
+                ^           ^           ^           ^
+              &quot;keep&quot;     &quot;convert&quot;   &quot;convert&quot;    &quot;keep&quot;</code></pre>
+<aside class="notes">
+<p>Three-step process:</p>
+<p>First, we score every layer - measure performance drop when removed,
+measure distillation loss when replaced with Mamba. That tells us which
+layers the model actually needs.</p>
+<p>Second, swap the low-importance layers to Mamba, initialize from the
+attention weights so we don't start from scratch.</p>
+<p>Third, staged distillation - walk the ratio up gradually: H1-25,
+H1-27, H1-30, gate at each step with reverse-KL divergence. Ship where
+quality-throughput trade is best.</p>
+</aside>
+</section>
+<section id="eval-score-vs-throughput" class="level3">
+<h3>Eval Score vs Throughput</h3>
+<p><img data-src="/images/apriel-h1-eval-score-vs-throughput.png"
+alt="Apriel-H1 Family Performance" /></p>
+<aside class="notes">
+<p>Here's the trade-off curve.</p>
+<p>Baseline Apriel-15B on the left. As we convert more layers to Mamba,
+throughput climbs while quality incurs small deltas.</p>
+<p>H1-30 is the sweet spot we're shipping - 2× throughput, same general
+reasoning strength.</p>
+<p>Beyond that, H1-40 pushes toward 3× with acceptable quality
+deltas.</p>
+<p>With more compute, each of these can be tuned further to recover
+quality if needed.</p>
+</aside>
+</section>
+</section>
+<section id="whats-next" class="slide level2">
+<h2>What's Next</h2>
+<p><strong>Apriel-H2 roadmap:</strong></p>
+<ul>
+<li><strong>Advanced mixers</strong>: Gated DeltaNet, Kimi Linear
+Attention</li>
+<li><strong>Higher efficient-to-full ratios</strong>: Search-guided
+layer placement</li>
+<li><strong>Stacked optimizations</strong>: Sliding window +
+quantization + sparse attention</li>
+<li><strong>Target</strong>: 5-10× throughput while maintaining
+reasoning quality</li>
+</ul>
+<p><strong>The path forward:</strong></p>
+<ul>
+<li>From-scratch hybrid training gives the best ceiling</li>
+<li>Distillation offers practical retrofitting for existing models</li>
+<li>Both approaches matter for different constraints</li>
+</ul>
+<aside class="notes">
+<p>45s</p>
+<p>Looking ahead to H2:</p>
+<p>We'll explore more advanced mixers like Gated DeltaNet and Kimi
+Linear Attention.</p>
+<p>Use search-guided layer placement to push higher efficient-to-full
+attention ratios.</p>
+<p>Stack multiple optimizations - sliding window, quantization, sparse
+attention - to compound gains.</p>
+<p>Target: 5-10× throughput while maintaining reasoning quality.</p>
+<p>The lesson: from-scratch hybrid training gives you the best possible
+result, but distillation offers a practical path when you can't retrain
+from scratch. Both approaches have their place.</p>
+</aside>
+</section>
+<section id="thank-you" class="title-slide slide level1"
+data-background-color="#000">
+<h1>Thank You</h1>
+
+</section>
+
+<section id="apriel-h1-efficient-reasoning-through-hybrid-architectures"
+class="slide level2" data-background-color="#000">
+<h2>Apriel-H1: Efficient Reasoning Through Hybrid Architectures</h2>
+<p><strong>SLAM Lab — ServiceNow</strong></p>
+<p><strong>Contact</strong>: Torsten Scholak (<a
+href="mailto:torsten.scholak@servicenow.com"
+class="email">torsten.scholak@servicenow.com</a>)</p>
+<p><strong>Team</strong>: Oleksiy Ostapenko, Luke Kumar, Raymond Li,
+Denis Kocetkov, Joel Lamy-Poirier</p>
+</section>
+        </div>
+    </div>
+
+    <script src="/js/reveal/dist/reveal.js"></script>
+    <script src="/js/reveal/plugin/notes/notes.js"></script>
+    <script src="/js/reveal/plugin/markdown/markdown.js"></script>
+    <script src="/js/reveal/plugin/highlight/highlight.js"></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            hash: true,
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+        });
+    </script>
+</body>
+</html>

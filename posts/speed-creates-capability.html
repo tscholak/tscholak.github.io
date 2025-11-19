@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>Speed Creates Capability: Why Efficient Attention Matters for AI
+Strategy</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Speed Creates Capability: Why Efficient Attention Matters for AI
+Strategy">
+    <meta property="og:description" content="&lt;p&gt;If your models think slowly, your roadmap does too. This essay argues
+that efficient attention is the hidden control knob for margins, RL
+capacity, and agent reliability, and shows how Apriel-H1 makes
+chain-of-thought, test-time compute, and large-scale RL practical at
+production scale.&lt;/p&gt;">
+    <meta property="og:url" content="https://tscholak.github.io/posts/speed-creates-capability.html">
+    <meta property="og:image" content="https://tscholak.github.io/images/speed-creates-capability.svg">
+<meta property="og:image:alt" content="Speed Creates Capability: Why Efficient Attention Matters for AI
+Strategy">
+<meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="Speed Creates Capability: Why Efficient Attention Matters for AI
+Strategy">
+    <meta name="twitter:description" content="&lt;p&gt;If your models think slowly, your roadmap does too. This essay argues
+that efficient attention is the hidden control knob for margins, RL
+capacity, and agent reliability, and shows how Apriel-H1 makes
+chain-of-thought, test-time compute, and large-scale RL practical at
+production scale.&lt;/p&gt;">
+    <meta name="twitter:image" content="https://tscholak.github.io/images/speed-creates-capability.svg">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/eae984a">eae984a</a> (2025-11-19 00:52:58 -0500) Torsten Scholak: Create images directory before writing SVG in .lhs</p>
+
+        <p><img src="/images/speed-creates-capability.svg"></p>
+
+        <h1>Speed Creates Capability: Why Efficient Attention Matters for AI
+Strategy</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/ai">ai</a>
+            <a href="/tags/strategy">strategy</a>
+            <a href="/tags/inference-efficiency">inference-efficiency</a>
+            <a href="/tags/hybrid-architectures">hybrid-architectures</a>
+        </p>
+        <p>Posted on Nov 18, 2025</p>
+        <p>25 min read</p>
+        <p>If your models think slowly, your roadmap does too. This essay argues
+that efficient attention is the hidden control knob for margins, RL
+capacity, and agent reliability, and shows how Apriel-H1 makes
+chain-of-thought, test-time compute, and large-scale RL practical at
+production scale.</p>
+        <p>In my previous post, <a href="/posts/stop-renting-moat.html">Stop
+Renting Your Moat</a>, I argued that relying on foundation model APIs
+creates a strategic dependency that limits your ability to build
+differentiated products. Owning your learning loop (i.e., your data,
+your training infrastructure, and your model development) is the only
+thing that secures you control over capabilities that matter to your
+business.</p>
+<p>This is great in theory, but what does it mean in practice? Today I
+want to dig into one specific aspect: inference speed. Inference speed
+is often treated as an operational concern: reduce costs, improve
+latency, optimize user experience. But it should instead be a core part
+of your AI strategy, because it determines which capabilities you can
+actually build and deploy.</p>
+<p>The bottleneck has shifted from a year ago. Back then, the primary
+constraint for building reliable AI systems was model quality and how to
+make them reason well. Think of <a
+href="https://arxiv.org/abs/2501.12948">DeepSeek-R1</a>. Nowadays we
+have strong reasoning, including <a
+href="https://moonshotai.github.io/Kimi-K2/thinking.html">open-weight
+models</a>, and the new constraint has become making them also fast
+enough to be useful. Reasoning models are getting slower as they get
+better, because better reasoning requires longer chains of thought.
+Every additional reasoning step adds latency, which is why the models
+achieving the best results on hard problems are also the least practical
+to deploy.</p>
+<p>It turns out that this is an architectural concern and ultimately
+comes down to attention mechanisms. If your reasoning model uses full
+attention, then every token attends to every other token in the context.
+This gives great fidelity but scales quadratically with context length.
+Doubling context length quadruples compute cost. For reasoning models
+generating 64k-token internal deliberations, such quadratic scaling
+makes long contexts prohibitively expensive to run in practice. That
+quadratic cost becomes the hard ceiling on what you can build: You can't
+run longer chains because latency becomes unacceptable, you can't deploy
+agents that keep full context because memory consumption explodes, and
+you can't scale test-time compute because generating multiple candidates
+takes too long.</p>
+<p>Breaking that quadratic scaling therefore doesn't just reduce costs
+but creates capabilities that are qualitatively different from what full
+attention can deliver at acceptable latency. A model that runs at twice
+the throughput can explore twice as many solution paths in the same time
+budget, maintain twice as much context without compression, or serve
+twice as many agents in parallel. An agent that keeps full conversation
+history across 50 tool calls behaves fundamentally differently from one
+that must compress and forget after every 10 interactions.</p>
+<p>At the beginning of the year, hybrid architectures mixing efficient
+and full attention were research curiosities. Today they're shipping in
+production at scale. In the last six months alone: NVIDIA's <a
+href="https://arxiv.org/abs/2504.03624">Nemotron-H-47B</a> (9:1
+Mamba:attention hybrid, 3x faster), <a
+href="https://arxiv.org/abs/2507.22448">Falcon-H1-34B</a> (1:1
+intra-layer hybrid, 4x faster prefill, 8x faster decode), <a
+href="https://arxiv.org/abs/2506.13585">MiniMax's M1</a> (7:1
+Lightning:attention hybrid, 3-4x faster at 100K tokens), NVIDIA's <a
+href="https://arxiv.org/abs/2508.14444">Nemotron-Nano-9B-v2</a> (7:1
+hybrid, up to 6x faster throughput), <a
+href="https://qwen.ai/blog?id=4074cca80393150c248e508aa62983f9cb7d27cd&amp;from=research.latest-advancements-list">Qwen3-Next-80B-A3B</a>
+(3:1 hybrid, &gt;10x faster throughput at &gt;32K context), <a
+href="https://api-docs.deepseek.com/news/news250929">DeepSeek
+V3.2-Exp</a> (sparse attention, 3x faster), and <a
+href="https://arxiv.org/abs/2510.26692">Kimi-Linear-48B</a> (3:1 hybrid,
+up to 6x faster at 1M tokens).</p>
+<p>What's striking is how consistent the pattern is across different
+organizations, architectures, and design choices. It always comes down
+to mixing efficient attention mechanisms (sparse or linear) with some
+full attention layers to preserve global context. The exact ratio varies
+(3:1, 7:1, 9:1 efficient-to-full) but the principle is the same. In the
+end we see similar throughput gains from 2x to 10x depending on context
+length.</p>
+<p>This means that the industry has identified quadratic attention cost
+as the bottleneck preventing deployment of capabilities teams want to
+ship, and efficient hybrids are the response. What makes this strategic
+rather than just an efficiency win is that these architectures break the
+fundamental tradeoffs that have constrained what you can build.</p>
+<h2 id="breaking-the-fast-cheap-good-triangle">Breaking the
+Fast-Cheap-Good Triangle</h2>
+<p>The conventional wisdom about inference optimization follows the
+classic engineering tradeoff: you can have fast, cheap, or good. Pick
+two. Want high-quality reasoning with long chains of thought? That's
+good but slow and expensive. Want fast responses? Run shorter chains,
+sacrifice quality. Want cheap serving costs? Accept higher latency. This
+tradeoff has governed production deployment decisions for the past two
+years.</p>
+<p>Efficient architectures break this triangle by making inference
+fundamentally cheaper in compute terms, which cascades through every
+dimension simultaneously.</p>
+<p>Start with the first-order effects: doubling throughput means you can
+serve the same workload at half the cost, or twice the workload on the
+same hardware. For API providers, this difference determines gross
+margin, because it changes which use cases are economically viable to
+support. Enterprises running millions of daily requests see that cost
+difference compound into seven-figure annual savings.</p>
+<p>But the cheaper serving cost enables something more valuable: you can
+now afford to run chain-of-thought reasoning by default, not as an
+expensive special mode you activate selectively. When inference is 3-5x
+cheaper, you make test-time compute the default serving path rather than
+the exception. Every request gets multi-step reasoning, verification,
+reflection. The quality improvement from running CoT inference
+universally can be larger than most post-training gains.</p>
+<p>The UX implications are direct and measurable. Coding agents that
+execute tests, query documentation, and validate solutions need to
+complete complex workflows in seconds, not tens of seconds. A 20-second
+agent breaks user flow because they context-switch to other work and
+lose the thread. A 5-second agent stays within the bounds of acceptable
+wait time. That 15-second difference determines whether users actually
+integrate the agent into their workflow or find reasons to avoid it. For
+production agents handling complex multi-step tasks (like database
+queries, API calls, file operations, or error recovery) being able to
+maintain full context across 50 tool calls instead of compressing
+aggressively after 10 changes reliability from "mostly works" to
+"actually dependable." These are differences that determine product
+success.</p>
+<p>The second-order effect is where efficient architectures create
+lasting competitive advantage. Cheaper inference means you can afford
+substantially more reinforcement learning during post-training. RL
+requires generating millions of reasoning traces, scoring them, updating
+the model, repeating. With 3-5x faster sampling, you run 3-5 times as
+many rollouts on the same budget. That means dramatically denser
+feedback signals, far more thorough exploration of solution space,
+better model behaviors discovered during training. This compounds.
+Better exploration finds better policies, which improve model quality,
+which generates better training data for the next RL iteration.</p>
+<p>I think this is the real hundred-million-dollar lever. Companies like
+Qwen, DeepSeek, and Kimi are investing heavily in efficient
+architectures alongside RL-based post-training because the architecture
+choice determines how much RL you can afford to run. More RL means
+better models. Better models mean better user experience, higher win
+rates against competitors, and ultimately stickier products. Efficient
+model architectures multiply your post-training capacity on the same
+budget, which directly improves model quality.</p>
+<p>There is also a third-order effect. The above advantages compound
+over time through a reinforcing cycle. Efficient architecture enables
+more RL training, which produces better models. Better models drive
+higher user adoption and usage. Higher usage would normally explode
+serving costs, but efficient architecture keeps costs manageable even as
+scale increases. That cost headroom funds another round of intensive RL
+training for the next model iteration. Competitors running less
+efficient architectures can't match this cycle, because they either
+can't afford the RL at scale, or their serving costs grow unsustainably
+as usage increases, forcing them to throttle features or raise prices.
+In this way, the architecture choice determines whether you can sustain
+the compounding advantage or whether each success creates new
+constraints.</p>
+<h2 id="proving-it-works-for-reasoning">Proving It Works for
+Reasoning</h2>
+<p>My team at ServiceNow built <a
+href="https://arxiv.org/abs/2511.02651">Apriel-H1</a> to settle whether
+you can retrofit efficiency into an existing reasoning model without
+breaking it. I wrote about the journey <a
+href="https://huggingface.co/blog/ServiceNow-AI/apriel-h1">here</a>. We
+started with Apriel-15B, our full-attention reasoning model, and
+replaced 30 of 50 attention layers with Mamba blocks. We hit 2.1x
+throughput with quality holding—math and coding benchmarks stayed flat,
+conversational reasoning improved. We did this with 76.8 billion tokens
+of distillation and SFT. Retrofitting works.</p>
+<p>Distillation de-risks when you have a strong model. From-scratch
+training gets you the ceiling (4x to &gt;10x throughput gains) but costs
+two orders of magnitude more compute. Companies like Qwen, DeepSeek, and
+NVIDIA take this path because they get to co-design architecture and
+data from day one.</p>
+<p>There's a middle path: slot the architecture change mid-training.
+Pretrain with full attention to build a strong foundation, then switch
+to a hybrid mid-training to capture efficiency gains. If it doesn't
+work, you stay with full attention and haven't lost the pretrain
+investment.</p>
+<p>The industry is moving. Qwen, DeepSeek, and NVIDIA are shipping
+efficient hybrids because they figured out that throughput determines RL
+capacity, and RL capacity determines who wins on model quality. They're
+treating architecture as strategic, not just operational.</p>
+<p>If you're renting inference through APIs, your roadmap depends on
+someone else's architecture priorities. When you need longer context or
+agent workflows that keep full state, you're constrained by their
+optimization choices and economics.</p>
+<p>Own your training loop, you control which capabilities exist. Own
+your architecture, you control which capabilities deploy. The paths are
+proven. The decision is which one matches your constraints.</p>
+<hr />
+<h2 id="appendix-generating-the-simplex-diagram">Appendix: Generating
+the Simplex Diagram</h2>
+<p>This <a href="https://wiki.haskell.org/Literate_programming">Literate
+Haskell</a> appendix contains the code that generates the
+quality-speed-cost simplex diagram shown at the top of this essay.</p>
+<p>We use a few language extensions and imports:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE RecordWildCards   #-}</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> <span class="dt">SpeedCreatesCapability</span> <span class="kw">where</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text</span>              <span class="kw">as</span> <span class="dt">T</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text.Lazy.IO</span>      <span class="kw">as</span> <span class="dt">TL</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text.Lazy.Builder</span> <span class="kw">as</span> <span class="dt">B</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span>           <span class="dt">Data.Text.Lazy.Builder</span> (<span class="dt">Builder</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span>           <span class="dt">Numeric</span>                (showFFloat)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span>           <span class="dt">System.Directory</span>       (createDirectoryIfMissing)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span>           <span class="dt">System.FilePath</span>        (takeDirectory)</span></code></pre></div>
+<p>Configuration and data types:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Canvas dimensions</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  width,<span class="ot"> height ::</span> <span class="dt">Double</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  width  <span class="ot">=</span> <span class="dv">900</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  height <span class="ot">=</span> <span class="dv">600</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  marginX,<span class="ot"> marginY ::</span> <span class="dt">Double</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  marginX <span class="ot">=</span> <span class="dv">60</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  marginY <span class="ot">=</span> <span class="dv">60</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Barycentric coordinates: (quality, speed, cost)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">BaryCoord</span> <span class="ot">=</span> <span class="dt">Bary</span> <span class="dt">Double</span> <span class="dt">Double</span> <span class="dt">Double</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Normalized coordinates in [0,1]^2</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">NormCoord</span> <span class="ot">=</span> <span class="dt">Norm</span> <span class="dt">Double</span> <span class="dt">Double</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Pixel coordinates</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">PixelCoord</span> <span class="ot">=</span> <span class="dt">Pixel</span> <span class="dt">Double</span> <span class="dt">Double</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | A region in the simplex</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Region</span> <span class="ot">=</span> <span class="dt">Region</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    {<span class="ot"> regionName     ::</span> <span class="dt">T.Text</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> regionColor    ::</span> <span class="dt">T.Text</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> regionOpacity  ::</span> <span class="dt">Double</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    ,<span class="ot"> regionVertices ::</span> [<span class="dt">BaryCoord</span>]</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    } <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</span></code></pre></div>
+<p>Region positioning philosophy:</p>
+<p>These barycentric coordinates are tuned to show regions that reflect
+real-world architectural tradeoffs, not extreme theoretical corners.</p>
+<p>Key design principles:</p>
+<ol>
+<li>Each region is a large triangle to show the viable design space</li>
+<li>Regions overlap because production models can sit in multiple
+zones</li>
+<li>Quality values reflect second/third-order effects:
+<ul>
+<li>Linear attention can reach higher quality by spending speed on RL +
+CoT</li>
+<li>Hybrids bridge the gap between full attention quality and efficient
+speed/cost</li>
+</ul></li>
+</ol>
+<p>Quality ranges:</p>
+<ul>
+<li>Full attention: q ∈ [0.60, 0.90] - top tier, but extends down to
+overlap hybrids</li>
+<li>Hybrids: q ∈ [0.35, 0.85] - bridge region, overlaps both
+extremes</li>
+<li>Linear: q ∈ [0.20, 0.52] - bottom edge is fast/cheap, top reflects
+RL gains</li>
+</ul>
+<p>The apex of linear/hybrid regions represents spending efficiency on
+<em>capability</em>, not just on lower cloud bills. You burn surplus
+speed on RL + test-time compute to climb the quality ladder at roughly
+fixed cost. If we wanted "slash costs at any latency", we'd make it
+right-leaning (c &gt; s), but that contradicts the essay: we use speed
+primarily to unlock deeper reasoning at production latency. Therefore,
+the linear and hybrid regions are slightly left-leaning (s &gt; c).</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  regions ::</span> [<span class="dt">Region</span>]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  regions <span class="ot">=</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    [ <span class="dt">Region</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        { regionName    <span class="ot">=</span> <span class="st">&quot;Full\nattention\nmodels&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        , regionColor   <span class="ot">=</span> <span class="st">&quot;#9ca3af&quot;</span>  <span class="co">-- muted gray</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        , regionOpacity <span class="ot">=</span> <span class="fl">0.28</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        , regionVertices <span class="ot">=</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>            <span class="co">-- q ∈ [0.60, 0.90]: High quality, modest speed/cost</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            [ <span class="dt">Bary</span> <span class="fl">0.90</span> <span class="fl">0.05</span> <span class="fl">0.05</span>  <span class="co">-- FA1: near pure quality</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            , <span class="dt">Bary</span> <span class="fl">0.60</span> <span class="fl">0.30</span> <span class="fl">0.10</span>  <span class="co">-- FA2: trade some quality for speed</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            , <span class="dt">Bary</span> <span class="fl">0.60</span> <span class="fl">0.10</span> <span class="fl">0.30</span>  <span class="co">-- FA3: trade some quality for cost</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    , <span class="dt">Region</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        { regionName    <span class="ot">=</span> <span class="st">&quot;Linear\nattention\nmodels&quot;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        , regionColor   <span class="ot">=</span> <span class="st">&quot;#f59e0b&quot;</span>  <span class="co">-- pale amber</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        , regionOpacity <span class="ot">=</span> <span class="fl">0.18</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        , regionVertices <span class="ot">=</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            <span class="co">-- q ∈ [0.20, 0.52]: Bottom edge hugs speed/cost extremes</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            [ <span class="dt">Bary</span> <span class="fl">0.20</span> <span class="fl">0.70</span> <span class="fl">0.10</span>  <span class="co">-- L1: speed-focused extreme</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            , <span class="dt">Bary</span> <span class="fl">0.20</span> <span class="fl">0.10</span> <span class="fl">0.70</span>  <span class="co">-- L2: cost-focused extreme</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            , <span class="dt">Bary</span> <span class="fl">0.52</span> <span class="fl">0.35</span> <span class="fl">0.13</span>  <span class="co">-- L3: quality via RL + CoT</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    , <span class="dt">Region</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        { regionName    <span class="ot">=</span> <span class="st">&quot;Hybrid\nmodels&quot;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        , regionColor   <span class="ot">=</span> <span class="st">&quot;#2563eb&quot;</span>  <span class="co">-- rich blue</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        , regionOpacity <span class="ot">=</span> <span class="fl">0.30</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        , regionVertices <span class="ot">=</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>            <span class="co">-- q ∈ [0.35, 0.85]: Bridge between full and linear</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>            [ <span class="dt">Bary</span> <span class="fl">0.85</span> <span class="fl">0.09</span> <span class="fl">0.06</span>  <span class="co">-- H1: high quality, closer to full</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>            , <span class="dt">Bary</span> <span class="fl">0.35</span> <span class="fl">0.55</span> <span class="fl">0.10</span>  <span class="co">-- H2: speed-leaning, toward linear</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>            , <span class="dt">Bary</span> <span class="fl">0.35</span> <span class="fl">0.10</span> <span class="fl">0.55</span>  <span class="co">-- H3: cost-leaning, symmetric</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
+<p>Barycentric coordinate system:</p>
+<p>The outer triangle vertices in normalized space (x, y) ∈ [0,1]²:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Quality vertex (top)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  qVertex ::</span> <span class="dt">NormCoord</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  qVertex <span class="ot">=</span> <span class="dt">Norm</span> <span class="fl">0.5</span> <span class="fl">1.0</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Speed vertex (bottom-left)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  sVertex ::</span> <span class="dt">NormCoord</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  sVertex <span class="ot">=</span> <span class="dt">Norm</span> <span class="fl">0.0</span> <span class="fl">0.0</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Cost vertex (bottom-right)</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ot">  cVertex ::</span> <span class="dt">NormCoord</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  cVertex <span class="ot">=</span> <span class="dt">Norm</span> <span class="fl">1.0</span> <span class="fl">0.0</span></span></code></pre></div>
+<p>Coordinate transformations:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Map barycentric (q, s, c) to normalized (x, y)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  baryToNorm ::</span> <span class="dt">BaryCoord</span> <span class="ot">-&gt;</span> <span class="dt">NormCoord</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  baryToNorm (<span class="dt">Bary</span> qCoord sCoord cCoord) <span class="ot">=</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="dt">Norm</span> qx qy <span class="ot">=</span> qVertex</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Norm</span> sx sy <span class="ot">=</span> sVertex</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Norm</span> cx cy <span class="ot">=</span> cVertex</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        x <span class="ot">=</span> qCoord <span class="op">*</span> qx <span class="op">+</span> sCoord <span class="op">*</span> sx <span class="op">+</span> cCoord <span class="op">*</span> cx</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        y <span class="ot">=</span> qCoord <span class="op">*</span> qy <span class="op">+</span> sCoord <span class="op">*</span> sy <span class="op">+</span> cCoord <span class="op">*</span> cy</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> <span class="dt">Norm</span> x y</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Map normalized (x, y) to pixel coordinates</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="ot">  normToPixels ::</span> <span class="dt">NormCoord</span> <span class="ot">-&gt;</span> <span class="dt">PixelCoord</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  normToPixels (<span class="dt">Norm</span> x y) <span class="ot">=</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> scaleX <span class="ot">=</span> width  <span class="op">-</span> <span class="dv">2</span> <span class="op">*</span> marginX</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        scaleY <span class="ot">=</span> height <span class="op">-</span> <span class="dv">2</span> <span class="op">*</span> marginY</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        pxX    <span class="ot">=</span> marginX <span class="op">+</span> x <span class="op">*</span> scaleX</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        pxY    <span class="ot">=</span> height <span class="op">-</span> marginY <span class="op">-</span> y <span class="op">*</span> scaleY  <span class="co">-- Flip y so quality is at the top</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> <span class="dt">Pixel</span> pxX pxY</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Map barycentric to pixels (composition)</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="ot">  baryToPixels ::</span> <span class="dt">BaryCoord</span> <span class="ot">-&gt;</span> <span class="dt">PixelCoord</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  baryToPixels <span class="ot">=</span> normToPixels <span class="op">.</span> baryToNorm</span></code></pre></div>
+<p>SVG generation helpers:</p>
+<p>We use a tiny SVG AST and builder to avoid ad-hoc string
+concatenation.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Minimal SVG AST</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Svg</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">Elem</span> <span class="dt">T.Text</span> [(<span class="dt">T.Text</span>, <span class="dt">T.Text</span>)] [<span class="dt">Svg</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Txt</span>  <span class="dt">T.Text</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Format a Double with one decimal place</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  format1 ::</span> <span class="dt">Double</span> <span class="ot">-&gt;</span> <span class="dt">T.Text</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  format1 x <span class="ot">=</span> T.pack (showFFloat (<span class="dt">Just</span> <span class="dv">1</span>) x <span class="st">&quot;&quot;</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Convert Text to a Builder</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="ot">  tB ::</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> <span class="dt">Builder</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  tB <span class="ot">=</span> B.fromText</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Render attributes: key=&quot;value&quot;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="ot">  renderAttrs ::</span> [(<span class="dt">T.Text</span>, <span class="dt">T.Text</span>)] <span class="ot">-&gt;</span> <span class="dt">Builder</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  renderAttrs <span class="ot">=</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">foldMap</span> (\(k, v) <span class="ot">-&gt;</span> <span class="st">&quot; &quot;</span> <span class="op">&lt;&gt;</span> tB k <span class="op">&lt;&gt;</span> <span class="st">&quot;=\&quot;&quot;</span> <span class="op">&lt;&gt;</span> tB v <span class="op">&lt;&gt;</span> <span class="st">&quot;\&quot;&quot;</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Render the SVG AST to a Builder</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="ot">  renderSvg ::</span> <span class="dt">Svg</span> <span class="ot">-&gt;</span> <span class="dt">Builder</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  renderSvg (<span class="dt">Txt</span> t) <span class="ot">=</span> tB t</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  renderSvg (<span class="dt">Elem</span> name attrs children) <span class="ot">=</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;&lt;&quot;</span> <span class="op">&lt;&gt;</span> tB name <span class="op">&lt;&gt;</span> renderAttrs attrs <span class="op">&lt;&gt;</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>      <span class="kw">if</span> <span class="fu">null</span> children</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> <span class="st">&quot;/&gt;&quot;</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="st">&quot;&gt;&quot;</span> <span class="op">&lt;&gt;</span> <span class="fu">foldMap</span> renderSvg children <span class="op">&lt;&gt;</span> <span class="st">&quot;&lt;/&quot;</span> <span class="op">&lt;&gt;</span> tB name <span class="op">&lt;&gt;</span> <span class="st">&quot;&gt;&quot;</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Smart constructors</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="ot">  elem_ ::</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> [(<span class="dt">T.Text</span>, <span class="dt">T.Text</span>)] <span class="ot">-&gt;</span> [<span class="dt">Svg</span>] <span class="ot">-&gt;</span> <span class="dt">Svg</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  elem_ <span class="ot">=</span> <span class="dt">Elem</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="ot">  txt_ ::</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> <span class="dt">Svg</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  txt_ <span class="ot">=</span> <span class="dt">Txt</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Polygon helper</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="ot">  polygon ::</span> [<span class="dt">PixelCoord</span>] <span class="ot">-&gt;</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> <span class="dt">Double</span> <span class="ot">-&gt;</span> <span class="dt">Svg</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  polygon pts color opacity <span class="ot">=</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pointText <span class="ot">=</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>          T.intercalate <span class="st">&quot; &quot;</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>            [ format1 x <span class="op">&lt;&gt;</span> <span class="st">&quot;,&quot;</span> <span class="op">&lt;&gt;</span> format1 y</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span> <span class="dt">Pixel</span> x y <span class="ot">&lt;-</span> pts</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> elem_ <span class="st">&quot;polygon&quot;</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>         [ (<span class="st">&quot;points&quot;</span>,       pointText)</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;fill&quot;</span>,         color)</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;fill-opacity&quot;</span>, format1 opacity)</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;stroke&quot;</span>,       color)</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;stroke-width&quot;</span>, <span class="st">&quot;2&quot;</span>)</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>         ]</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>         []</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Multi-line text helper</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="ot">  textBlock ::</span> <span class="dt">PixelCoord</span> <span class="ot">-&gt;</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Svg</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>  textBlock (<span class="dt">Pixel</span> x y) txt size weight <span class="ot">=</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> T.splitOn <span class="st">&quot;\n&quot;</span> txt <span class="kw">of</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>      [single] <span class="ot">-&gt;</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        elem_ <span class="st">&quot;text&quot;</span> (baseAttrs y) [txt_ single]</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>      ls <span class="ot">-&gt;</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> lineSpacing <span class="ot">=</span> <span class="fu">fromIntegral</span> size <span class="op">*</span> <span class="fl">1.2</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>            n           <span class="ot">=</span> <span class="fu">length</span> ls</span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>            startY      <span class="ot">=</span> y <span class="op">-</span> <span class="fu">fromIntegral</span> (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">*</span> lineSpacing <span class="op">/</span> <span class="dv">2</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>            mkLine i lineTxt <span class="ot">=</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>              <span class="kw">let</span> lineY <span class="ot">=</span> startY <span class="op">+</span> <span class="fu">fromIntegral</span> i <span class="op">*</span> lineSpacing</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>              <span class="kw">in</span> elem_ <span class="st">&quot;text&quot;</span> (baseAttrs lineY) [txt_ lineTxt]</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>        <span class="kw">in</span> elem_ <span class="st">&quot;g&quot;</span> [] (<span class="fu">zipWith</span> mkLine [<span class="dv">0</span><span class="op">..</span>] ls)</span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>      baseAttrs yPos <span class="ot">=</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>        [ (<span class="st">&quot;x&quot;</span>,           format1 x)</span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>        , (<span class="st">&quot;y&quot;</span>,           format1 yPos)</span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>        , (<span class="st">&quot;text-anchor&quot;</span>, <span class="st">&quot;middle&quot;</span>)</span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>        , (<span class="st">&quot;font-size&quot;</span>,   T.pack (<span class="fu">show</span> size))</span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>        , (<span class="st">&quot;font-weight&quot;</span>, T.pack (<span class="fu">show</span> weight))</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>        , (<span class="st">&quot;fill&quot;</span>,        <span class="st">&quot;#1f2937&quot;</span>)</span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>        ]</span></code></pre></div>
+<p>Main SVG building function:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | The full SVG node (without XML prolog)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  svgRoot ::</span> <span class="dt">Svg</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  svgRoot <span class="ot">=</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="co">-- Background</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        background <span class="ot">=</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>          elem_ <span class="st">&quot;rect&quot;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            [ (<span class="st">&quot;width&quot;</span>,  format1 width)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            , (<span class="st">&quot;height&quot;</span>, format1 height)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>            , (<span class="st">&quot;fill&quot;</span>,   <span class="st">&quot;#ffffff&quot;</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>            ] []</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- Outer simplex</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        outerVertices <span class="ot">=</span> <span class="fu">map</span> normToPixels [qVertex, sVertex, cVertex]</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        outerTriangle <span class="ot">=</span> polygon outerVertices <span class="st">&quot;#d1d5db&quot;</span> <span class="fl">0.0</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- Region triangles</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        regionPolys <span class="ot">=</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>          [ polygon (<span class="fu">map</span> baryToPixels (regionVertices r))</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>                    (regionColor r)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                    (regionOpacity r)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> r <span class="ot">&lt;-</span> regions</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>          ]</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- Axis labels</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Pixel</span> qx qy <span class="ot">=</span> normToPixels qVertex</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Pixel</span> sx sy <span class="ot">=</span> normToPixels sVertex</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Pixel</span> cx cy <span class="ot">=</span> normToPixels cVertex</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>        axisLabels <span class="ot">=</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>          [ textBlock (<span class="dt">Pixel</span> qx (qy <span class="op">-</span> <span class="dv">15</span>)) <span class="st">&quot;Quality&quot;</span> <span class="dv">20</span> <span class="dv">600</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>          , textBlock (<span class="dt">Pixel</span> sx (sy <span class="op">+</span> <span class="dv">25</span>)) <span class="st">&quot;Speed&quot;</span>   <span class="dv">20</span> <span class="dv">600</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>          , textBlock (<span class="dt">Pixel</span> cx (cy <span class="op">+</span> <span class="dv">25</span>)) <span class="st">&quot;Low cost&quot;</span> <span class="dv">20</span> <span class="dv">600</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>          ]</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- Region labels at centroids</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        regionLabels <span class="ot">=</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>          [ <span class="kw">let</span> coords <span class="ot">=</span> <span class="fu">map</span> baryToPixels (regionVertices r)</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>                xs     <span class="ot">=</span> [x <span class="op">|</span> <span class="dt">Pixel</span> x _ <span class="ot">&lt;-</span> coords]</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>                ys     <span class="ot">=</span> [y <span class="op">|</span> <span class="dt">Pixel</span> _ y <span class="ot">&lt;-</span> coords]</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>                n      <span class="ot">=</span> <span class="fu">fromIntegral</span> (<span class="fu">length</span> coords)</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>                mx     <span class="ot">=</span> <span class="fu">sum</span> xs <span class="op">/</span> n</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>                my     <span class="ot">=</span> <span class="fu">sum</span> ys <span class="op">/</span> n</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>                w      <span class="ot">=</span> <span class="kw">if</span> <span class="st">&quot;Hybrid&quot;</span> <span class="ot">`T.isInfixOf`</span> regionName r</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>                            <span class="kw">then</span> <span class="dv">600</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>                            <span class="kw">else</span> <span class="dv">500</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>            <span class="kw">in</span> textBlock (<span class="dt">Pixel</span> mx my) (regionName r) <span class="dv">20</span> w</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>          <span class="op">|</span> r <span class="ot">&lt;-</span> regions</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>          ]</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>        styleNode <span class="ot">=</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>          elem_ <span class="st">&quot;style&quot;</span> []</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>            [ txt_</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;text {\n      font-family: &#39;PragmataPro&#39;, monospace;\n    }\n&quot;</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>        intText n <span class="ot">=</span> T.pack (<span class="fu">show</span> (<span class="fu">round</span><span class="ot"> n ::</span> <span class="dt">Int</span>))</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> elem_ <span class="st">&quot;svg&quot;</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>         [ (<span class="st">&quot;width&quot;</span>,  intText width)</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;height&quot;</span>, intText height)</span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;viewBox&quot;</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>           , T.concat</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>               [ <span class="st">&quot;0 0 &quot;</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>               , intText width</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>               , <span class="st">&quot; &quot;</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>               , intText height</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>               ])</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;xmlns&quot;</span>, <span class="st">&quot;http://www.w3.org/2000/svg&quot;</span>)</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>         ]</span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>         (  [styleNode, background, outerTriangle]</span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>         <span class="op">++</span> regionPolys</span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>         <span class="op">++</span> axisLabels</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>         <span class="op">++</span> regionLabels</span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>         )</span></code></pre></div>
+<p>Writing the SVG to a file:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Full document builder (XML prolog + SVG)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  documentBuilder ::</span> <span class="dt">Builder</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  documentBuilder <span class="ot">=</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&gt;</span> <span class="st">&quot;&lt;?xml-stylesheet type=\&quot;text/css\&quot; href=\&quot;/css/fonts.css\&quot; ?&gt;\n&quot;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&gt;</span> renderSvg svgRoot</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&gt;</span> <span class="st">&quot;\n&quot;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="ot">  writeSVG ::</span> <span class="dt">FilePath</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  writeSVG path <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    createDirectoryIfMissing <span class="dt">True</span> (takeDirectory path)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    TL.writeFile path (B.toLazyText documentBuilder)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="ot">  main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  main <span class="ot">=</span> writeSVG <span class="st">&quot;images/speed-creates-capability.svg&quot;</span></span></code></pre></div>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original. Code blocks are BSD-3-Clause unless noted.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

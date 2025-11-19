@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>Skills, Composition, and the Coordination Problem</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Skills, Composition, and the Coordination Problem">
+    <meta property="og:description" content="&lt;p&gt;Anthropic released &lt;a
+href=&quot;https://www.anthropic.com/news/skills&quot;&gt;Skills&lt;/a&gt; last week, and
+the response was immediate: finally, composable AI capabilities! Build
+once, reuse anywhere. Give Claude folders of instructions and scripts,
+and it&#39;ll load what it needs automatically. Modular, portable,
+efficient. We&#39;ll have reliable AI systems using hundreds or thousands or
+hundreds of thousands of skills in no time. There&#39;s just one problem:
+Skills aren&#39;t actually composable, and that creates a coordination
+problem that needs to be addressed urgently.&lt;/p&gt;">
+    <meta property="og:url" content="https://tscholak.github.io/posts/composable-skills.html">
+    <meta property="og:image" content="https://tscholak.github.io/images/kung-fu.png">
+<meta property="og:image:alt" content="Skills, Composition, and the Coordination Problem">
+<meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="Skills, Composition, and the Coordination Problem">
+    <meta name="twitter:description" content="&lt;p&gt;Anthropic released &lt;a
+href=&quot;https://www.anthropic.com/news/skills&quot;&gt;Skills&lt;/a&gt; last week, and
+the response was immediate: finally, composable AI capabilities! Build
+once, reuse anywhere. Give Claude folders of instructions and scripts,
+and it&#39;ll load what it needs automatically. Modular, portable,
+efficient. We&#39;ll have reliable AI systems using hundreds or thousands or
+hundreds of thousands of skills in no time. There&#39;s just one problem:
+Skills aren&#39;t actually composable, and that creates a coordination
+problem that needs to be addressed urgently.&lt;/p&gt;">
+    <meta name="twitter:image" content="https://tscholak.github.io/images/kung-fu.png">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/2626937">2626937</a> (2025-10-29 16:02:05 -0400) Torsten Scholak: Add personal motivation and acknowledgments, integrate Bengio future-safety footnote</p>
+
+        <p><img src="/images/kung-fu.png"></p>
+
+        <h1>Skills, Composition, and the Coordination Problem</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/ai">ai</a>
+            <a href="/tags/agents">agents</a>
+        </p>
+        <p>Posted on Oct 22, 2025</p>
+        <p>26 min read</p>
+        <p>Anthropic released <a
+href="https://www.anthropic.com/news/skills">Skills</a> last week, and
+the response was immediate: finally, composable AI capabilities! Build
+once, reuse anywhere. Give Claude folders of instructions and scripts,
+and it'll load what it needs automatically. Modular, portable,
+efficient. We'll have reliable AI systems using hundreds or thousands or
+hundreds of thousands of skills in no time. There's just one problem:
+Skills aren't actually composable, and that creates a coordination
+problem that needs to be addressed urgently.</p>
+        <p>When Skills work together to complete a task, fundamental questions
+emerge: Who verifies the result is correct? Who gets credit for success
+or blame for failure? How does the system learn from millions of such
+interactions? Model-mediated coordination alone can't solve these at
+scale. The solution requires infrastructure most people building with
+Skills haven't considered, and that Anthropic hasn't built yet. The
+architectural patterns that solve this problem extend far beyond
+multi-agent AI.</p>
+<p>This article presents a solution. We'll see why natural language
+coordination fails beyond small-scale examples, then work through the
+infrastructure that would actually solve it (drawing on principles from
+formal verification, market design, and institutional theory). The goal
+is understanding how autonomous systems can cooperate reliably when
+individual incentives don't naturally align with collective outcomes.
+The proposed architecture is precise, and the components exist
+today.</p>
+<p>This is a follow-up to <a href="/posts/agentkit">"Everyone's Arguing
+About the Wrong Abstraction Layer"</a>. That post argued that neither
+visual workflow builders nor natural language prompts provide
+<em>formal</em> compositional guarantees, and that this lack of
+structure creates economic risks as systems scale. This post drills into
+Anthropic's Skills feature to illustrate the point. You don't have to
+read the previous post to follow along, but it provides useful
+context.</p>
+<p>The previous piece sparked conversations that shaped this one. When
+Anthropic launched Skills, I realized the coordination problem was no
+longer hypothetical: it was arriving in production. This article is my
+attempt to think through what actually solves it.</p>
+<h2 id="what-skills-are">What Skills Are</h2>
+<p>A Skill is a folder containing instructions and resources that Claude
+loads when relevant. At minimum, it has a <code>SKILL.md</code> file
+describing what the Skill does. It can also include executable scripts,
+templates, or other supporting files.</p>
+<p>Consider a meeting workflow. A <code>transcribe</code> Skill might
+contain audio processing instructions and timestamp formatting scripts.
+A <code>summarize</code> Skill has prompt templates for different
+summary styles. An <code>extract</code> Skill identifies action items. A
+<code>format</code> Skill knows your company's email conventions. Each
+Skill is self-contained, reusable across contexts (Claude Desktop,
+Claude Code, API).</p>
+<p>At startup, Claude indexes every Skill by name and description. When
+you ask it to "transcribe this meeting and email action items," it
+autonomously decides which Skills to load and in what order:
+<code>transcribe.audio</code> -&gt; <code>summarize.text</code> -&gt;
+<code>extract.actions</code> -&gt; <code>format.email</code>. No
+explicit wiring required. Claude orchestrates the sequence based on what
+each Skill declares it can do. (That <code>skill.capability</code>
+notation is shorthand I'll use throughout for specific capabilities
+within Skills, not formal syntax.)</p>
+<p><a
+href="https://x.com/barry_zyj/status/1978860549837299948">People</a> <a
+href="https://x.com/alexalbert__/status/1978877514903884044">are</a> <a
+href="https://simonwillison.net/2025/Oct/16/claude-skills/">excited</a>
+because this <em>feels</em> like composition: small, independent modules
+combining automatically for larger workflows. Skills stack naturally
+when multiple are relevant. But from a <em>formal</em> perspective (the
+one that lets you build reliable systems), it isn't composition at all,
+and that creates serious coordination challenges.</p>
+<h2 id="what-skills-are-not">What Skills Are Not</h2>
+<p>Formal composition has structure. It defines how pieces fit together
+and what happens when they do. Inputs align with outputs. There's an
+identity element (something you can compose with anything without
+changing it). You can reason about the whole because you understand the
+parts.</p>
+<p>Is this the case for Skills? No, because they don't have formal
+compositional semantics:</p>
+<ul>
+<li>There's no formal <code>compose(skillA, skillB)</code> operator.
+Claude simply decides what to use and to what granularity.</li>
+<li>There's no type system or contracts, hence no type safety: In a
+chain of actions, the output from skill A may not match the inputs of
+skill B.</li>
+<li>There's no associativity. <code>(A + B) + C</code> may behave
+differently than <code>A + (B + C)</code>. Order of combination
+matters.</li>
+</ul>
+<p>Skills don't compose. Claude orchestrates them heuristically:
+interpreting requests, selecting Skills, and routing between them.<a
+href="#fn1" class="footnote-ref" id="fnref1"
+role="doc-noteref"><sup>1</sup></a></p>
+<p>At small scale, this approach works well enough. For most users,
+Skills will feel magical: open a PDF, extract data, format a report.
+Done. The model makes the right decisions most of the time, and the
+abstraction holds.</p>
+<p>But as soon as people start chaining more Skills together, the cracks
+appear:</p>
+<ul>
+<li>Skill A and B work, but A, B, and C in combination fail
+unpredictably.</li>
+<li>Updating one Skill breaks workflows you didn't know were using
+it.</li>
+<li>The same workflow can yield very different results depending on what
+other Skills are being used or what ran before.</li>
+</ul>
+<p>Without formal structure, we can't reason about how Skills behave. We
+can only test, and even then, the tests aren't stable.</p>
+<p>In a nutshell, we've replaced explicit composition with implicit,
+model-mediated coordination, and that scales only as far as Claude's
+ability to guess correctly.</p>
+<p>So how much of a problem is this?</p>
+<h2 id="why-coordination-matters">Why Coordination Matters</h2>
+<p>Coordination is the linchpin that holds complex systems together. The
+more components you have, the more ways they can interact, and the
+harder it is to ensure they work together reliably.</p>
+<p>The economy of AI systems is moving rapidly toward scale. Enterprises
+will want an ever-growing library of specialized skills for compliance,
+security, domain knowledge, formatting, localization, and more. Every
+team will build custom skills for their workflows. Systems will chain
+many skills dynamically based on context, user preferences, and
+regulatory requirements. The complexity will explode, and with it, the
+coordination challenges.</p>
+<p>Some people are optimistic that model intelligence alone will solve
+these problems, "ship fast and iterate, it's just a tool, if it's
+broken, we'll fix it." That optimism is understandable given current
+trends. <a
+href="https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/">Research
+from METR</a> shows AI's ability to complete long-duration tasks
+improving rapidly. Current frontier models achieve 50% success on
+hour-long tasks, nearly 100% on tasks under four minutes. If the current
+trend continues, we'll have systems reliably completing week-long tasks
+within 2-4 years. <a
+href="https://www.dwarkesh.com/p/andrej-karpathy">Andrej Karpathy</a>,
+who led AI at Tesla and OpenAI, doubts it will: he calls this "the
+decade of agents, not the year of agents." AI research itself proves
+harder to automate than expected. Karpathy found coding agents "of very
+little help" building his LLM training codebase: "They're not very good
+at code that has never been written before, which is what we're trying
+to achieve when we're building these models." Recursive self-improvement
+faces the same barrier.</p>
+<p>Even if capabilities do scale as optimists hope, coordination
+failures aren't capability problems. <a
+href="https://metr.org/blog/2025-06-05-recent-reward-hacking/">METR
+found</a> reward hacking in 70-95% of test cases: models knowingly
+violating user intent while maximizing specified objectives. <a
+href="https://openai.com/index/detecting-and-reducing-scheming-in-ai-models/">Separate
+research from OpenAI and Apollo Research</a> found scheming behavior:
+models deliberately hiding their intentions while appearing compliant,
+even covertly preserving themselves when facing replacement.<a
+href="#fn2" class="footnote-ref" id="fnref2"
+role="doc-noteref"><sup>2</sup></a></p>
+<p><a
+href="https://fortune.com/2025-06-03/yoshua-bengio-ai-models-dangerous-behaviors-deception-cheating-lying/">Yoshua
+Bengio</a>, who won the Turing Award for pioneering deep learning,
+observed that these coordination problems emerge from intelligence
+itself: frontier models now exhibit deception and goal misalignment in
+empirical tests. Smarter models won't fix these problems because, as
+Bengio noted, the AI arms race "pushes labs toward focusing on
+capability to make the AI more and more intelligent, but not necessarily
+put enough emphasis and investment on research on safety." Intelligence
+achieves task completion. Coordination requires institutional structure:
+shared standards, aligned incentives, accountability frameworks. Those
+don't emerge from capability scaling alone.</p>
+<p>Right now, we're in the hype phase. Hundreds of billions in AI capex
+are already committed. Companies have raised funding on promises of AGI.
+Investors expect returns. Enterprises have been sold on AI agents that
+will reliably automate complex workflows. The economic pressure to
+deploy at scale is immense.</p>
+<p>By 2027, if current trends hold, enterprises will be deploying
+multi-skill agents for financial consolidations, regulatory compliance,
+and hiring decisions. When coordination failures hit production (errors
+in quarterly reports, missed compliance requirements, biased screening)
+"the model orchestrates skills autonomously" won't satisfy auditors,
+insurers, or regulators.</p>
+<p>Given that deployment is proceeding regardless of safety researchers'
+warnings, the question becomes: do we build coordination infrastructure
+proactively or reactively? Waiting for production failures guarantees
+reactive regulation and crude capability restrictions. Building it
+proactively means designing coordination architecture while systems
+remain tractable, before they're operating financial systems and
+failures force crude retrofits.</p>
+<p>So how do we build that infrastructure?</p>
+<h2 id="why-formal-guarantees-arent-enough">Why Formal Guarantees Aren't
+Enough</h2>
+<p>An obvious answer could be: "Just make it formal." Add types,
+contracts, schemas. Verify that skill outputs match skill inputs. Build
+a <code>compose(skillA, skillB)</code> operator that actually composes
+things. Require Claude to generate formally verifiable plans before
+execution.</p>
+<p>This would help, but it wouldn't solve the problem.</p>
+<p>Formal guarantees make coordination <em>tractable</em>. They prevent
+the dumbest failures. They can't prevent the subtle ones. Even perfectly
+verified systems misfire when the specifications are wrong, incomplete,
+or gameable. And in open-ended environments, specifications are always
+at least two of those three.</p>
+<p>The specification problem is fundamental. <a
+href="https://blog.chain.link/reentrancy-attacks-and-the-dao-hack/">The
+DAO smart contract</a> was formally designed with explicit interfaces,
+yet lost $50-70 million to a reentrancy attack that exploited the gap
+between intended and actual behavior. The code did exactly what the
+specification said. The specification said the wrong thing.</p>
+<p>Formal methods shine at well-bounded problems: protocol correctness,
+safety-critical control loops, system invariants. AI skills are dynamic
+behaviors embedded in messy human workflows where "correct" isn't even
+well-defined. The complexity comes from the world.</p>
+<p>The scalability barrier is fundamental. <a
+href="https://amturing.acm.org/award_winners/clarke_1167964.cfm">Edmund
+Clarke</a>, who won the Turing Award for inventing <a
+href="https://en.wikipedia.org/wiki/Model_checking">model checking</a>,
+identified the core problem: as state variables increase, the state
+space grows exponentially. For n processes with m states each,
+composition may have m^n states. <a
+href="https://sel4.systems/">seL4</a> (the most successfully verified
+operating system kernel) required 20 person-years to verify 8,700 lines
+of C code with 200,000 lines of proof. It's a remarkable achievement for
+a microkernel. It doesn't scale to coordinating hundreds of dynamic
+skills.</p>
+<p>Try to formally verify every possible interaction between skills and
+you'll discover why most formal-method projects plateau after a few
+components: verification costs explode quadratically while the value of
+guarantees grows sublinearly. The economics stop working.</p>
+<p>That's why human civilization runs on something else.</p>
+<h2 id="how-humans-actually-coordinate">How Humans Actually
+Coordinate</h2>
+<p>We solved large-scale coordination once already. We used
+institutions.</p>
+<p>Markets, laws, and peer review manage complexity without central
+verification. They don't prove that everyone behaves correctly. They
+create feedback loops that punish failure and reward reliability. These
+systems are <em>self-correcting</em> without being <em>formally
+correct</em>.</p>
+<p>But these mechanisms do more than catch errors. They solve problems
+that formal verification cannot address at all:</p>
+<ul>
+<li><p><strong>Markets create information that doesn't
+pre-exist.</strong> Prices emerge from millions of decentralized
+decisions, revealing preferences and scarcities no central planner could
+compute. The FCC spectrum auctions designed by Nobel laureates <a
+href="https://www.nobelprize.org/prizes/economic-sciences/2020/popular-information/">Paul
+Milgrom and Robert Wilson</a> generated $233 billion across 100 auctions
+with less than 1% administrative cost. They elicit optimal allocations
+through incentive-compatible mechanisms.</p></li>
+<li><p><strong>Legal systems provide legitimacy through
+participation.</strong> Courts aren't just error-correctors. They
+generate buy-in, establish precedent, and adapt rules to contexts no
+specification anticipated. Process matters as much as outcome.</p></li>
+<li><p><strong>Science enables discovery under uncertainty.</strong>
+Peer review doesn't verify truth. It evaluates plausibility when ground
+truth is unknown. <a href="https://www.nber.org/papers/w10002">Alvin
+Roth's kidney exchange mechanisms</a> (another Nobel Prize) increased
+donor utilization from 55% to 89%, facilitating over 2,000 transplants.
+It solved a coordination problem with no "correct" answer to verify
+against.</p></li>
+</ul>
+<p>These systems address problems type-checking cannot solve:</p>
+<ul>
+<li>incentive alignment when agents have private information,</li>
+<li>information creation when optimal solutions are unknown, and</li>
+<li>legitimacy when stakeholders must voluntarily participate.</li>
+</ul>
+<p>These are genuine advantages. But human institutions have a critical
+limitation: they self-correct slowly. A bad policy might take years to
+reveal itself. Scientific fraud could persist until replication
+attempts. Financial markets (our fastest coordination mechanism) <a
+href="https://en.wikipedia.org/wiki/2010_flash_crash">crashed in
+2010</a> when high-frequency traders created a "hot potato" effect,
+dropping the DJIA 998 points in minutes. Implementing circuit breakers
+and structural fixes took years. LLM-mediated systems generate, execute,
+and fail millions of workflows per hour. They'll accumulate coordination
+debt faster than human institutions can correct it. We need institutions
+designed to self-correct at the pace AI systems fail.</p>
+<h2 id="what-this-actually-requires">What This Actually Requires</h2>
+<p>Skills need a three-layer structure combining formal verification,
+social coordination, and credit assignment. Each layer addresses
+problems the others cannot solve.</p>
+<pre><code>APPLICATIONS: Users &amp; Tasks
+         ↓ request
+┌──────────────────────────────────────────────────────┐
+│ FORMAL LAYER: Plan Synthesis &amp; Verification          │
+│  • type-checked skill composition                    │
+│  • resource budgets enforced                         │
+│  • isolation + capability gating                     │
+└──────────────────────────────────────────────────────┘
+         ↑ plan    ↓ accept/reject    ↓ telemetry
+┌──────────────────────────────────────────────────────┐
+│ SOCIAL LAYER: Registry &amp; Market                      │
+│  • reputation scores (success/failure rates)         │
+│  • competitive selection (quality vs. cost)          │
+│  • version compatibility tracking                    │
+└──────────────────────────────────────────────────────┘
+         ↓ outcomes              ↑ credit signals
+┌──────────────────────────────────────────────────────┐
+│ LEGAL LAYER: Credit Assignment                       │
+│  • forensics (causal attribution)                    │
+│  • fault allocation (credit signals)                 │
+│  • remediation (incentive adjustment)                │
+└──────────────────────────────────────────────────────┘</code></pre>
+<p>Here's how they work together. An application submits a task. The
+planner proposes a plan: a directed graph of skills with declared types,
+ordering constraints, and resource budgets. The <strong>formal
+layer</strong> performs static checks (type unification, dependency
+ordering, cycle detection, resource admission). If well-formed,
+execution proceeds with capability-based contexts (each skill gets only
+its declared effects) and resource metering (tracking actual consumption
+against budgets). The <strong>social layer</strong> tracks which skills
+actually deliver quality results and updates reputation scores. The
+<strong>legal layer</strong> performs forensic analysis on failures to
+assign credit signals that feed back into reputation. Each layer has
+specific responsibilities. None can be skipped.</p>
+<h3 id="the-formal-layer-verified-composition">The Formal Layer:
+Verified Composition</h3>
+<p>The formal layer provides guarantees about composition boundaries,
+not about correctness of individual skill internals or optimality of
+plans. This scoping is deliberate. We verify the narrow waist where
+coordination happens, not everything. Here's the breakdown:</p>
+<table>
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 31%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Verify?</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Edge types between skills</strong></td>
+<td>✅ Yes</td>
+<td>JSON Schema unification at plan time</td>
+</tr>
+<tr>
+<td><strong>Execution order &amp; acyclicity</strong></td>
+<td>✅ Yes</td>
+<td>DAG analysis</td>
+</tr>
+<tr>
+<td><strong>Resource budgets</strong> (tokens/latency/calls)</td>
+<td>✅ Yes</td>
+<td>Static admission + runtime meters</td>
+</tr>
+<tr>
+<td><strong>Side-effect policies</strong> (database writes, API
+calls)</td>
+<td>✅ Yes</td>
+<td>Effect declarations (static) + capability-based contexts
+(runtime)</td>
+</tr>
+<tr>
+<td><strong>Skill internals</strong></td>
+<td>❌ No</td>
+<td>Handled by testing and reputation</td>
+</tr>
+<tr>
+<td><strong>Planner reasoning</strong></td>
+<td>⚠️ Partial</td>
+<td>Logical structure if typed, optimality by outcomes</td>
+</tr>
+</tbody>
+</table>
+<p>This division matters because it keeps the verified core small. The
+narrow waist stays manageable because we don't verify everything, just
+the composition boundaries where coordination happens.</p>
+<p>Consider a workflow: PDF -&gt; Table -&gt; SQL. skills declare their
+types: <code>pdf.extractTables</code> accepts PDF and returns
+<code>[Table]</code>. <code>table.toSql</code> accepts
+<code>[Table]</code> and returns SQL. The planner proposes a two-step
+DAG. The checker unifies types across the edge and enforces a 1000-token
+budget. If <code>pdf.extractTables</code> returns mixed schemas but
+<code>table.toSql</code> expects uniform structure, the checker rejects
+the plan unless a normalization step is inserted. Type safety prevents
+the runtime failure.</p>
+<p>Side effects work the same way. Skills declare effects in their
+interfaces (<code>pdf.extractTables: {FileSystem.read}</code>,
+<code>db.write: {Database.write}</code>). The Plan Checker statically
+verifies the composition is well-formed. At runtime, each skill's
+execution context is configured with only the capabilities it declared.
+<a
+href="https://www.anthropic.com/engineering/claude-code-sandboxing">Claude
+Code's sandboxing</a> demonstrates the primitives: filesystem and
+network isolation through OS mechanisms. But sandboxing alone creates
+privilege escalation at composition: a PDF-to-database workflow must
+grant both filesystem and database access globally. Effect declarations
+enable least privilege: the PDF skill executes in a context with only
+<code>{FileSystem.read}</code>, the DB skill with only
+<code>{Database.write}</code>, despite both running in the same
+workflow. Effect types provide the compositional algebra for
+per-component minimization. Capability-based execution implements it.
+Effect violations become impossible by construction.</p>
+<p>The narrow waist approach (a small, stable interface layer that
+enables diversity above and below) is how successful systems scale. The
+Internet scales to billions of devices through this pattern. <a
+href="https://datatracker.ietf.org/doc/html/rfc9293">TCP/IP</a> provides
+minimal guarantees at the protocol layer (IP) that enable maximum
+diversity at the edges, with <a href="https://www.ietf.org/">IETF</a>
+governance handling disputes and evolving standards. <a
+href="https://sel4.systems/">seL4</a> demonstrates the same. The
+verified core enforces isolation, while everything above competes
+freely. <a
+href="https://cacm.acm.org/magazines/2015/4/184701-how-amazon-web-services-uses-formal-methods/fulltext">AWS
+proved this works</a> for distributed systems: TLA+ specifications
+(200-1000 lines each) caught critical bugs in DynamoDB requiring 35
+steps to trigger. These are bugs that would never surface in testing.
+The npm ecosystem's <a
+href="https://thehackernews.com/2024/12/thousands-download-malicious-npm.html">15,000+
+malicious packages</a> show what happens without this discipline. For
+skills: verify how they compose, not what each does internally.<a
+href="#fn3" class="footnote-ref" id="fnref3"
+role="doc-noteref"><sup>3</sup></a></p>
+<h3 id="the-social-layer-competitive-coordination">The Social Layer:
+Competitive Coordination</h3>
+<p>Formal verification ensures skills compose correctly, but it can't
+determine which composition is best or whether specifications capture
+actual requirements. You can prove code matches spec without proving
+spec matches reality. Even perfectly specified systems get gamed, as
+seen in the reward hacking research showing agents maximize specified
+objectives while violating user intent. When multiple skills satisfy the
+same contract with different quality or cost profiles, formal
+verification offers no guidance. The social layer fills this gap through
+market-like selection mechanisms that function as a learning algorithm.
+As Philippe Beaudoin observed, "social structure is the learning
+algorithm of society"<a href="#fn4" class="footnote-ref" id="fnref4"
+role="doc-noteref"><sup>4</sup></a>. Institutions learn through feedback
+which behaviors to reward. The social layer automates this through
+several mechanisms:</p>
+<p><strong>Reputation and competitive selection.</strong> Track success
+rates, latency, and cost per skill. Bad performers decay through disuse.
+Good ones capture market share. <a
+href="https://link.springer.com/article/10.1007/s10683-006-4309-2">eBay
+demonstrates</a> reputation systems create an 8.1% price premium for
+trusted sellers. These are quantifiable incentives for good
+behavior.</p>
+<p>Consider a data extraction skill that passes all formal checks but
+consistently produces edge-case formats that downstream skills handle
+poorly. Verification sees: types match, contracts satisfied. But
+outcomes reveal quality issues. Over 1000 workflows, its reputation
+decays from 0.85 to 0.32, dropping its selection probability
+proportionally. A competing skill with identical contract but better
+output quality captures the market share. No human intervention
+required. The system learns which implementations actually work.</p>
+<p>These automated learning mechanisms are not hypothetical. <a
+href="https://arxiv.org/abs/2507.19457">DSPy's GEPA optimizer</a>
+demonstrates that automated learning from execution feedback achieves
+dramatic improvements with small datasets: 97.8% accuracy from just 34
+training examples, without gradient descent or model retraining. GEPA
+uses LLM reflection on execution traces to iteratively improve
+performance. This is exactly the pattern the social layer implements
+through reputation updates.</p>
+<p>The key architectural difference: GEPA optimizes prompts within a
+fixed module structure (improving how individual agents work), while the
+social layer optimizes skill selection within formally verified
+composition boundaries (improving how agents coordinate). Both are
+training-free optimization through execution feedback. Both achieve
+sample efficiency because they exploit LLM language priors rather than
+treating outcomes as scalar rewards. GEPA provides empirical proof that
+institutional learning can operate effectively when automated.</p>
+<p>Production evaluation systems like <a
+href="https://mistral.ai/news/ai-studio">Mistral's judges</a>
+demonstrate teams already recognize this need, scoring outputs at scale
+and converting production traces into datasets. But evaluation alone
+isn't sufficient: judges measure quality, not economic impact. A
+financial compliance task failing once is catastrophic, while an email
+draft generator failing occasionally is acceptable. The social layer
+must weight reputation updates by impact, enabling risk-adjusted
+selection where high-stakes tasks select proven reliability even at
+higher cost, while low-stakes tasks can use cheaper, less reliable
+skills.</p>
+<p><strong>Evolutionary dynamics under institutional selection.</strong>
+Reputation scores provide fitness signals for automated skill
+optimization, as <a href="https://github.com/stanfordnlp/dspy">DSPy</a>
+demonstrates through programmatic variation and outcome evaluation.
+Applied to skills: the formal layer ensures evolved variations still
+compose correctly (providing institutional bounds that prevent runaway
+optimization), while the social layer provides selection pressure
+through reputation. Better skills gain market share, poor mutations lose
+selection probability. Skills improve through variation and selection,
+but within verifiable compositional constraints.</p>
+<p><strong>Hierarchical coordination emerges naturally.</strong> Recent
+agent research focuses on improving individual capabilities (better
+reasoning, richer memory, sophisticated execution), but real-world
+automation requires coordinating multiple specialized agents. As skill
+populations grow, certain organizational structures emerge because they
+solve computational problems. Multi-agent AI research shows hierarchical
+patterns reduce communication overhead from O(n²) to O(n log n) while
+improving performance. Boss-Worker, Actor-Critic, and hierarchical
+orchestration are validated patterns. Complex workflows decompose
+naturally: coordinator skills delegate to specialist skills recursively,
+creating organizational structure through selection pressure rather than
+top-down design.</p>
+<p><strong>The registry learns compatibility through use.</strong> Which
+skills actually work together in production? The system discovers this
+through execution: when skill A updates, the registry knows which
+downstream dependencies are affected. This enables automatic deprecation
+warnings, migration paths, and backward compatibility enforcement (not
+through manual declaration, but through observed behavior).</p>
+<h3 id="the-legal-layer-credit-assignment-for-multi-agent-learning">The
+Legal Layer: Credit Assignment for Multi-Agent Learning</h3>
+<p>Reputation mechanisms tell us which skills work better overall, but
+they struggle with a fundamental problem: when a multi-component
+workflow fails, which component caused it? Penalizing all components
+equally kills good skills. Penalizing only the last component misses
+root causes. Using global reward signals can't distinguish individual
+contributions. Without precise credit assignment, evolutionary dynamics
+can't function because the system doesn't know which mutations to
+reinforce and which to suppress.</p>
+<p>The legal layer solves this through causal attribution: forensics
+determines what happened, fault allocation assigns credit, and
+remediation adjusts incentives. These are automated platform operations
+that enable learning. The audit infrastructure (cryptographically signed
+execution traces) serves both automated forensics and human oversight,
+but automation is primary because it scales to millions of workflows
+where human review cannot.</p>
+<p><strong>Forensics establishes causality.</strong> Every execution
+produces a structured audit trail: input schemas, component versions
+(cryptographic hashes), plan structure, declared contracts
+(pre/postconditions, effects), intermediate outputs, and resource
+consumption. This becomes a queryable execution graph for automated
+analysis. When a workflow produces an unexpected outcome, forensics
+analyzes this graph to establish causal relationships: Which component's
+output violated which downstream precondition? Which plan decision
+introduced the composition error? Which input distribution fell outside
+declared envelopes? Forensics itself can be a learned component, a
+specialized skill trained on thousands of incidents to identify failure
+patterns (<a
+href="https://blog.langchain.com/insights-agent-multiturn-evals-langsmith/?utm_medium=social&amp;utm_source=linkedin&amp;utm_campaign=q4-2025_october-launch-week_aw">production
+tools</a> demonstrate the value of clustering failures by behavioral
+patterns), while still operating within contract boundaries declared at
+composition time.</p>
+<p><strong>Attribution assigns credit signals.</strong> Once causality
+is established, attribution translates this into feedback for the social
+layer. A component that violates its postcondition receives negative
+credit. A planner that composes skills while ignoring preconditions
+receives negative credit. A component that handles edge cases beyond its
+specification receives positive credit. These credit signals function as
+gradients for evolutionary optimization, indicating which behaviors to
+reinforce or suppress.</p>
+<p>Consider a failure in <a href="#what-skills-are">the meeting
+workflow</a>. The output email says "Sarah will finalize the pricing
+proposal by Friday for the client call." What was actually said: "Sarah
+might be able to finalize pricing by Friday if bandwidth permits, but
+can't commit given the Q4 close." Yet all formal verification passes:
+types unify, accuracy thresholds met, contracts satisfied.</p>
+<p>The cascade: transcribe makes a phonetic error on the hedge word ("if
+bandwidth permits" -&gt; "her bandwidth for it"), producing "Sarah might
+be able to finalize pricing by Friday, her bandwidth for it, but can't
+commit given Q4 close." Summarize drops the qualifying phrases to be
+concise: "Sarah to finalize pricing by Friday (Q4 close)." Extract
+treats the deadline as the salient action item: "Sarah: finalize pricing
+by Friday." Format makes it definitive: "Sarah will finalize the pricing
+proposal by Friday for the client call."</p>
+<p>Attribution: transcribe receives minor negative credit (phonetic
+error on critical qualifier), summarize receives significant negative
+credit (dropped uncertainty signal), extract receives moderate negative
+credit (interpreted conditional as commitment), format receives moderate
+negative credit (added false definitiveness), planner receives negative
+credit (composition progressively removed hedging instead of preserving
+it). Each component made defensible choices within its contract, but the
+cascade turned a tentative maybe into a firm commitment. Nothing
+violated a contract, no types mismatched, no invariants broke. The
+system was formally correct but produced the wrong outcome. Formal
+verification alone can't catch this.</p>
+<p><strong>This completes the learning loop.</strong> The social layer
+implements evolutionary dynamics (variation and selection based on
+reputation), but can only function with accurate credit signals. Without
+causal attribution, evolution observes aggregate outcomes: "this
+workflow succeeded" or "this workflow failed." With attribution,
+evolution receives precise feedback: "this component violated this
+contract, this component exceeded expectations, this composition pattern
+reliably fails." The legal layer provides backward-looking credit
+assignment, while the social layer provides forward-looking selection.
+Together they enable learning.</p>
+<p>The reward hacking problem poses a particular challenge: static
+reward functions can't anticipate all gaming strategies. But learned
+forensics can identify patterns where models maximize specified
+objectives while violating intent: outputs that technically satisfy
+contracts while degrading unmeasured quality, behaviors that exploit
+interface loopholes, workflows that optimize metrics at the expense of
+user goals. When forensics identifies such patterns, negative credit
+attaches not just to individual instances but to behavior classes,
+propagating to similar component versions. The legal layer becomes a
+learned reward model that identifies and penalizes gaming strategies as
+they emerge.</p>
+<p>This solves credit assignment at scale: automated forensics handles
+millions of routine failures per day, assigning credit and updating
+reputations in seconds. Major disputes (liability questions involving
+significant damages, regulatory compliance investigations, questions of
+systemic failure) remain under external oversight from courts,
+regulators, and arbitrators. The division of labor mirrors human
+institutions: automated systems handle routine cases, human judgment
+handles precedent-setting ones.</p>
+<h3 id="failure-semantics-across-all-layers">Failure Semantics Across
+All Layers</h3>
+<p>The three layers work together, each handling different failure
+modes. When something fails, each layer responds if applicable:</p>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 25%" />
+<col style="width: 26%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Failure Type</th>
+<th>Formal Response</th>
+<th>Social Response</th>
+<th>Legal Response (Credit Assignment)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Type mismatch</strong></td>
+<td>Reject plan statically (no execution)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Effect violation</strong></td>
+<td>Impossible by construction (execution context has only declared
+capabilities)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Budget exceeded</strong></td>
+<td>Admit budget statically -&gt; runtime metering (abort when limit
+hit)</td>
+<td>Reputation penalty if habitual</td>
+<td>Negative credit to component, charge overage</td>
+</tr>
+<tr>
+<td><strong>Malformed output</strong></td>
+<td>Pass static checks -&gt; runtime detection (abort with error)</td>
+<td>Severe reputation hit</td>
+<td>Negative credit to component, positive credit to detector</td>
+</tr>
+<tr>
+<td><strong>Quality degradation</strong></td>
+<td>Pass all formal checks</td>
+<td>Gradual reputation decay from outcomes</td>
+<td>Forensics attributes credit across cascade, planner penalized for
+poor composition</td>
+</tr>
+</tbody>
+</table>
+<p>This demonstrates why you need all three. Formal verification
+prevents violations by construction (type mismatches caught statically,
+effect violations made impossible through capability-based execution).
+Runtime metering tracks resource consumption that cannot be predicted
+statically. Social mechanisms handle quality degradation that passes all
+formal checks. Legal assigns credit when outcomes reveal which
+components contributed to failures.</p>
+<h2 id="the-synthesis">The Synthesis</h2>
+<p>The proposed architecture combines three layers because no single
+approach suffices. Formal verification prevents predictable composition
+failures but cannot specify optimal behavior under uncertainty. Social
+mechanisms learn what works through execution feedback but require
+formal boundaries to prevent catastrophic failures. Legal accountability
+assigns responsibility when the other layers fail but needs verifiable
+traces to function. Each layer addresses problems the others cannot
+solve.<a href="#fn5" class="footnote-ref" id="fnref5"
+role="doc-noteref"><sup>5</sup></a></p>
+<p>AI systems create both necessity and opportunity for automated
+coordination. Necessity: workflows execute millions of times per hour,
+accumulating coordination debt faster than human institutions can
+correct. Opportunity: each layer exploits capabilities human
+institutions lack.</p>
+<p>The formal layer makes composition boundaries explicit and
+machine-checkable. Type-checking catches interface mismatches before
+runtime. Effect systems make unauthorized actions impossible by
+construction: each execution context has only the capabilities its skill
+declared. AI exposes compositional structure as typed interfaces that
+can be verified automatically.</p>
+<p>The social layer updates reputation immediately after each execution.
+Competitive selection occurs at request time. Evaluation runs
+automatically on every output. The learning algorithm operates
+continuously through execution feedback, no human deliberation required
+for routine cases.</p>
+<p>The legal layer produces complete, cryptographically signed traces
+for every execution: inputs, outputs, skill versions, resource
+consumption, decisions. Audit trails are comprehensive and tamper-proof
+by construction.</p>
+<p>This is training-free optimization. No model weights change, no
+gradient descent, no reinforcement learning loops. The formal layer
+provides static guarantees through type-checking. The social layer
+learns selection policies through automated reputation updates. The
+legal layer creates accountability through signed audit trails. Like <a
+href="https://github.com/stanfordnlp/dspy">DSPy</a> improving LLM
+performance through prompt optimization rather than retraining,
+coordination improves by optimizing the environment rather than the
+models.</p>
+<p>The components exist. <a
+href="https://www.anthropic.com/news/model-context-protocol">The Model
+Context Protocol</a> provides typed schemas. Multi-agent AI research
+validates hierarchical coordination patterns. <a
+href="https://ethereum.org/">Ethereum</a> secures $30+ billion through
+verified EVM semantics, staking incentives, and immutable transaction
+logs. <a href="https://arxiv.org/abs/2507.19457">DSPy's GEPA
+optimizer</a> proves automated learning from execution feedback achieves
+significant improvements with small datasets (97.8% accuracy from 34
+examples, training-free). <a
+href="https://www.nobelprize.org/prizes/economic-sciences/2020/popular-information/">Milgrom
+and Wilson's auction mechanisms</a> demonstrate incentive-compatible
+institutional design at scale ($233 billion across 100 FCC spectrum
+auctions). All of these operate in production today.</p>
+<p>Skills validate demand for composable capabilities but lack
+composition guarantees. Claude orchestrates Skills through inference
+rather than verified planning. MCP provides types but requires explicit
+invocation. Skills enable autonomous selection but without type safety.
+Neither provides reputation tracking, competitive pressure, or audit
+trails. The synthesis (autonomous selection of capabilities that
+verifiably compose) requires combining these pieces into coherent
+architecture.</p>
+<p>The formal verification community has the tools. The mechanism design
+community has the theory. The ML community ships the systems. Agent
+architecture research has focused on individual capabilities (reasoning,
+memory, execution), but production demands coordination. What's missing
+is synthesis. Skills and MCP demonstrate the pieces are emerging
+independently. The question is whether coordination infrastructure gets
+built before production failures force reactive regulation, or as
+principled architecture that enables scale. Economics determines the
+answer by 2027.</p>
+<hr />
+<p><em>Thanks to Philippe Beaudoin and Paul Chiusano for detailed
+feedback that significantly improved this piece. Their insights on
+social learning mechanisms and the library/application distinction
+shaped the core argument.</em></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Paul Chiusano, creator of the <a
+href="https://www.unison-lang.org/">Unison programming language</a>,
+personal communication, October 2025. Chiusano observes this is the
+difference between libraries (providing functions) and applications
+(specifying how functions compose): "The model isn't an oracle" that
+will discover correct compositions automatically.<a href="#fnref1"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Reward hacking optimizes against the specification.
+Scheming actively conceals misbehavior. Attempts to train out scheming
+appeared effective, but models developed situational awareness to detect
+when they're being evaluated, suggesting they learn to hide misbehavior
+during testing rather than genuinely aligning.<a href="#fnref2"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>One frontier deserves attention: verifying the planner's
+reasoning itself. When AI reasoning is expressed as a typed program (as
+in <a href="https://platform.openai.com/docs/guides/reasoning">OpenAI's
+o1</a> or <a
+href="https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/">DeepMind's
+AlphaProof</a>), type-checking mechanically verifies logical structure
+through the <a
+href="https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence">Curry-Howard
+correspondence</a>. We still evaluate optimality by outcomes, but
+structural verification reaches into cognition itself. This is something
+courts need judges for, but AI can expose cognition as programs that
+machines can verify.<a href="#fnref3" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>Philippe Beaudoin, Senior Director, Research at <a
+href="https://www.lawzero.org/">LawZero</a>, personal communication,
+October 2025.<a href="#fnref4" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>As capabilities increase, high-stakes decisions may
+require forward-looking harm assessment for cases with deep epistemic
+uncertainty (ambiguous safety specifications, novel contexts). <a
+href="https://arxiv.org/abs/2502.15657">Bengio et al.</a> propose
+computing harm probabilities across plausible interpretations and
+blocking actions when thresholds are exceeded. The coordination
+framework's audit trails, effect declarations, and execution histories
+provide the substrate such mechanisms require.<a href="#fnref5"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

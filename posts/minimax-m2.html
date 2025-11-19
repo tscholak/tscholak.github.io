@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>Trouble in LA LA Land: Did MiniMax Just Kill Efficient Attention?</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Trouble in LA LA Land: Did MiniMax Just Kill Efficient Attention?">
+    <meta property="og:description" content="&lt;p&gt;When you&#39;re building efficient LLMs and a major industrial lab says
+&quot;we tried this path, it doesn&#39;t work at scale,&quot; your first instinct is
+to listen (and cry). Maybe your assumptions are wrong. Maybe you&#39;re
+about to waste a lot of compute chasing a dead end. That&#39;s where I was
+this week.&lt;/p&gt;">
+    <meta property="og:url" content="https://tscholak.github.io/posts/minimax-m2.html">
+    <meta property="og:image" content="https://tscholak.github.io/images/mambamin.png">
+<meta property="og:image:alt" content="Trouble in LA LA Land: Did MiniMax Just Kill Efficient Attention?">
+<meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="Trouble in LA LA Land: Did MiniMax Just Kill Efficient Attention?">
+    <meta name="twitter:description" content="&lt;p&gt;When you&#39;re building efficient LLMs and a major industrial lab says
+&quot;we tried this path, it doesn&#39;t work at scale,&quot; your first instinct is
+to listen (and cry). Maybe your assumptions are wrong. Maybe you&#39;re
+about to waste a lot of compute chasing a dead end. That&#39;s where I was
+this week.&lt;/p&gt;">
+    <meta name="twitter:image" content="https://tscholak.github.io/images/mambamin.png">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/dc1fb17">dc1fb17</a> (2025-10-31 10:30:34 -0400) Torsten Scholak: Update MiniMax article: title change and Kimi Linear Attention update</p>
+
+        <p><img src="/images/mambamin.png"></p>
+
+        <h1>Trouble in LA LA Land: Did MiniMax Just Kill Efficient Attention?</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/ai">ai</a>
+            <a href="/tags/linear-attention">linear-attention</a>
+        </p>
+        <p>Posted on Oct 30, 2025</p>
+        <p>9 min read</p>
+        <p>When you're building efficient LLMs and a major industrial lab says
+"we tried this path, it doesn't work at scale," your first instinct is
+to listen (and cry). Maybe your assumptions are wrong. Maybe you're
+about to waste a lot of compute chasing a dead end. That's where I was
+this week.</p>
+        <p>My team is betting big on hybrid architectures: mixing full and
+efficient attention (SWA/sparse, linear/SSM, etc.) with learned layer
+placement. Then MiniMax dropped their <a
+href="https://www.zhihu.com/question/1965302088260104295/answer/1966810157473335067">M2
+post-mortem bomb</a> on October 25th explaining to everyone why they
+went back to quadratic attention for their 230B model. By October 29th,
+<a href="https://x.com/giffmana/status/1983457240452673710">the</a> <a
+href="https://x.com/zpysky1125/status/1983383094607347992">internet</a>
+<a href="https://x.com/p_nawrot/status/1983579777844834459">was</a> <a
+href="https://x.com/DBahdanau/status/1983909078414831987">convinced</a>:
+efficient attention is dead. We told you so.</p>
+<p>Except that's not what MiniMax said. The more I looked into their
+reasoning, the more I realized their decision actually strengthens the
+case for efficient hybrids in ways nobody's talking about.</p>
+<h2 id="what-minimax-actually-said">What MiniMax Actually Said</h2>
+<p>If you read MiniMax's post-mortem carefully, their conclusion is
+actually nuanced. They didn't say efficient attention is fundamentally
+broken. Their exact words: "一直在做，但是在工业系统里真的打过Full
+Attention还有些距离" (We've always been working on it, but truly beating
+full attention (FA) in industrial systems still has some way to go). In
+other words, efficient attention lacks production readiness at their
+scale with today's infrastructure. So it's a question of not if, but
+when.</p>
+<p>And yeah, I get it. Anyone who's tried to run linear attention in
+production knows the pain. I can personally attest to this, because we
+did it in our <a
+href="https://github.com/ServiceNow/Fast-LLM">Fast-LLM</a> training
+framework this year. Build failures from <code>mamba-ssm</code> or FLA
+with cryptic CUDA linker errors. An afternoon hunting for the magic
+combination of torch version, CUDA toolkit, and kernel implementation
+that doesn't segfault. Getting TP to work wasn't straightforward either.
+Then the serving stack surprises you by missing chunked prefill,
+speculative decoding, or prefix caching. On that note, prefix caching is
+the reason why efficient attention often fails to deliver in practice:
+once your serving stack caches the prefix, the memory and compute
+savings compared to FA vanish. And that's exactly where most production
+traffic lives.</p>
+<p>Also, FA just works. The kernel ecosystem is mature, and the whole
+ecosystem is built around its assumptions. It's still getting better all
+the time. For a 230B production model serving millions of users, you
+really can't mess around.</p>
+<p>Then there's model quality. Their <a
+href="https://arxiv.org/abs/2501.08313">Lightning Attention hybrid</a>
+crushed the standard benchmarks everybody uses for pretraining ablations
+that work without much post-training. Your usual suspects, MMLU, BBH,
+LongBench, etc. But when they scaled to large-scale, multi-hop reasoning
+and agent tasks with genuinely long contexts, big cracks appeared. After
+their pretrained FA model was converted to Lightning Attention hybrids,
+performance on these tasks dropped significantly. They attributed this
+to the hybrid's inability to maintain the complex attention patterns
+that the model had developed during pretraining. These are retrieval
+heads, induction heads, and long-range coherence mechanisms that become
+structurally essential. They tried detecting critical heads and keeping
+only those as FA, but they weren't able to reliably identify and retain
+all the patterns.</p>
+<p>In the end, they chose certainty over risk. For their timeline and
+scale, that was the right call.</p>
+<p>But while MiniMax was wrestling with efficient attention, a different
+line of research was quietly changing the landscape.</p>
+<h2 id="the-delethink-twist">The Delethink Twist</h2>
+<p>The recent <a href="https://arxiv.org/abs/2510.06557">Markovian
+Thinker</a> work shows something that will send shockwaves through the
+efficient attention debate: reasoning is naturally Markovian. Put
+simply, when models think step by step, they rarely need to remember the
+entire chain of thought. What matters is the most recent slice, the
+current working memory.</p>
+<p>Delethink from the paper is a technique that exploits this. The idea:
+Train a model to reason in 8K-token chunks. Then, at the chunk boundary,
+delete the first part of the reasoning chain, keep only the last portion
+as carryover state, and continue. Sounds weird and counterintuitive, but
+this works reasonably well already for large off-the-shelf models, i.e.
+unmodified gpt-oss. Through RL even 1.5B parameter models can learn to
+work under the Delethink Markovian constraint. They showed that such a
+Delethink-enabled model can think in 8K chunks and match standard
+LongCoT-RL performance trained with full 24K context.</p>
+<p>I will spell this out for you: <strong>Delethink lets you run FA
+models with effectively linear memory and compute for reasoning
+tasks.</strong> You chunk the reasoning chain, delete the old parts, and
+only keep the recent context. This quietly changes the story for FA. If
+you're running a thinking process that generates 50K tokens, FA with
+Delethink gives you O(1) memory and O(n) compute. The quadratic blowup
+disappears. With this, suddenly we have a credible way to stay on plain
+FA, handle longer chains, lower memory, and stick with infrastructure
+that already works. The pressure to migrate away from FA drops
+significantly.</p>
+<p>So MiniMax's decision makes sense for single-shot reasoning. They
+(and everyone else) can run FA with Delethink, avoid the engineering
+pain of efficient attention, and sidestep the quality risks of hybrids.
+But what about M2's actual workload? Does M2 do single-shot
+reasoning?</p>
+<h2 id="the-m2-problem">The M2 Problem</h2>
+<p>No, it doesn't. M2 follows the standard <a
+href="https://huggingface.co/blog/MiniMax-AI/aligning-to-what#the-need-for-interleaved-thinking">interleaved-thinking
+pattern</a>: it emits <code>&lt;think&gt;...&lt;/think&gt;</code>
+blocks, and these blocks accumulate over multi-turn conversations. Every
+bit of thinking history needs to be retained, and the <a
+href="https://huggingface.co/MiniMaxAI/MiniMax-M2#inference-parameters">README</a>
+warns that removing them hurts performance. Thus every exchange adds
+more tokens, building up tens of thousands of reasoning tokens that must
+stay in memory.</p>
+<p>Delethink can't help here because it only works for single reasoning
+chains, where you can truncate and carry forward a small state. But in
+multi-turn conversations, the thinking tokens from previous turns belong
+to conversation history. You can't delete all of them without negatively
+impacting performance.</p>
+<p>That means the computational blow-up returns. The longer a dialogue
+continues, the heavier each turn becomes. MiniMax chose FA while
+adopting the interleaved-thinking pattern that makes quadratic scaling
+still painful. Every multi-turn conversation pays that quadratic tax
+again and again.</p>
+<p>So is efficient attention back in the game?</p>
+<h2 id="what-jet-nemotron-shows">What Jet Nemotron Shows</h2>
+<p>MiniMax's complaint was that you can't manually identify which
+attention heads need to be FA. True enough. But <a
+href="https://arxiv.org/abs/2508.15884">NVIDIA's Jet Nemotron</a> work
+shows you can <strong>learn</strong> the placement.</p>
+<p>They built a supernet where each attention block can swap between FA,
+SWA, and other efficient alternatives. During training, NVIDIA randomly
+switched between options at each layer so all paths get gradient signal.
+Hence the "supernet." Afterward, a lightweight search finds the optimal
+layer configuration under a compute budget.</p>
+<p>For a 4B-parameter 36-layer model and a budget of 3 FA, 7 SWA, and 26
+linear layers, that's about 30.5 billion possible architectures in the
+search space. But hierarchical beam search finds a top architecture
+efficiently. After optimizing the linear attention for the chosen layers
+further, they get their Jet-Nemotron-4B that beats Qwen3-1.7B on
+standard benchmarks (including reasoning-heavy math tasks) while
+delivering a massive 21x speedup at 64k tokens decoding length. The
+smaller Jet-Nemotron-2B is slightly behind Qwen3-1.7B but delivers 47x
+generation throughput speedup at 64k tokens and still 23x speedup at 8k
+tokens. Prefill speedups are more modest, around 2.5x at 64k and 6x at
+256k tokens, but still significant.</p>
+<p>This is a big deal, and I think MiniMax missed it. The gains from Jet
+Nemotron's learned placement are huge, and while the potential only
+fully shows with large prefill and long decode (because that's where FA
+is memory-bound), the impact is clear, because that's also the regime
+interleaved thinking with its accumulated context operates in.</p>
+<p>But Jet Nemotron proved this only at 2-4B scale. M2 is 230B
+parameters, 57 times larger. Nobody has published results at that scale.
+We don't know if you still only need 3 FA layers at 230B scale, or if
+you need 10 or 20. We don't know what the compute budget looks like for
+training the supernet at the big scale. Until that evidence extends
+upward, FA remains the safe bet for massive models.</p>
+<h2 id="the-nuanced-story">The Nuanced Story</h2>
+<p>So, where does that leave us? It's clear that we can't just proclaim
+that linear attention blows FA out of the water anymore. I won't be able
+to argue that point convincingly anymore. The story now depends very
+much on workload and scale.</p>
+<p>For single-shot reasoning, FA plus Delethink is pragmatic. Stable
+infrastructure, and the Markovian behavior is already there in
+pretrained models. That buys time for the efficient attention ecosystem
+to mature. At M2's scale, the infrastructure pain and model quality
+risks of hybrids outweigh the compute savings and speed benefits of
+efficient attention. FA with Delethink is the right call for the
+majority of single-shot reasoning workloads right now.</p>
+<p>For multi-turn interleaved thinking, hybrids with learned placement
+will eventually become essential. Context accumulates, Delethink can't
+reset it, and FA's quadratic cost will dominate. Optimized hybrids will
+win that regime, and that's where the field is heading. That's where my
+team is heading. See you in the efficient-attention trenches.</p>
+<hr />
+<p><strong>Update Oct 31, 2025:</strong> The day after I posted this, <a
+href="https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct">Kimi.ai
+released</a> <a
+href="https://github.com/fla-org/flash-linear-attention/tree/main/fla/ops/kda">Kimi
+Linear Attention (KLA)</a>, a new hybrid architecture that validates the
+core argument here in ways even I didn't expect, at least not so
+soon.</p>
+<p>KLA extends Gated DeltaNet with channel-wise gating (instead of
+scalar gating) and interleaves this efficient attention with full
+attention in a 3:1 ratio. That ratio matters: just like Jet Nemotron
+found that only 2-3 layers out of 36 need FA, Kimi found that roughly
+25% FA is enough to maintain quality while cutting KV cache by 75% and
+delivering 6x decoding throughput at 1M context.</p>
+<p>The results are great. On synthetic tasks like MQAR and Stack, KLA
+significantly outperforms Mamba2 and beats Gated DeltaNet. On real
+reasoning tasks (AIME 2025, MATH500, LiveCodeBench), it matches or beats
+both MLA (DeepSeek's compressed full attention) and Gated DeltaNet-H
+after the same SFT recipe. Pretraining scaling laws show 1.16x better
+loss at the same compute budget.</p>
+<p>Two caveats: First, this is a 3B-activated, 48B-total parameter
+model. M2 is 230B total, so roughly 5x larger. We still don't know what
+happens at that scale, but the trend is promising. Second, Kimi uses a
+fixed 3:1 ratio rather than learned placement, so we don't know if
+that's optimal or just good enough.</p>
+<p>But here's what matters: within days of MiniMax saying "efficient
+attention has some way to go," another major industrial lab shipped a
+production-grade hybrid that beats full attention on the metrics that
+matter.</p>
+<p>The confusion MiniMax's post-mortem created also triggered a flurry
+of activity. Everyone working on efficient attention saw an opening and
+pushed out their work. <a
+href="https://manifestai.com/articles/release-brumby-14b/">Brumby-14B</a>
+(an attention-free model converted from Qwen), <a
+href="https://arxiv.org/abs/2507.04239">Higher-order Linear
+Attention</a>, and several others all dropped within days. The Flash
+Linear Attention community <a
+href="https://github.com/fla-org/flash-linear-attention/pull/621">merged
+Kimi's optimized KDA kernel</a> within hours. There's now active debate
+about which approach wins where.</p>
+<p>What looked like a setback for efficient attention turned into its
+Streisand moment. MiniMax forced everyone to clarify their positions,
+tighten their arguments, and ship their code. The infrastructure is
+maturing faster than anyone expected. The timeline just got a lot
+shorter.</p>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

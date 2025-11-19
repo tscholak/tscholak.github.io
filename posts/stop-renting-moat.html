@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>Stop Renting Moat: Why Enterprises Must Own Part of Their AI Stack</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Stop Renting Moat: Why Enterprises Must Own Part of Their AI Stack">
+    <meta property="og:description" content="&lt;p&gt;Enterprises are told they have to choose between cost or
+differentiation. But that&#39;s a false choice. If you outsource all AI,
+your costs stay volatile and your upside is capped. The winners will own
+enough of the stack to control both unit cost and quality.&lt;/p&gt;">
+    <meta property="og:url" content="https://tscholak.github.io/posts/stop-renting-moat.html">
+    <meta property="og:image" content="https://tscholak.github.io/images/moat-for-rent.png">
+<meta property="og:image:alt" content="Stop Renting Moat: Why Enterprises Must Own Part of Their AI Stack">
+<meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="Stop Renting Moat: Why Enterprises Must Own Part of Their AI Stack">
+    <meta name="twitter:description" content="&lt;p&gt;Enterprises are told they have to choose between cost or
+differentiation. But that&#39;s a false choice. If you outsource all AI,
+your costs stay volatile and your upside is capped. The winners will own
+enough of the stack to control both unit cost and quality.&lt;/p&gt;">
+    <meta name="twitter:image" content="https://tscholak.github.io/images/moat-for-rent.png">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/c0f603c">c0f603c</a> (2025-10-20 17:32:51 -0400) Torsten Scholak: Simplify JSON instances and refactor publication fields with type-safe GADTs</p>
+
+        <p><img src="/images/moat-for-rent.png"></p>
+
+        <h1>Stop Renting Moat: Why Enterprises Must Own Part of Their AI Stack</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/ai">ai</a>
+            <a href="/tags/strategy">strategy</a>
+            <a href="/tags/economics">economics</a>
+        </p>
+        <p>Posted on Aug 20, 2025</p>
+        <p>7 min read</p>
+        <p>Enterprises are told they have to choose between cost or
+differentiation. But that's a false choice. If you outsource all AI,
+your costs stay volatile and your upside is capped. The winners will own
+enough of the stack to control both unit cost and quality.</p>
+        <h2 id="the-false-choice">The false choice</h2>
+<p>Corporate strategy decks love to paint things as a neat fork in the
+road. You've probably seen it: on one side, rent everything. Stay light,
+keep costs down, let the big labs handle the heavy lifting. On the
+other, build everything yourself. Hire a frontier research team, rack up
+thousands of GPUs, become your own OpenAI.</p>
+<p>That framing makes for a tidy slide, but it's not reality. No
+enterprise should try to out-OpenAI OpenAI. That's not the game. On the
+other hand, renting everything leaves you totally exposed. Your costs
+swing with someone else's pricing strategy, and any "moat" you think you
+have can be bought by your competitors tomorrow. You are just an
+integrator of someone else's commoditized technology.</p>
+<p>The real choice isn't between these two extremes. Smart companies
+stake out the middle ground: <strong>own just enough</strong> to control
+what matters. You don't need your own frontier model lab, but you can't
+afford to own nothing either.</p>
+<p>What you need is the <strong>learning loop</strong>. That means
+locking down evaluation, securing rights to the data your systems
+generate, building privacy-safe feedback mechanisms, and maintaining the
+ability to adapt models on <strong>your</strong> schedule, and not when
+a vendor decides it's convenient.</p>
+<p>Owning that path gives you predictable unit economics and a moat that
+compounds. Outsource it all and you lose both.</p>
+<h2 id="prices-move-your-moat-shouldnt">Prices move. Your moat
+shouldn't</h2>
+<p>Do you believe that all providers will eventually offer the same
+capabilities at the same, ever-shrinking price? If so, you may be
+underestimating the complexity of the market.</p>
+<p>What we are witnessing is a <strong>subsidy race</strong>. Providers
+are desperate for scale and market lock-in. Labs burn cash to win share,
+and hyperscalers cross-subsidize from their profitable core business.
+The current prices are a reflection of that strategy and not one of
+cost.</p>
+<p>For a typical agent/RAG blend (approx. 3:1 input:output), OpenAI <a
+href="https://platform.openai.com/docs/pricing">charges</a> about
+<strong>$3.44 per million tokens on GPT-5</strong>, <strong>$3.50 on
+o3</strong>, and <strong>$1.05 on 4o-mini</strong>. Prices may look
+cheap now, but they can and will shift again, and not necessarily
+downwards.</p>
+<p>According to <a
+href="https://techcrunch.com/2024/09/27/openai-might-raise-the-price-of-chatgpt-to-22-by-2025-44-by-2029/">internal
+documents reported by The New York Times</a>, OpenAI plans to raise
+ChatGPT Plus from $20/month to <strong>$44/month by 2029</strong>, more
+than doubling current prices. This while the company reportedly operates
+at a loss, with <a
+href="https://www.reuters.com/business/openai-hits-12-billion-annualized-revenue-information-reports-2025-07-31/">revenue</a>
+unable to cover <a
+href="https://www.investing.com/news/stock-market-news/openai-hits-12-bln-in-annualized-revenue-sees-higher-costs-the-information-4161634">operational
+costs</a>.</p>
+<p>The volatility is already here. <strong>Cursor</strong> <a
+href="https://cursor.com/blog/june-2025-pricing">walked back</a> a
+flat-rate plan after usage spiked and heavy users blew up the economics.
+<strong>Perplexity</strong> grew fast but still <strong>burned ~$65M on
+$34M revenue in 2024</strong>. This is a reminder that <a
+href="https://www.theinformation.com/articles/google-challenger-perplexity-growth-comes-high-cost">API
+spend can already easily outrun sales</a>. If you are an enterprise
+relying on APIs today, your P&amp;L becomes a derivative of somebody
+else's burn rate and fundraising calendar.</p>
+<h2 id="what-to-own-and-why">What to own (and why)</h2>
+<p>You don't need to own everything, but you can't afford to own
+nothing. The trick is knowing which parts of the stack matter: the
+places where volatility destroys you and where defensibility compounds.
+Everything else you can rent.</p>
+<p>Think of the AI stack as having three tiers:</p>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 25%" />
+<col style="width: 13%" />
+<col style="width: 16%" />
+<col style="width: 7%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Approach</th>
+<th>Unit cost</th>
+<th>Differentiation</th>
+<th>Control</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Commodity API</td>
+<td>Rent it all</td>
+<td>Volatile</td>
+<td>None</td>
+<td>None</td>
+<td>Basic agentic chatbot</td>
+</tr>
+<tr>
+<td>Hybrid</td>
+<td>APIs + fine-tunes</td>
+<td>Mid, blended</td>
+<td>Moderate</td>
+<td>Partial</td>
+<td>RAG with custom data</td>
+</tr>
+<tr>
+<td>Own core loop</td>
+<td>Internal models &amp; evals</td>
+<td>Predictable</td>
+<td>High</td>
+<td>Full</td>
+<td>Convirza, GS Platform</td>
+</tr>
+</tbody>
+</table>
+<p>The commodity tier is where most enterprises start and never escape.
+They plug GPT-4o or GPT-5 into every workflow and pat themselves on the
+back. It works, but it's indistinguishable from what their competitors
+are doing. They're reselling OpenAI with a bit of integration glue. As
+soon as the API provider shifts pricing, their margins evaporate.</p>
+<p>The hybrid tier feels safer but is actually worse. You spend on
+fine-tunes and custom RAG pipelines but still depend on someone else's
+pricing whims and roadmap. Your supposed "moat" is just a brittle
+collection of prompts and data munging scripts. Anyone can copy it.
+You're paying more without buying freedom.</p>
+<p>Owning the core learning loop is the only move that compounds. That
+doesn't mean training GPT-scale models from scratch, but putting
+yourself in control of what ships, what learns, and what lasts. You
+define the evaluation gates and the regression rules. You decide what
+data you capture, how it's anonymized, and whether it flows back into a
+global model. You secure guaranteed compute for adaptation, not just
+inference. You build a feedback loop that learns from every deployment,
+not just the ones OpenAI decides to optimize for.</p>
+<p>That requires structuring data rights from day one. Tenants need
+three modes: <strong>off</strong> (nothing leaves their silo),
+<strong>local-only</strong> (improvements stay within their instance),
+or <strong>global</strong> (anonymized data improves the shared model).
+Start everyone on local, but build in incentives for moving to global as
+trust grows. You can't bolt this on later. The contracts have to be
+right from the first pilot.</p>
+<p>Here's what compounding looks like in practice:
+<strong>Convirza</strong> migrated from OpenAI GPT models to Llama 3-8B
+in 2024 and, per <a
+href="https://www.llama.com/community-stories/">Meta's Llama Community
+Stories</a>, cut operational cost by <strong>10x</strong> while
+improving F1 by <strong>8%</strong> and throughput by
+<strong>80%</strong>, now serving <strong>60+ KPIs</strong> across
+thousands of daily interactions. <strong>Goldman Sachs</strong> hosts
+multiple models, including Llama, behind its firewall. <a
+href="https://nanonets.com/blog/goldman-sachs-ai-platform/">Reported
+results</a> include <strong>20% developer productivity gains</strong>
+and <strong>15% fewer post-release bugs</strong>, with adoption above
+50% across 46,000 employees.</p>
+<p>The more these systems run, the better they get. Your unit economics
+become predictable instead of volatile. Your accuracy rises in domains
+where competitors flatline. And your roadmap stops being a derivative of
+someone else's burn rate.</p>
+<p>Do you want compounding or commoditization? Own the loop, and every
+deployment makes you stronger. Rent it all, and you're just financing
+someone else's moat.</p>
+<h2 id="when-to-switch-from-rent-to-own">When to switch from rent to
+own</h2>
+<p>Conventional wisdom says to wait: Wait until your volume is high
+enough, wait until API prices stabilize, wait until the tooling matures.
+But waiting is not neutral. Every month you hold back is a month your
+competitor's system gets smarter while yours doesn't exist.</p>
+<p>There are only two real triggers. The first is steady spend: if your
+token bill is already in the five-figure range each month, you are
+exposed to someone else's pricing decisions. The second is workload
+criticality: if accuracy, latency, and compliance define your product,
+you cannot build an advantage on rented APIs.</p>
+<p>The trap is telling yourself you will switch "later." But by then you
+are locked in. Your QA processes are built around one provider's quirks,
+your customers expect a specific output style, your prompts have
+hundreds of workarounds for model-specific bugs, and the cost of change
+feels impossible. Meanwhile, your competitor who started small has
+already tuned open-weights models to their data, cut their costs by
+<strong>10x</strong>, and built evaluation gates that compound every
+cycle.</p>
+<p>If AI touches your core product, every day you rent the loop is a day
+you hand your roadmap to someone else. Start early, even when the
+economics seem to look wrong. They only look right after you have
+already built capability.</p>
+<h2 id="what-to-do-next">What to do next</h2>
+<p>The rent-or-build dichotomy is fake. You need to own enough of the
+learning loop to compound. You don't need a mega-lab for this. You need
+a durable, small stack. Open weights are the clay, and your learning
+loop is the sculptor. If you don't do this, you are just another cheap
+renter and not a winner.</p>
+<p>The winners will be the ones who turn every deployment into
+compounding advantage. Convirza cut costs <strong>10x</strong> while
+improving quality. Goldman Sachs boosted productivity
+<strong>20%</strong> while reducing defects. This is what happens when
+you own the learning loop.</p>
+<p>Prices will keep shifting, and model deprecations will force
+rewrites, but real moats that are built on your data, your evaluations,
+your continuous improvement don't move.</p>
+<p><strong>If you rent everything, OpenAI's roadmap is your
+roadmap.</strong><br />
+If you own the loop, your roadmap is yours.</p>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

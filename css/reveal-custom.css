@@ -1,0 +1,337 @@
+/**
+ * Custom reveal.js theme matching the main site aesthetic
+ * Minimal, monospace, terminal-inspired design
+ */
+
+:root {
+  --r-background-color: #fff;
+  --r-main-font: "PragmataPro", monospace;
+  --r-main-font-size: 28px;
+  --r-main-color: #000;
+  --r-block-margin: 20px;
+  --r-heading-margin: 0;
+  --r-heading-font: "PragmataPro", monospace;
+  --r-heading-color: #000;
+  --r-heading-line-height: 1.4;
+  --r-heading-letter-spacing: normal;
+  --r-heading-text-transform: none;
+  --r-heading-text-shadow: none;
+  --r-heading-font-weight: bold;
+  --r-heading1-text-shadow: none;
+  --r-heading1-size: 1em;
+  --r-heading2-size: 1em;
+  --r-heading3-size: 1em;
+  --r-heading4-size: 1em;
+  --r-code-font: "PragmataPro", monospace;
+  --r-link-color: #000;
+  --r-link-color-dark: #000;
+  --r-link-color-hover: #000;
+  --r-selection-background-color: rgba(0, 0, 0, 0.2);
+  --r-selection-color: #000;
+}
+
+.reveal-viewport {
+  background: #fff;
+}
+
+.reveal {
+  font-family: var(--r-main-font);
+  font-size: var(--r-main-font-size);
+  font-weight: normal;
+  color: var(--r-main-color);
+  line-height: 1.4;
+}
+
+.reveal ::selection {
+  color: var(--r-selection-color);
+  background: var(--r-selection-background-color);
+  text-shadow: none;
+}
+
+.reveal ::-moz-selection {
+  color: var(--r-selection-color);
+  background: var(--r-selection-background-color);
+  text-shadow: none;
+}
+
+/* Paragraphs */
+.reveal p {
+  margin: 1em 0;
+}
+
+.reveal li > p {
+  margin: 0;
+  display: inline;
+}
+
+/* Images - scale to fit slide */
+.reveal img {
+  max-width: 100%;
+  max-height: 450px;
+  object-fit: contain;
+}
+
+/* Headings - add markdown-style prefixes */
+.reveal h1 {
+  margin: var(--r-heading-margin);
+  color: var(--r-heading-color);
+  font-family: var(--r-heading-font);
+  font-weight: var(--r-heading-font-weight);
+  line-height: var(--r-heading-line-height);
+  letter-spacing: var(--r-heading-letter-spacing);
+  text-transform: var(--r-heading-text-transform);
+  text-shadow: var(--r-heading-text-shadow);
+  word-wrap: break-word;
+}
+
+.reveal h1::before {
+  content: "# ";
+}
+
+.reveal h2 {
+  margin-top: 1em;
+  color: var(--r-heading-color);
+  font-family: var(--r-heading-font);
+  font-weight: var(--r-heading-font-weight);
+  font-size: var(--r-heading2-size);
+  line-height: var(--r-heading-line-height);
+  letter-spacing: var(--r-heading-letter-spacing);
+  text-transform: var(--r-heading-text-transform);
+  text-shadow: var(--r-heading-text-shadow);
+  word-wrap: break-word;
+}
+
+.reveal h2::before {
+  content: "## ";
+}
+
+.reveal h3 {
+  margin-top: 1em;
+  color: var(--r-heading-color);
+  font-family: var(--r-heading-font);
+  font-weight: var(--r-heading-font-weight);
+  font-size: var(--r-heading3-size);
+  line-height: var(--r-heading-line-height);
+  letter-spacing: var(--r-heading-letter-spacing);
+  text-transform: var(--r-heading-text-transform);
+  text-shadow: var(--r-heading-text-shadow);
+  word-wrap: break-word;
+}
+
+.reveal h3::before {
+  content: "### ";
+}
+
+.reveal h4 {
+  margin-top: 1em;
+  color: var(--r-heading-color);
+  font-family: var(--r-heading-font);
+  font-weight: var(--r-heading-font-weight);
+  font-size: var(--r-heading4-size);
+  line-height: var(--r-heading-line-height);
+  letter-spacing: var(--r-heading-letter-spacing);
+  text-transform: var(--r-heading-text-transform);
+  text-shadow: var(--r-heading-text-shadow);
+  word-wrap: break-word;
+}
+
+.reveal h4::before {
+  content: "#### ";
+}
+
+/* Links */
+.reveal a {
+  color: var(--r-link-color);
+  text-decoration: none;
+  border-bottom: 1px solid var(--r-link-color);
+  transition: none;
+}
+
+.reveal a:hover {
+  color: var(--r-link-color-hover);
+  border-bottom-style: solid;
+  text-shadow: none;
+  border: none;
+}
+
+/* Lists - markdown style */
+.reveal ul {
+  list-style-type: none;
+  margin: 1em 0;
+  padding-left: 2ch;
+}
+
+.reveal ul > li::before {
+  content: "* ";
+  margin-left: -2ch;
+}
+
+.reveal ol {
+  margin: 1em 0;
+  padding-left: 3ch;
+}
+
+.reveal li {
+  margin-left: 0;
+}
+
+.reveal li > ul,
+.reveal li > ol {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Blockquotes */
+.reveal blockquote {
+  margin: 1em 0;
+  padding-left: 2ch;
+  font-style: normal;
+  background: none;
+  border-left: none;
+}
+
+.reveal blockquote > p::before {
+  content: "> ";
+}
+
+/* Code */
+.reveal code {
+  font-family: var(--r-code-font);
+  font-weight: bold;
+}
+
+.reveal pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 2ch;
+  background: transparent;
+  padding: 0;
+}
+
+.reveal pre code {
+  font-weight: normal;
+}
+
+/* Tables - match main site style */
+.reveal table {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  background-color: transparent;
+  border: 0;
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+
+.reveal table th {
+  text-align: left;
+  vertical-align: middle;
+  padding: 0.2em 20px 0.2em 10px;
+  font-weight: bold;
+}
+
+.reveal table td {
+  text-align: left;
+  vertical-align: middle;
+  padding: 0.2em 20px 0.2em 10px;
+  background-color: var(--r-background-color);
+  border: 2px solid var(--r-main-color);
+}
+
+/* Strong and emphasis */
+.reveal strong,
+.reveal b {
+  font-weight: bold;
+}
+
+.reveal em {
+  font-style: italic;
+}
+
+/* Remove default slide backgrounds and transitions */
+.reveal .slides section {
+  text-align: left;
+  padding: 0;
+}
+
+.reveal .slides section.center {
+  text-align: center;
+}
+
+/* Progress bar */
+.reveal .progress {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+/* Controls */
+.reveal .controls {
+  color: #000;
+}
+
+/* Slide numbers */
+.reveal .slide-number {
+  color: #000;
+  background: transparent;
+  font-family: var(--r-main-font);
+}
+
+/* Fragment animations - invisible then inverted */
+.reveal .fragment.highlight-current-blue {
+  opacity: 0;
+  padding: 2px 6px;
+}
+
+.reveal .fragment.highlight-current-blue.current-fragment {
+  opacity: 1;
+  color: #fff;
+  background: #000;
+}
+
+/* Title slide - center it */
+.reveal .slide.level1:first-child {
+  text-align: center;
+}
+
+/* Title slide image */
+.reveal .title-slide-image {
+  text-align: center;
+  margin-bottom: 2em;
+}
+
+.reveal .title-slide-image img {
+  max-width: 40%;
+  max-height: 200px;
+  border: 0;
+}
+
+/* Inverted slides - white on black */
+.reveal section[data-background-color="#000"],
+.reveal section[data-background-color="#000"] h1,
+.reveal section[data-background-color="#000"] h2,
+.reveal section[data-background-color="#000"] h3,
+.reveal section[data-background-color="#000"] h4,
+.reveal section[data-background-color="#000"] p,
+.reveal section[data-background-color="#000"] strong,
+.reveal section[data-background-color="#000"] a {
+  color: #fff;
+}
+
+.reveal section[data-background-color="#000"] a {
+  border-bottom-color: #fff;
+}
+
+/* Responsive font sizing */
+@media (max-width: 768px) {
+  .reveal {
+    font-size: 20px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .reveal .backgrounds {
+    background: #fff;
+  }
+}

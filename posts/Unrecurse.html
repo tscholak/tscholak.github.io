@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>Unrecurse -- A Recursive Function That Doesn&#39;t Recurse</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Unrecurse -- A Recursive Function That Doesn&#39;t Recurse">
+    <meta property="og:description" content="&lt;p&gt;Have you ever wanted to write a recursive function and wondered what
+would happen if someone took away recursion from Haskell? Say goodbye to
+recursive function calls, say goodbye to recursive data types. How sad
+Haskell would be without them! I&#39;m sure that thought must have occured
+to you -- if not, what are you even doing here?! Well, this article has
+you covered should that day ever come. After reading it, you will know
+how to write a recursive function that doesn&#39;t recurse.&lt;/p&gt;">
+    <meta property="og:url" content="https://tscholak.github.io/posts/Unrecurse.html">
+    <meta property="og:image" content="https://tscholak.github.io/images/goodbye.gif">
+<meta property="og:image:alt" content="Unrecurse -- A Recursive Function That Doesn&#39;t Recurse">
+<meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="Unrecurse -- A Recursive Function That Doesn&#39;t Recurse">
+    <meta name="twitter:description" content="&lt;p&gt;Have you ever wanted to write a recursive function and wondered what
+would happen if someone took away recursion from Haskell? Say goodbye to
+recursive function calls, say goodbye to recursive data types. How sad
+Haskell would be without them! I&#39;m sure that thought must have occured
+to you -- if not, what are you even doing here?! Well, this article has
+you covered should that day ever come. After reading it, you will know
+how to write a recursive function that doesn&#39;t recurse.&lt;/p&gt;">
+    <meta name="twitter:image" content="https://tscholak.github.io/images/goodbye.gif">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/c0f603c">c0f603c</a> (2025-10-20 17:32:51 -0400) Torsten Scholak: Simplify JSON instances and refactor publication fields with type-safe GADTs</p>
+
+        <p><img src="/images/goodbye.gif"></p>
+
+        <h1>Unrecurse -- A Recursive Function That Doesn&#39;t Recurse</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/haskell">haskell</a>
+            <a href="/tags/recursion">recursion</a>
+        </p>
+        <p>Posted on Jan 20, 2022</p>
+        <p>33 min read</p>
+        <p>Have you ever wanted to write a recursive function and wondered what
+would happen if someone took away recursion from Haskell? Say goodbye to
+recursive function calls, say goodbye to recursive data types. How sad
+Haskell would be without them! I'm sure that thought must have occured
+to you -- if not, what are you even doing here?! Well, this article has
+you covered should that day ever come. After reading it, you will know
+how to write a recursive function that doesn't recurse.</p>
+        <h2 id="preliminaries">Preliminaries</h2>
+<p>For this <a
+href="https://wiki.haskell.org/Literate_programming">Literate
+Haskell</a> essay, a few language extensions are required. Nothing
+extraordinarily fancy, just the usually fancy Haskell flavour.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE GADTs #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DeriveTraversable #-}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE TypeFamilies #-}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE ScopedTypeVariables #-}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE FlexibleContexts #-}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE MultiParamTypeClasses #-}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE FlexibleInstances #-}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE UndecidableInstances #-}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DeriveGeneric #-}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE DerivingVia #-}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{-# LANGUAGE LambdaCase #-}</span></span></code></pre></div>
+<p>A bunch of these are part of <a
+href="https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/control.html#extension-GHC2021">GHC2021</a>
+that was introduced in GHC 9.2, but this blog is boring and still
+running on GHC 8.10.</p>
+<p>Unsurprisingly, we will also work with code that is not in the
+<code>Prelude</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> <span class="dt">Unrecurse</span> <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Lens</span> (zoom, _1, _2)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad.Cont</span> (<span class="dt">ContT</span> (runContT))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad.State</span> (<span class="dt">MonadState</span> (get, put), <span class="dt">StateT</span> (runStateT), evalStateT, modify)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad.Trans</span> (<span class="dt">MonadTrans</span> (lift))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Control.Monad.Writer</span> (<span class="dt">Writer</span>, execWriter, tell)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Data.Monoid</span> (<span class="dt">Sum</span> (..))</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">GHC.Generics</span> (<span class="dt">Generic</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> <span class="dt">Prelude</span> <span class="kw">hiding</span> (even, odd)</span></code></pre></div>
+<p>Now, since this is settled, we can get on with the article.</p>
+<h2 id="the-best-refactoring-you-have-never-done">The Best Refactoring
+You Have Never Done</h2>
+<p>The first part of this article is based on a <a
+href="https://www.pathsensitive.com/2019/07/the-best-refactoring-youve-never-heard.html">2019
+post and talk</a> by <a href="https://www.jameskoppel.com">James
+Koppel</a> about the equivalence of recursion and iteration.</p>
+<p>James' talk is a great introduction to the topic, but it left out a
+few important details and did not explain how to generalize the example
+from the talk to more complicated cases. Also, the original talk used
+Java and only a little bit of Haskell, but I'm going to exclusively use
+Haskell here. This will make it clearer for people familiar with Haskell
+but not with Java, like me.</p>
+<p>James' example is a recursive function that prints the content of a
+binary tree. The problem he chose to focus on is to convert that
+recursive function to an iterative one. We will reproduce the conversion
+process in Haskell code, and the first step is going to be to define an
+abstract data type for binary trees:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Tree</span> a</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">Nil</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Node</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        {<span class="ot"> left ::</span> <span class="dt">Tree</span> a,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ot">          content ::</span> a,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ot">          right ::</span> <span class="dt">Tree</span> a</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> stock (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Functor</span>, <span class="dt">Foldable</span>, <span class="dt">Generic</span>)</span></code></pre></div>
+<p>For illustration purposes, we will use the following balanced tree
+that carries consecutive integers at its seven leaves:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  exampleTree ::</span> <span class="dt">Tree</span> <span class="dt">Int</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  exampleTree <span class="ot">=</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Node</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">Node</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>          (<span class="dt">Node</span> <span class="dt">Nil</span> <span class="dv">1</span> <span class="dt">Nil</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>          <span class="dv">2</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>          (<span class="dt">Node</span> <span class="dt">Nil</span> <span class="dv">3</span> <span class="dt">Nil</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="dv">4</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">Node</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>          (<span class="dt">Node</span> <span class="dt">Nil</span> <span class="dv">5</span> <span class="dt">Nil</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>          <span class="dv">6</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>          (<span class="dt">Node</span> <span class="dt">Nil</span> <span class="dv">7</span> <span class="dt">Nil</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>      )</span></code></pre></div>
+<p>Really, any tree will do, but we will use this one. We can print the
+contents of our tree using the <code>Show</code> instance of
+integers.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Print the content of a `Tree a`.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; printTree exampleTree</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 1</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 3</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 4</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 5</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 6</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 7</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="ot">  printTree ::</span> <span class="kw">forall</span> a<span class="op">.</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  printTree <span class="dt">Nil</span> <span class="ot">=</span> <span class="fu">pure</span> ()</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  printTree <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    printTree left</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> content</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    printTree right</span></code></pre></div>
+<p>This is the function we want to convert to an iterative one. In its
+current form, it contains two recursive calls to itself. To eliminate
+the recursive calls, we need to perform a number of transformations.
+Each transformation is potentially headache inducing, and I am not going
+to promise pretty code. In fact, the code is going to get worse and
+worse.</p>
+<h2 id="continuations-and-continuation-passing-style">Continuations And
+Continuation Passing Style</h2>
+<p>With your expectations properly lowered, let's start with the first
+transformation. We need to rewrite the <code>printTree</code> function
+to use continuations, using something called the "continuation passing
+style" or CPS. I'm not going to explain CPS in all its glory, only that
+it is a style of programming in which functions do not return values,
+but instead repeatedly pass control to a function called a continuation
+that decides what to do next. The mind-bending implications of this
+style of programming are introduced and discussed in <a
+href="https://en.wikibooks.org/wiki/Haskell/Continuation_passing_style">this
+article on wikibooks.org</a>. Have a look at that article if you are
+interested in the fine details. It's not necessary to understand the
+details of CPS to understand the rest of this article, though.</p>
+<p>Haskell is particularly good at handling the CPS style, rewriting to
+it is easy and mechanical. The tool we will use is called the
+<code>ContT</code> monad transformer. It is found in the <a
+href="https://hackage.haskell.org/package/transformers">transformers</a>
+package. <code>ContT</code> will wrap the <code>IO</code> monad, and we
+will use the <code>&gt;&gt;=</code> operator to chain continuations.
+<code>IO</code> values need to be lifted to <code>ContT</code> values.
+This gives us:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  printTree&#39; ::</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a r<span class="op">.</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Show</span> a <span class="ot">=&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Tree</span> a <span class="ot">-&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ContT</span> r <span class="dt">IO</span> ()</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  printTree&#39; <span class="dt">Nil</span> <span class="ot">=</span> <span class="fu">pure</span> ()</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  printTree&#39; <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    printTree&#39; left</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> <span class="fu">print</span> content</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    printTree&#39; right</span></code></pre></div>
+<p>The code appears mostly the same, except for a few subtleties. We
+have changed the return type and added a new type variable,
+<code>r</code>, that we cannot touch since it is quantified over. It is
+the type of the result of the continuation. <code>r</code> will only be
+of interest when we run the <code>ContT</code> monad transformer. This
+is done using the
+<code>runContT :: ContT r m a -&gt; (a -&gt; m r) -&gt; m r</code>
+function. It runs the CPS computation encoded in
+<code>ContT r m a</code> and gets the result, but only if we seed it
+with one final continuation of the form <code>a -&gt; m r</code>:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Run the `ContT` computation for `printTree&#39;`.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; runPrintTree&#39; exampleTree</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 1</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 3</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 4</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 5</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 6</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 7</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="ot">  runPrintTree&#39; ::</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  runPrintTree&#39; tree <span class="ot">=</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    runContT (printTree&#39; tree) <span class="fu">pure</span></span></code></pre></div>
+<p>The final continuation is <code>pure</code>, and it decides that the
+result of the continuation is <code>r ~ ()</code>. Everything still
+works as expected, phew.</p>
+<p>The <code>ContT</code> monad transformer is a great convenience and
+allows us to deal with continuations in the familiar monadic style.
+What's great for Haskell and its users is not so great for us in this
+article, though. Remember, we want less of that good, idiomatic Haskell,
+not more of it. The goodbye to recursion must hurt. <code>ContT</code>
+is very effective at hiding what is actually happening behind the
+scenes. We need to pull that curtain up and see what is going on. Below
+is the same code as before, but with the <code>ContT</code> monad
+transformer inlined into the <code>printTree'</code> function:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  printTree&#39;&#39; ::</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a r<span class="op">.</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Show</span> a <span class="ot">=&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Tree</span> a <span class="ot">-&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    (() <span class="ot">-&gt;</span> <span class="dt">IO</span> r) <span class="ot">-&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">IO</span> r</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39; <span class="dt">Nil</span> <span class="ot">=</span> \c <span class="ot">-&gt;</span> c ()</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39; <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">=</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="ot">=</span> \c <span class="ot">-&gt;</span> printTree&#39;&#39; left c</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        second <span class="ot">=</span> \c <span class="ot">-&gt;</span> <span class="fu">print</span> content <span class="op">&gt;&gt;=</span> c</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        third <span class="ot">=</span> \c <span class="ot">-&gt;</span> printTree&#39;&#39; right c</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        inner <span class="ot">=</span> \c <span class="ot">-&gt;</span> second (\x <span class="ot">-&gt;</span> (\() <span class="ot">-&gt;</span> third) x c)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        outer <span class="ot">=</span> \c <span class="ot">-&gt;</span> first (\x <span class="ot">-&gt;</span> (\() <span class="ot">-&gt;</span> inner) x c)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> outer</span></code></pre></div>
+<p>This is starting to look nasty. Don't look at me, I warned you.
+<code>printTree''</code> is now a higher-order function that takes a
+continuation function, <code>c</code>, as its second argument.
+Notwithstanding, we can also clearly see now that <code>c</code> takes a
+value of type <code>()</code> and returns a value of type
+<code>IO r</code>. The <code>()</code> type of the argument is a
+consequence of the fact that the original <code>printTree</code>
+function returned a value of type <code>IO ()</code>.</p>
+<p>Let's take a look at the <code>Node</code> case of
+<code>printTree''</code>. The <code>do</code> notation is <a
+href="https://en.wikipedia.org/wiki/Syntactic_sugar">desugared</a> into
+nested continuations. <code>inner</code> chains the <code>second</code>
+and <code>third</code> functions, and <code>outer</code> chains the
+<code>first</code> and <code>inner</code> functions. <code>first</code>
+happens first, then <code>second</code>, and then <code>third</code>. We
+can convince ourselves that this painfully obfuscated
+<code>printTree''</code> function is still computing the same result as
+the <code>printTree</code> function.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Run the CPS computation for `printTree&#39;&#39;`.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; runPrintTree&#39;&#39; exampleTree</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 1</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 3</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 4</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 5</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 6</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 7</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="ot">  runPrintTree&#39;&#39; ::</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  runPrintTree&#39;&#39; tree <span class="ot">=</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    printTree&#39;&#39; tree (\() <span class="ot">-&gt;</span> <span class="fu">pure</span> ())</span></code></pre></div>
+<h2 id="defunctionalization">Defunctionalization</h2>
+<p>What we have achieved so far is nice, but we still have not
+eliminated any recursive calls. In order to make progress, we need to
+convert the higher-order <code>printTree''</code> function to a
+first-order function. This process is called "defunctionalization". Once
+again, there is a <a
+href="https://en.wikipedia.org/wiki/Defunctionalization">wiki
+article</a> on the subject if you are interested. It's one of those rare
+and wonderous articles on Wikipedia that exclusively use Haskell to
+explain things. Not that there should be more of them, but I
+digress.</p>
+<p>Concretely, we defunctionalize the <code>printTree''</code> function
+by replacing all the continuations, <code>c :: () -&gt; IO r</code>,
+with a value of a new data type <code>Kont (Next a)</code>.
+<code>Kont</code> and <code>Next</code> look like this:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Kont</span> next</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">Finished</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">More</span> next (<span class="dt">Kont</span> next)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Next</span> a</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="ot">=</span> <span class="dt">First</span> (<span class="dt">Tree</span> a)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Second</span> a</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="dt">Third</span> (<span class="dt">Tree</span> a)</span></code></pre></div>
+<p><code>Kont</code> is a recursive data type with two constructors,
+<code>Finished</code> and <code>More</code>. We use
+<code>Finished</code> to terminate the computation, and
+<code>More</code> to indicate that we need to continue. When that
+happens, we use <code>Next</code> to describe the details of the next
+step in the computation. Each constructor of <code>Next</code>
+corresponds to a different action that needs to be taken. The
+<code>First</code> constructor is named after the <code>first</code>
+function in <code>printTree''</code>. It takes a left subtree as
+argument. The <code>Second</code> constructor is named after the
+<code>second</code> function in <code>printTree''</code>. Its argument
+is the content of the current node that needs to be printed. The
+<code>Third</code> constructor is named after the <code>third</code>
+function in <code>printTree''</code>, and it takes a right subtree as
+argument. We need a new function, <code>apply</code>, that interprets a
+<code>Kont (Next a)</code> value and executes the corresponding
+action:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  apply ::</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a<span class="op">.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Show</span> a <span class="ot">=&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Kont</span> (<span class="dt">Next</span> a) <span class="ot">-&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">IO</span> ()</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  apply (<span class="dt">More</span> (<span class="dt">First</span> left) c) <span class="ot">=</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    printTree&#39;&#39;&#39; left c</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  apply (<span class="dt">More</span> (<span class="dt">Second</span> content) c) <span class="ot">=</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> content <span class="op">&gt;&gt;</span> apply c</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  apply (<span class="dt">More</span> (<span class="dt">Third</span> right) c) <span class="ot">=</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    printTree&#39;&#39;&#39; right c</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  apply <span class="dt">Finished</span> <span class="ot">=</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pure</span> ()</span></code></pre></div>
+<p>We can see here how different <code>Next</code> values correspond to
+different actions. When the computation is finished, <code>apply</code>
+returns <code>()</code>. When there is more work to do,
+<code>apply</code> either calls the yet-to-be-defined
+<code>printTree'''</code> function with the next subtree and the
+continuation value, <code>c :: Kont (Next a)</code>, or it calls the
+<code>print</code> function on the content of the node and then itself
+to continue the computation. The purpose of the
+<code>printTree'''</code> function is to build continuation values and
+then call <code>apply</code> to execute the corresponding actions:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  printTree&#39;&#39;&#39; ::</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a<span class="op">.</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Show</span> a <span class="ot">=&gt;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Tree</span> a <span class="ot">-&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Kont</span> (<span class="dt">Next</span> a) <span class="ot">-&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">IO</span> ()</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39; <span class="dt">Nil</span> c <span class="ot">=</span> apply c</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39; <span class="dt">Node</span> {<span class="op">..</span>} c <span class="ot">=</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    apply</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">More</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>          (<span class="dt">First</span> left)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>          ( <span class="dt">More</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>              (<span class="dt">Second</span> content)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>              (<span class="dt">More</span> (<span class="dt">Third</span> right) c)</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>          )</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>      )</span></code></pre></div>
+<p>How do we know that this is all working correctly? We can run it:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Run the defunctionalized CPS computation</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- for `printTree&#39;&#39;&#39;`.</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; runPrintTree&#39;&#39;&#39; exampleTree</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 1</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 3</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 4</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 5</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 6</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 7</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="ot">  runPrintTree&#39;&#39;&#39; ::</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  runPrintTree&#39;&#39;&#39; tree <span class="ot">=</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    printTree&#39;&#39;&#39; tree <span class="dt">Finished</span></span></code></pre></div>
+<p>Great, we have successfully defunctionalized <code>printTree''</code>
+and turned it into a first-order function. This has been a major step,
+but we are not done yet. We still have to eliminate the recursive calls.
+It only appears as if <code>printTree'''</code> doesn't call itself
+anymore. In fact, it still does, just indirectly through mutual
+recursion. This becomes more apparent once we inline <code>apply</code>
+into <code>printTree'''</code>:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  printTree&#39;&#39;&#39;&#39; ::</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a<span class="op">.</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Show</span> a <span class="ot">=&gt;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Tree</span> a <span class="ot">-&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Kont</span> (<span class="dt">Next</span> a) <span class="ot">-&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">IO</span> ()</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39; <span class="dt">Nil</span> (<span class="dt">More</span> (<span class="dt">First</span> left) c) <span class="ot">=</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    printTree&#39;&#39;&#39;&#39; left c</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39; <span class="dt">Nil</span> (<span class="dt">More</span> (<span class="dt">Second</span> content) c) <span class="ot">=</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> content <span class="op">&gt;&gt;</span> printTree&#39;&#39;&#39;&#39; <span class="dt">Nil</span> c</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39; <span class="dt">Nil</span> (<span class="dt">More</span> (<span class="dt">Third</span> right) c) <span class="ot">=</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    printTree&#39;&#39;&#39;&#39; right c</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39; <span class="dt">Nil</span> <span class="dt">Finished</span> <span class="ot">=</span> <span class="fu">pure</span> ()</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39; <span class="dt">Node</span> {<span class="op">..</span>} c <span class="ot">=</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    printTree&#39;&#39;&#39;&#39;</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Nil</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>      ( <span class="dt">More</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>          (<span class="dt">First</span> left)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>          ( <span class="dt">More</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>              (<span class="dt">Second</span> content)</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>              (<span class="dt">More</span> (<span class="dt">Third</span> right) c)</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>          )</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>      )</span></code></pre></div>
+<h2 id="state-and-stack">State And Stack</h2>
+<p>At first glance, <code>printTree''''</code> doesn't look better than
+what we had before. We went from two recursive calls up to now four.
+There is something interesting going on here, though. The recursive call
+to <code>printTree''''</code> always appears in the tail position. And
+this means that we should be able to replace the calls with a loop.
+Wikipedia also has <a href="https://en.wikipedia.org/wiki/Tail_call">an
+article on that</a>. However, we also notice that
+<code>printTree''''</code> is called with different arguments in all
+four cases. We can't replace these calls with a loop without removing
+those arguments first, and we can't remove the arguments until we have a
+way to keep track of them. Or do we? Haskell has a special type, called
+<code>State</code>, that allows for just that. On hackage,
+<code>State</code> is available as <a
+href="https://hackage.haskell.org/package/transformers-0.6.0.2/docs/Control-Monad-Trans-State-Lazy.html"><code>Control.Monad.Trans.State.Lazy</code></a>.
+Rather than passing arguments, we are going to update the
+<code>State</code> with the arguments' values. In preparation for this,
+let us have a closer look at <code>Kont</code>. You may have already
+noticed, but our <code>Kont</code> is isomorphic to <code>[]</code>:
+<code>Finished</code> is the empty list, and <code>More</code> is simply
+the list constructor. Let's acknowledge that fact by using the
+<code>[]</code> data type directly and by giving <code>Kont</code> a
+better name: <code>Stack</code>.</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Stack</span> a <span class="ot">=</span> [a]</span></code></pre></div>
+<p>The only operations on <code>Stack</code> we will need in the
+following are adding and removing single elements from its end. These
+operations are commonly called <code>push</code> and <code>pop</code>.
+They can be implemented as follows:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  push ::</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a m<span class="op">.</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">MonadState</span> (<span class="dt">Stack</span> a) m <span class="ot">=&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    a <span class="ot">-&gt;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    m ()</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  push x <span class="ot">=</span> modify (x <span class="op">:</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="ot">  pop ::</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a m<span class="op">.</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">MonadState</span> (<span class="dt">Stack</span> a) m <span class="ot">=&gt;</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    m (<span class="dt">Maybe</span> a)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  pop <span class="ot">=</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    get <span class="op">&gt;&gt;=</span> \<span class="kw">case</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>      [] <span class="ot">-&gt;</span> <span class="fu">pure</span> <span class="dt">Nothing</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>      (x <span class="op">:</span> xs) <span class="ot">-&gt;</span> put xs <span class="op">&gt;&gt;</span> <span class="fu">pure</span> (<span class="dt">Just</span> x)</span></code></pre></div>
+<p>Notice here how we use <code>get</code>, <code>put</code>, and
+<code>modify</code> to update the <code>Stack</code> state. With
+<code>push</code> and <code>pop</code>, <code>printTree''''</code>
+becomes:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  printTree&#39;&#39;&#39;&#39;&#39; ::</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a<span class="op">.</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Show</span> a <span class="ot">=&gt;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Tree</span> a <span class="ot">-&gt;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">StateT</span> (<span class="dt">Stack</span> (<span class="dt">Next</span> a)) <span class="dt">IO</span> ()</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39;&#39; <span class="dt">Nil</span> <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    next <span class="ot">&lt;-</span> pop</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> next <span class="kw">of</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Just</span> (<span class="dt">First</span> left) <span class="ot">-&gt;</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        printTree&#39;&#39;&#39;&#39;&#39; left</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Just</span> (<span class="dt">Second</span> content) <span class="ot">-&gt;</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        lift (<span class="fu">print</span> content)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>          <span class="op">&gt;&gt;</span> printTree&#39;&#39;&#39;&#39;&#39; <span class="dt">Nil</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Just</span> (<span class="dt">Third</span> right) <span class="ot">-&gt;</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        printTree&#39;&#39;&#39;&#39;&#39; right</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="fu">pure</span> ()</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39;&#39; <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    push (<span class="dt">Third</span> right)</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    push (<span class="dt">Second</span> content)</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    push (<span class="dt">First</span> left)</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    printTree&#39;&#39;&#39;&#39;&#39; <span class="dt">Nil</span></span></code></pre></div>
+<p>One thing to note here is that we use <code>StateT</code>, not
+<code>State</code>, to represent the state of our computation. This is
+because <code>StateT</code> is a monad transformer, and we already have
+effects in <code>IO</code> that we need to lift into it.</p>
+<p>Rather than building a value of type <code>Stack (Next a)</code> that
+we pass to <code>printTree''''</code>, in <code>printTree'''''</code>,
+we use <code>push</code> and <code>pop</code> to update the
+<code>Stack</code> state. As always, we need to confirm that this is
+doing the right thing:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Run the defunctionalized CPS computation</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- for `printTree&#39;&#39;&#39;&#39;&#39;`.</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; runPrintTree&#39;&#39;&#39;&#39;&#39; exampleTree</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 1</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 3</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 4</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 5</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 6</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 7</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="ot">  runPrintTree&#39;&#39;&#39;&#39;&#39; ::</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  runPrintTree&#39;&#39;&#39;&#39;&#39; tree <span class="ot">=</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    evalStateT (printTree&#39;&#39;&#39;&#39;&#39; tree) []</span></code></pre></div>
+<p>The result is as expected. This takes care of the
+<code>Kont (Next a)</code> argument, but we still need to eliminate the
+<code>Tree a</code> argument. We can use the same trick again and add
+<code>Tree a</code> to the state:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  printTree&#39;&#39;&#39;&#39;&#39;&#39; ::</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a<span class="op">.</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Show</span> a <span class="ot">=&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">StateT</span> (<span class="dt">Tree</span> a, <span class="dt">Stack</span> (<span class="dt">Next</span> a)) <span class="dt">IO</span> ()</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39;&#39;&#39; <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    tree <span class="ot">&lt;-</span> zoom _1 get</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> tree <span class="kw">of</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Nil</span> <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>        c <span class="ot">&lt;-</span> zoom _2 pop</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">case</span> c <span class="kw">of</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>          <span class="dt">Just</span> (<span class="dt">First</span> left) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>            zoom _1 <span class="op">$</span> put left</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>            printTree&#39;&#39;&#39;&#39;&#39;&#39;</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>          <span class="dt">Just</span> (<span class="dt">Second</span> content) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>            lift (<span class="fu">print</span> content)</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>            zoom _1 <span class="op">$</span> put <span class="dt">Nil</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>            printTree&#39;&#39;&#39;&#39;&#39;&#39;</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>          <span class="dt">Just</span> (<span class="dt">Third</span> right) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>            zoom _1 <span class="op">$</span> put right</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>            printTree&#39;&#39;&#39;&#39;&#39;&#39;</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>          <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="fu">pure</span> ()</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        zoom _2 <span class="op">$</span> push (<span class="dt">Third</span> right)</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>        zoom _2 <span class="op">$</span> push (<span class="dt">Second</span> content)</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>        zoom _2 <span class="op">$</span> push (<span class="dt">First</span> left)</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>        zoom _1 <span class="op">$</span> put <span class="dt">Nil</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>        printTree&#39;&#39;&#39;&#39;&#39;&#39;</span></code></pre></div>
+<p>In this new version, <code>printTree''''''</code> appears in the tail
+position and does not have any arguments. We are now ready for the final
+magic step, which is to eliminate all recursive calls.</p>
+<h2 id="while">While</h2>
+<p>Let us introduce a little helper, <code>while</code>:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Continue</span> <span class="ot">=</span> <span class="dt">Continue</span> <span class="op">|</span> <span class="dt">Break</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  while ::</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> m<span class="op">.</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Monad</span> m <span class="ot">=&gt;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    m <span class="dt">Continue</span> <span class="ot">-&gt;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    m ()</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  while m <span class="ot">=</span> m <span class="op">&gt;&gt;=</span> \<span class="kw">case</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Continue</span> <span class="ot">-&gt;</span> while m</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Break</span> <span class="ot">-&gt;</span> <span class="fu">pure</span> ()</span></code></pre></div>
+<p>This function just runs the given monadic computation,
+<code>m :: m Continue</code>, again and again until it returns
+<code>Break</code>. This is as close to a "while" loop as we can get in
+Haskell, we can't remove the recursion here. Let us pretend the
+hypothetical recursion-free Haskell has <code>while</code> as a
+primitive.</p>
+<p>With this, we finally have:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  printTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; ::</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a<span class="op">.</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Show</span> a <span class="ot">=&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">StateT</span> (<span class="dt">Tree</span> a, <span class="dt">Stack</span> (<span class="dt">Next</span> a)) <span class="dt">IO</span> ()</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  printTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; <span class="ot">=</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    while <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>      tree <span class="ot">&lt;-</span> zoom _1 get</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">case</span> tree <span class="kw">of</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Nil</span> <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>          c <span class="ot">&lt;-</span> zoom _2 pop</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>          <span class="kw">case</span> c <span class="kw">of</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">First</span> left) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put left</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">Second</span> content) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>              lift (<span class="fu">print</span> content)</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put <span class="dt">Nil</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">Third</span> right) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put right</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="fu">pure</span> <span class="dt">Break</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">Third</span> right)</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">Second</span> content)</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">First</span> left)</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>          zoom _1 <span class="op">$</span> put <span class="dt">Nil</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>          <span class="fu">pure</span> <span class="dt">Continue</span></span></code></pre></div>
+<p>There are no recursive calls left. Well, almost, because we are still
+using the recursive <code>Tree</code> type. We will worry about that in
+a follow-up piece.</p>
+<p>This marvel of a function still computes the same result,</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Run the unrolled `printTree&#39;&#39;&#39;&#39;&#39;&#39;&#39;` program.</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; runPrintTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; exampleTree</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 1</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 3</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 4</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 5</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 6</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 7 </span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="ot">  runPrintTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; ::</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  runPrintTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; tree <span class="ot">=</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    evalStateT printTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; (tree, [])</span></code></pre></div>
+<p>Fantastic! What's next?</p>
+<h2 id="accumulations">Accumulations</h2>
+<p>The <code>printTree</code> example from James' 2019 talk is a bit too
+simple, because we run <code>printTree</code> only for its effects. We
+don't care about the result since it is just <code>()</code> and will be
+the same for all trees we pass to <code>printTree</code>. What if this
+was different? In many real applications, we might want to reduce the
+tree to a value, say, accumulate a result, like a sum. This common
+pattern is captured by the function below:</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  accumTree ::</span> <span class="kw">forall</span> a<span class="op">.</span> <span class="dt">Monoid</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  accumTree <span class="dt">Nil</span> <span class="ot">=</span> <span class="fu">mempty</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  accumTree <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">=</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> lacc <span class="ot">=</span> accumTree left</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>        racc <span class="ot">=</span> accumTree right</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> lacc <span class="op">&lt;&gt;</span> content <span class="op">&lt;&gt;</span> racc</span></code></pre></div>
+<p>Using <code>accumTree</code>, summing up all the content values of
+our example tree is a simple matter:</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Sum the content values of a tree.</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; sumTree exampleTree</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 28</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  sumTree ::</span> <span class="dt">Num</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  sumTree tree <span class="ot">=</span> getSum <span class="op">$</span> accumTree (<span class="dt">Sum</span> <span class="op">&lt;$&gt;</span> tree)</span></code></pre></div>
+<p><code>Sum</code> is a newtype wrapper whose only function is to
+select the <code>Monoid</code> instance for summation, where
+<code>mempty</code> is zero and <code>mappend</code> is addition. This
+is necessary since Haskell doesn't have named class instances.</p>
+<p>By the way, since <code>Tree</code> has a <code>Foldable</code>
+instance, we could have achieved the same by using <code>foldMap</code>
+from <code>Data.Foldable</code>:</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Sum the content values of a tree.</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; sumTree&#39; exampleTree</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 28</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  sumTree&#39; ::</span> (<span class="dt">Num</span> a, <span class="dt">Foldable</span> f) <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> a</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  sumTree&#39; tree <span class="ot">=</span> getSum <span class="op">$</span> <span class="fu">foldMap</span> <span class="dt">Sum</span> tree</span></code></pre></div>
+<p>This certainly is convenient. Haskellers love <code>foldMap</code>,
+because they can use it on any data type that has a
+<code>Foldable</code> instance, not just <code>Tree</code>. But this is
+supposed to be a tutorial about inconvenient, recursion-free Haskell,
+and for that we need to understand how we can remove recursion from
+<code>accumTree</code>. The tool we are going to use here is the
+<code>Writer</code> monad.</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  accumTree&#39;&#39; ::</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a<span class="op">.</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Monoid</span> a <span class="ot">=&gt;</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Tree</span> a <span class="ot">-&gt;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Writer</span> a ()</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  accumTree&#39;&#39; <span class="dt">Nil</span> <span class="ot">=</span> <span class="fu">pure</span> ()</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  accumTree&#39;&#39; <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    accumTree&#39;&#39; left</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    tell content</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    accumTree&#39;&#39; right</span></code></pre></div>
+<p>This version of <code>accumTree</code> is a bit more complicated.
+Accumulation has been moved to the <code>Writer</code> monad, and we
+need to use <code>tell</code> to accumulate the result. We also are
+working with a monadic effect, <code>Writer</code>, whereas
+<code>accumTree</code> was pure. We can extract the result by using
+<code>execWriter</code>:</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Sum the content values of a tree.</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; sumTree&#39;&#39; exampleTree</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 28</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  sumTree&#39;&#39; ::</span> <span class="dt">Num</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  sumTree&#39;&#39; tree <span class="ot">=</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    getSum <span class="op">$</span> execWriter <span class="op">$</span> accumTree&#39;&#39; (<span class="dt">Sum</span> <span class="op">&lt;$&gt;</span> tree)</span></code></pre></div>
+<p>Great, this works. Now, sharp eyes will notice that
+<code>accumTree''</code> and <code>printTree</code> from before are
+structurally equivalent. The only difference is that
+<code>printTree</code> uses <code>IO</code>, and
+<code>accumTree''</code> uses <code>Writer a</code>. That's all. Based
+on what we have seen so far, we can therefore immediately see how
+<code>accumTree''</code> can be made iterative:</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  accumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; ::</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">forall</span> a<span class="op">.</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Monoid</span> a <span class="ot">=&gt;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">StateT</span> (<span class="dt">Tree</span> a, <span class="dt">Stack</span> (<span class="dt">Next</span> a)) (<span class="dt">Writer</span> a) ()</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  accumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; <span class="ot">=</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    while <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>      tree <span class="ot">&lt;-</span> zoom _1 get</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">case</span> tree <span class="kw">of</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Nil</span> <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>          c <span class="ot">&lt;-</span> zoom _2 pop</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>          <span class="kw">case</span> c <span class="kw">of</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">First</span> left) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put left</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">Second</span> content) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>              lift (tell content)</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put <span class="dt">Nil</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> (<span class="dt">Third</span> right) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>              zoom _1 <span class="op">$</span> put right</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pure</span> <span class="dt">Continue</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="fu">pure</span> <span class="dt">Break</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Node</span> {<span class="op">..</span>} <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">Third</span> right)</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">Second</span> content)</span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>          zoom _2 <span class="op">$</span> push (<span class="dt">First</span> left)</span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>          zoom _1 <span class="op">$</span> put <span class="dt">Nil</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>          <span class="fu">pure</span> <span class="dt">Continue</span></span></code></pre></div>
+<p>Does this look familiar? This is the exact same as
+<code>printTree'''''''</code> from above, except
+<code>print content</code> is replaced by <code>tell content</code>. We
+run this function using its companion function
+<code>sumTree'''''''</code> that executes the <code>Writer</code> and
+<code>State</code> effects:</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- | Run the unrolled `accumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39;` program</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- and calculate the sum of the content values of the tree.</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- &gt;&gt;&gt; sumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; exampleTree</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 28</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="ot">  sumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; ::</span> <span class="dt">Num</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  sumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; tree <span class="ot">=</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    getSum <span class="op">$</span> execWriter <span class="op">$</span> runStateT accumTree&#39;&#39;&#39;&#39;&#39;&#39;&#39; (<span class="dt">Sum</span> <span class="op">&lt;$&gt;</span> tree, [])</span></code></pre></div>
+<p>This settles the issue. Now you know how to write a recursive
+function that doesn't recurse.</p>
+<h2 id="next-up">Next Up</h2>
+<p>Next time, we will take a closer look at the <code>Tree</code> type,
+and we will make sure it doesn't recurse either. This will be super
+ugly, I can't wait for that.</p>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original. Code blocks are BSD-3-Clause unless noted.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

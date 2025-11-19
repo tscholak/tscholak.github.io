@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <title>The Home Supercomputer Fallacy</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Torsten Scholak&#39;s personal website">
+    <meta name="author" content="Torsten Scholak">
+    <meta name="keywords" content="AI, ML, Haskell, functional programming">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="The Home Supercomputer Fallacy">
+    <meta property="og:description" content="&lt;p&gt;NVIDIA&#39;s DGX Spark promises to put an &quot;AI supercomputer&quot; on your
+desk. But for most people, owning a $4,000 box is slower, less flexible,
+and more expensive than renting smartly. Here&#39;s why.&lt;/p&gt;">
+    <meta property="og:url" content="https://tscholak.github.io/posts/home-supercomputers.html">
+    <meta property="og:image" content="https://tscholak.github.io/images/home-supercomputers.png">
+<meta property="og:image:alt" content="The Home Supercomputer Fallacy">
+<meta property="og:site_name" content="Torsten Scholak">
+    <meta property="article:author" content="Torsten Scholak">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tscholak">
+<meta name="twitter:creator" content="@tscholak">
+<meta name="twitter:title" content="The Home Supercomputer Fallacy">
+    <meta name="twitter:description" content="&lt;p&gt;NVIDIA&#39;s DGX Spark promises to put an &quot;AI supercomputer&quot; on your
+desk. But for most people, owning a $4,000 box is slower, less flexible,
+and more expensive than renting smartly. Here&#39;s why.&lt;/p&gt;">
+    <meta name="twitter:image" content="https://tscholak.github.io/images/home-supercomputers.png">
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="screen" title="default">
+    <link rel="stylesheet" type="text/css" href="/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">/</a>
+            <a href="/posts">posts/</a>
+            <a href="/publications">publications/</a>
+            <a href="/slide-decks">decks/</a>
+            <a href="/tags">tags/</a>
+            <a href="/resume">resume/</a>
+            <a href="/contact">contact/</a>
+            <a href="/terms">terms/</a>
+        </nav>
+    </header>
+    <div>
+        <p>commit <a href="https://github.com/tscholak/website/commit/c0f603c">c0f603c</a> (2025-10-20 17:32:51 -0400) Torsten Scholak: Simplify JSON instances and refactor publication fields with type-safe GADTs</p>
+
+        <p><img src="/images/home-supercomputers.png"></p>
+
+        <h1>The Home Supercomputer Fallacy</h1>
+        <p>
+            Tagged as:
+            <a href="/tags/gpu">gpu</a>
+            <a href="/tags/infrastructure">infrastructure</a>
+            <a href="/tags/economics">economics</a>
+        </p>
+        <p>Posted on Oct 15, 2025</p>
+        <p>7 min read</p>
+        <p>NVIDIA's DGX Spark promises to put an "AI supercomputer" on your
+desk. But for most people, owning a $4,000 box is slower, less flexible,
+and more expensive than renting smartly. Here's why.</p>
+        <h2 id="the-dgx-spark-hype">The DGX Spark Hype</h2>
+<p>NVIDIA just released the DGX Spark, a $3,999 "AI supercomputer for
+your desk" the size of a Mac Mini. It ships with 128 GB of unified
+memory, a Blackwell GPU, and marketing that borders on poetry:</p>
+<blockquote>
+<p>"Own your compute!"</p>
+</blockquote>
+<blockquote>
+<p>"Escape cloud vendor lock-in!"</p>
+</blockquote>
+<blockquote>
+<p>"Run the largest models yourself at home!"</p>
+</blockquote>
+<p>Influencers are already unboxing and calling it a game-changer for
+"taking back control" from the cloud.</p>
+<p>Here's the problem: <strong>it's slow for real work</strong>. Worse,
+the whole premise is a trap because you can get better performance, zero
+idle cost, and a persistent environment elsewhere for less money.</p>
+<h2 id="the-sparks-actual-performance">The Spark's Actual
+Performance</h2>
+<p>Running GPT-OSS 20B in Ollama (via <a
+href="https://docs.google.com/spreadsheets/d/1SF1u0J2vJ-ou-R_Ry1JZQ0iscOZL8UKHpdVFr85tNLU/edit?gid=0#gid=0">@LMSYS</a>):</p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 9%" />
+<col style="width: 14%" />
+<col style="width: 13%" />
+<col style="width: 16%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th>Hardware / Model</th>
+<th>Precision</th>
+<th>Prefill (tokens/sec)</th>
+<th>Decode (tokens/sec)</th>
+<th>Relative Speed vs Spark</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DGX Spark (GB10)</strong></td>
+<td>4-bit (mxfp4)</td>
+<td>2,054</td>
+<td>49.7</td>
+<td>1x</td>
+<td>128 GB LPDDR5X @ 273 GB/s unified memory</td>
+</tr>
+<tr>
+<td><strong>RTX 6000 Blackwell</strong></td>
+<td>4-bit (mxfp4)</td>
+<td>10,108</td>
+<td>215</td>
+<td>4.3x faster</td>
+<td>Workstation GPU with ~1 TB/s bandwidth</td>
+</tr>
+<tr>
+<td><strong>GeForce RTX 5090</strong></td>
+<td>4-bit (mxfp4)</td>
+<td>8,519</td>
+<td>205</td>
+<td>4.0x faster</td>
+<td>Consumer flagship GPU</td>
+</tr>
+<tr>
+<td><strong>GH200 (Cloud, est.)</strong></td>
+<td>FP8 / FP16</td>
+<td>~10,000-15,000</td>
+<td>~250-350</td>
+<td>~5-7x faster</td>
+<td>96 GB HBM3 @ 4 TB/s; $1.49/hr on Lambda</td>
+</tr>
+</tbody>
+</table>
+<p>The Spark is <strong>4x slower</strong> than high-end GPUs on
+standard workloads. In SGLang, for a 70B model (FP8), it manages 2.7
+tokens per second in generation. Not exactly "supercomputer" speed.</p>
+<p>The bottleneck is the memory bandwidth, not the GPU cores. The
+Spark's 273 GB/s LPDDR5x sounds impressive until you realize an RTX 5090
+has ~1 TB/s. The precious Blackwell GPU cores are starved for data.
+NVIDIA clearly traded bandwidth for price; cutting LPDDR5X instead of
+HBM keeps it under $4k and avoids cannibalizing the $8.5k RTX 6000.</p>
+<h3 id="the-nvfp4-trap">The NVFP4 Trap</h3>
+<p>NVIDIA's marketing claims "1 petaFLOP" of performance or "1000 AI
+TFLOPS." Technically true, but only for NVFP4, which is NVIDIA's new
+proprietary 4-bit floating-point format that almost no models use
+yet.</p>
+<p>Load a standard model and the Spark essentially behaves like a
+mid-range GPU with relatively weak inference performance. You're buying
+hardware optimized for a format the ecosystem hasn't adopted yet.</p>
+<p>Want the Spark's advertised performance? You need models specifically
+trained or converted to NVFP4. Possible, but not convenient.</p>
+<h2 id="the-false-binary">The False Binary</h2>
+<p>The debate has calcified into two positions: buy expensive hardware
+vs rent expensive cloud.</p>
+<p>That's the wrong framing entirely. The real question isn't ownership
+vs rental because <strong>granularity of commitment</strong>
+matters.</p>
+<p>What people actually need is:</p>
+<ul>
+<li>Burst access to serious compute (H100, GH200, 8xA100) when working
+on big models.</li>
+<li>Zero cost when idle.</li>
+<li>Persistent environment between sessions.</li>
+</ul>
+<p>The Spark gives you one or two of these at $4,000 upfront. AWS gives
+you two of three at premium pricing.<br />
+Lambda and other neoclouds give you <strong>all three</strong> for about
+as low as $1.49/hour for a GH200 on demand with no upfront cost or
+commitment.</p>
+<p>Break-even napkin math:</p>
+<ul>
+<li>$3,999 ÷ $1.49/hr = <strong>2,685 hours</strong></li>
+<li>At 8 hrs/week: 6.45 years of full utilization</li>
+<li>At 8 hrs/day: 336 days of full utilization</li>
+</ul>
+<p>This assumes your $4k Spark matches GH200 performance (it doesn't)
+and the Spark has zero power/cooling costs (it does).</p>
+<p>If you are hitting 60%+ duty cycle every day training models or doing
+heavy inference, you're not doing enthusiast experiments anymore but
+production workloads. You need a big rig or a cluster, not a Spark.</p>
+<h2 id="the-real-bottleneck-is-ceremony">The Real Bottleneck is
+Ceremony</h2>
+<p>While renting compute on neoclouds is cheap and easy, the workflow
+friction is the real barrier:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> launch instance</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> wait several minutes</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> <span class="st">&quot;is it up already?&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> ssh in, install everything from scratch</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> <span class="st">&quot;wait, how did I get FlashAttention working with this version of PyTorch again?&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> <span class="st">&quot;shit, I forgot to mount my data&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> <span class="st">&quot;where&#39;s that experiment config file? did I save it?&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> do 30 minutes of work</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> terminate instance</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span> lose everything</span></code></pre></div>
+<p>So in the end you default to your laptop and don't do any of the real
+work you intended to do.</p>
+<h2 id="declarative-ephemeral-infrastructure">Declarative Ephemeral
+Infrastructure</h2>
+<p>Simple fix: <strong>persistent storage + declarative environment +
+intelligent retry</strong>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">devbox</span> command=up_gh200</span></code></pre></div>
+<p>(devbox is a tool I wrote to manage ephemeral GPU instances, link at
+end)</p>
+<p>This launches a GH200 instance with:</p>
+<ul>
+<li>Your entire <code>/home</code> directory on persistent NFS</li>
+<li>Nix store on a 100GB loop device (survives termination)</li>
+<li>SSH config auto-generated</li>
+<li>Exponential backoff on capacity errors</li>
+</ul>
+<p>Terminate when done. Environment persists. Next launch: instant. Same
+packages, same state.</p>
+<h2 id="common-objections">Common Objections</h2>
+<p><strong>"But M4/M5 Macs are faster!"</strong> Yep. For models under
+30B, an M4 Mac matches or beats the Spark and doubles as a
+general-purpose machine. The Spark's 128GB advantage matters for massive
+models, except: a 120B model runs at ~14-15 tokens/sec on Spark vs ~53
+tokens/sec on an M2 Max Mac Studio.</p>
+<p><strong>"What about AMD Strix Halo?"</strong> Faster on many
+workloads, roughly half the price. Trade-off: you lose the mature CUDA
+ecosystem. (Well, ROCm is getting better, but the compute capabilities
+of a Max+ 395 are not the same as a Blackwell.) Pure inference? Strix
+wins. Development and scaling? Spark's NVIDIA stack matters.</p>
+<p><strong>Local data access?</strong> On first launch you set up your
+dotfiles, pull any repos you need, and set up development environments
+with nix or uv. After that, everything is on an NFS mount. No difference
+from local disk from then on. Persistent storage is dirt cheap.</p>
+<p><strong>Latency?</strong> SSH latency is ~20-50ms. Irrelevant for
+training/inference.</p>
+<p><strong>Vendor lock-in?</strong> Lambda's API is just HTTP. Migrating
+to another provider is a weekend project if needed.</p>
+<p><strong>Capacity availability?</strong> GH200s are scarce. Retry
+logic handles it. In practice: occasional 10-20min waits for capacity,
+then instant access, followed by many hours of uninterrupted work. That
+overhead is a rounding error compared to the cost of owning
+hardware.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The DGX Spark exists because "AI supercomputer for your home office"
+sells better than "expensive, slow, vendor-locked bet on NVFP4." NVIDIA
+admits the Spark isn't designed for raw performance but as a
+"developer-friendly platform" for people prototyping before scaling to
+real DGX systems or cloud. It's also a $4k stepping stone to lock you
+further into the DGX ecosystem. The "own your infrastructure" narrative
+is seductive, but all the brilliant marketing can't hide the fact that
+for many people this is a terrible purchase and renting is simply
+better.</p>
+<p>The Spark conflates ownership with commitment. You can own your data,
+environment, and state without owning idle silicon. Renting ephemeral
+GPUs gives you better performance, zero idle cost, and the same
+persistence.</p>
+<p>Don't buy the "home supercomputer." Rent smart. Work smart.</p>
+<p>Disclaimer: I have no relationship with Lambda Labs or NVIDIA. I just
+do a lot of training framework development and can afford to be
+opinionated about infrastructure.</p>
+<p>Disclaimer 2: The author of this article has since purchased a DGX
+Spark because he thinks it looks cool and makes him look smart at
+parties. Just kidding.</p>
+<h2 id="next-steps">Next Steps</h2>
+<p>If you want to try this out, check out <a
+href="https://github.com/tscholak/devbox">devbox</a>, my little
+opinionated tool to manage ephemeral GPU instances easily. Drop me a
+line if you have questions or feedback!</p>
+    </div>
+
+    <div>
+        <h1>License</h1>
+        <p>
+            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+             — Please attribute "Torsten Scholak" with a link to the original.
+        </p>
+    </div>
+
+    <div>
+    </div>
+
+    <footer>
+        <p>Copyright © 2025 Torsten Scholak</p>
+        <p>
+            <a href="/feed.xml"></a>
+    
+            <a href="https://scholar.google.com/citations?user=BgkjtKgAAAAJ"></a>
+
+            <a href="https://github.com/tscholak"></a>
+
+            <a href="https://twitter.com/tscholak"></a>
+
+            <a href="https://youtube.com/TorstenScholak"></a>
+
+            <a href="https://twitch.com/tscholak"></a>
+    </p>
+    </footer></body>
+
+</html>

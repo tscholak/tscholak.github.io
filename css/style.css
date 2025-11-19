@@ -1,0 +1,172 @@
+:root {
+  --bg: rgba(0, 0, 0, 0);
+  --prebg: rgba(0, 0, 0, 0);
+  --text: rgb(0, 0, 0);
+  --pretext: rgba(0, 0, 0);
+  --accent: rgb(0, 0, 0);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "PragmataPro", monospace;
+  padding: 0px;
+  margin: 0px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80ch;
+  overflow-y: scroll;
+  line-height: 1.4;
+}
+
+body > * {
+  margin: 1%;
+}
+
+h1 {
+  font-size: 1em;
+  color: var(--accent);
+}
+
+h1::before {
+  content: "# ";
+}
+
+h2 {
+  margin-top: 1em;
+  font-size: 1em;
+  color: var(--accent);
+}
+
+h2::before {
+  content: "## ";
+}
+
+h3 {
+  margin-top: 1em;
+  font-size: 1em;
+  color: var(--accent);
+}
+
+h3::before {
+  content: "### ";
+}
+
+img {
+  max-width: 100%;
+  border: 0;
+}
+
+table {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  background-color: transparent;
+  border: 0px dashed var(--bg);
+}
+
+hr {
+  margin: 0;
+}
+
+td {
+  background-color: var(--bg);
+  border:1px solid var(--text);
+  padding:0.2em 20px 0.2em 10px;
+}
+
+a {
+  color: var(--text);
+}
+
+a:link, a:visited {
+  text-decoration: none;
+  border-bottom: 1px solid var(--text);
+}
+
+a:active, a:hover {
+  text-decoration: none;
+}
+
+a img {
+  border: 0;
+}
+
+ul {
+  list-style-type: "* ";
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 2ch;
+}
+
+ol {
+  list-style-type: decimal;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 3ch;
+}
+
+li {
+  margin-left: 0;
+}
+
+blockquote {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 2ch;
+}
+
+blockquote>p {
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+
+blockquote>p::before {
+  content: "> ";
+}
+
+blockquote>pre {
+  padding-left: 0ch;
+  text-indent: -2ch;
+}
+
+blockquote>pre>code::before {
+  content: "> ";
+}
+
+blockquote>ul {
+  list-style-type: "> * ";
+  padding-left: 4ch;
+}
+
+h1>a, h2>a, h3>a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+h1>a, h2>a, h3>a:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+pre {
+  background-color: var(--prebg);
+  color: var(--pretext);
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 2ch;
+}
+
+code {
+  font-weight: bold;
+  font-family: "PragmataPro", monospace;
+}
+
+pre>code {
+  font-weight: normal;
+}
+
+#csl span:not(:last-of-type)::after {
+  content: ", ";
+}
